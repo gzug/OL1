@@ -2,623 +2,98 @@
 <html lang="en">
   <head>
     <meta charset="utf-8" />
-    <meta content="width=device-width, initial-scale=1" name="viewport" />
-    <meta content="noindex,nofollow,noarchive" name="robots" />
-    <meta content="OL1 future-state concept preview" name="description" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="robots" content="noindex,nofollow,noarchive" />
+    <meta name="description" content="OL1 future-state concept preview" />
     <link href="data:," rel="icon" />
     <title>OL1 · Concept Lab</title>
     <style>
-      :root {
-        --ink: #0a0d12;
-        --surface: #141a22;
-        --surface-soft: #1a212b;
-        --line: #2c3542;
-        --text: #f4f7f7;
-        --muted: #9ca9b8;
-        --green: #e7ff57;
-        --green-ink: #11170c;
-        --blue: #7fc7ff;
-        --amber: #ffb36b;
-        --grey: #8390a0;
-        --shadow: 0 24px 80px rgba(0, 0, 0, 0.36);
-      }
-
-      * { box-sizing: border-box; }
-
-      body {
-        background:
-          radial-gradient(circle at 80% -20%, rgba(231, 255, 87, 0.13), transparent 31rem),
-          radial-gradient(circle at 4% 92%, rgba(127, 199, 255, 0.10), transparent 26rem),
-          var(--ink);
-        color: var(--text);
-        font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-        margin: 0;
-        min-height: 100vh;
-      }
-
-      button { font: inherit; }
-
-      .shell {
-        display: grid;
-        gap: 24px;
-        margin: 0 auto;
-        max-width: 1160px;
-        padding: 28px 24px 52px;
-      }
-
-      .site-header,
-      .site-footer,
-      .header-actions,
-      .brand,
-      .meta-row,
-      .panel-heading,
-      .action-row,
-      .legend,
-      .legend-item,
-      .section-heading,
-      .appbar,
-      .nav,
-      .stage-switch,
-      .question-row,
-      .answer-meta,
-      .playbook-title,
-      .data-source,
-      .checkin-row,
-      .timeline {
-        align-items: center;
-        display: flex;
-      }
-
-      .site-header { justify-content: space-between; }
-      .brand, .header-actions, .meta-row, .legend, .question-row, .answer-meta, .playbook-title { gap: 10px; }
-      .brand { gap: 12px; }
-      .header-actions { gap: 8px; }
-
-      .wordmark {
-        font-size: 22px;
-        font-weight: 800;
-        letter-spacing: -0.06em;
-      }
-
-      .tag, .eyebrow, .badge, .nav-button, .stage-button, .text-button, .primary-button, .scale-button {
-        border: 0;
-        border-radius: 999px;
-        letter-spacing: 0.02em;
-      }
-
-      .tag {
-        background: rgba(231, 255, 87, 0.12);
-        color: var(--green);
-        font-size: 12px;
-        padding: 6px 10px;
-      }
-
-      .muted { color: var(--muted); }
-      .tiny { font-size: 12px; }
-      .small { font-size: 13px; }
-
-      .guide-button, .text-button, .nav-button, .stage-button, .scale-button {
-        background: transparent;
-        color: var(--muted);
-        cursor: pointer;
-      }
-
-      .guide-button, .primary-button {
-        border: 1px solid var(--green);
-        border-radius: 999px;
-        cursor: pointer;
-        padding: 10px 14px;
-      }
-
-      .guide-button { color: var(--green); }
-
-      .guide-button:hover, .guide-button:focus-visible {
-        background: rgba(231, 255, 87, 0.12);
-      }
-
-      .context {
-        display: grid;
-        gap: 4px;
-        max-width: 550px;
-      }
-
-      .context strong { font-size: 16px; }
-
-      .app-frame {
-        background: rgba(20, 26, 34, 0.92);
-        border: 1px solid rgba(156, 169, 184, 0.18);
-        border-radius: 28px;
-        box-shadow: var(--shadow);
-        display: grid;
-        gap: 0;
-        margin: 0 auto;
-        max-width: 790px;
-        overflow: hidden;
-        width: 100%;
-      }
-
-      .appbar {
-        border-bottom: 1px solid var(--line);
-        justify-content: space-between;
-        padding: 14px 18px;
-      }
-
-      .appbar-copy { display: grid; gap: 3px; }
-      .appbar-copy strong { font-size: 15px; }
-
-      .stage-switch { gap: 4px; }
-
-      .stage-button {
-        font-size: 12px;
-        padding: 8px 10px;
-      }
-
-      .stage-button[aria-pressed="true"] {
-        background: var(--green);
-        color: var(--green-ink);
-        font-weight: 800;
-      }
-
-      .app-main { min-height: 642px; padding: 22px; }
-      .screen { animation: appear 240ms ease-out; display: grid; gap: 22px; }
-      .screen[hidden] { display: none; }
-
-      @keyframes appear {
-        from { opacity: 0; transform: translateY(8px); }
-        to { opacity: 1; transform: translateY(0); }
-      }
-
-      .hero-card, .detail-card, .lab-card, .playbook-card, .assistant-card, .data-card {
-        background: linear-gradient(145deg, rgba(33, 42, 54, 0.92), rgba(18, 24, 32, 0.92));
-        border: 1px solid rgba(156, 169, 184, 0.18);
-        border-radius: 22px;
-        padding: 20px;
-      }
-
-      .hero-card { display: grid; gap: 18px; }
-      .hero-head { display: grid; gap: 10px; max-width: 560px; }
-
-      .eyebrow {
-        color: var(--green);
-        font-size: 12px;
-        font-weight: 800;
-        text-transform: uppercase;
-      }
-
-      h1, h2, h3, p { margin: 0; }
-      h1 { font-size: clamp(28px, 5vw, 45px); letter-spacing: -0.055em; line-height: 1.02; }
-      h2 { font-size: clamp(23px, 3.8vw, 31px); letter-spacing: -0.045em; line-height: 1.08; }
-      h3 { font-size: 16px; letter-spacing: -0.02em; }
-      p { line-height: 1.55; }
-
-      .evidence-pill {
-        background: rgba(231, 255, 87, 0.11);
-        border-radius: 999px;
-        color: var(--green);
-        font-size: 13px;
-        padding: 7px 10px;
-        width: max-content;
-      }
-
-      .meta-row { color: var(--muted); flex-wrap: wrap; font-size: 13px; }
-      .dot { background: var(--line); border-radius: 50%; height: 4px; width: 4px; }
-
-      .action-row {
-        border-top: 1px solid var(--line);
-        flex-wrap: wrap;
-        gap: 12px;
-        justify-content: space-between;
-        padding-top: 16px;
-      }
-
-      .action-copy { display: grid; gap: 4px; }
-      .action-copy strong { font-size: 16px; }
-
-      .primary-button {
-        background: var(--green);
-        color: var(--green-ink);
-        font-weight: 800;
-      }
-
-      .primary-button:hover, .primary-button:focus-visible { filter: brightness(0.94); }
-
-      .section-heading { justify-content: space-between; }
-      .section-heading > div { display: grid; gap: 5px; }
-
-      .space-preview, .space-canvas {
-        min-height: 330px;
-        position: relative;
-      }
-
-      .space-canvas { min-height: 430px; }
-
-      .space-svg {
-        height: 100%;
-        inset: 0;
-        overflow: visible;
-        position: absolute;
-        width: 100%;
-      }
-
-      .edge { stroke: var(--grey); stroke-width: 1.4; }
-      .edge.observed { stroke-dasharray: 5 7; }
-      .edge.testing { stroke: var(--blue); stroke-width: 2.5; }
-      .edge.learned { stroke: var(--green); stroke-width: 2.7; }
-
-      .node {
-        background: rgba(20, 26, 34, 0.96);
-        border: 1px solid var(--line);
-        border-radius: 999px;
-        color: var(--muted);
-        cursor: pointer;
-        font-size: 13px;
-        padding: 9px 12px;
-        position: absolute;
-        transform: translate(-50%, -50%);
-      }
-
-      .node:hover, .node:focus-visible, .node[aria-pressed="true"] {
-        border-color: var(--green);
-        color: var(--text);
-        outline: none;
-      }
-
-      .node.goal {
-        background: var(--green);
-        border-color: var(--green);
-        color: var(--green-ink);
-        font-weight: 800;
-      }
-
-      .node.recovery { left: 50%; top: 13%; }
-      .node.nutrition { left: 85%; top: 38%; }
-      .node.mind { left: 75%; top: 80%; }
-      .node.markers { left: 25%; top: 80%; }
-      .node.movement { left: 15%; top: 38%; }
-      .node.goal { left: 50%; top: 51%; }
-
-      .space-caption {
-        bottom: 0;
-        color: var(--muted);
-        font-size: 13px;
-        left: 0;
-        position: absolute;
-        right: 0;
-        text-align: center;
-      }
-
-      .legend { color: var(--muted); flex-wrap: wrap; font-size: 12px; }
-      .legend-item { gap: 6px; }
-      .legend-line { border-top: 2px solid var(--grey); display: inline-block; width: 24px; }
-      .legend-line.observed { border-top-style: dashed; }
-      .legend-line.testing { border-color: var(--blue); }
-      .legend-line.learned { border-color: var(--green); }
-
-      .two-up { display: grid; gap: 16px; grid-template-columns: repeat(2, minmax(0, 1fr)); }
-      .soft-panel { border-top: 1px solid var(--line); display: grid; gap: 8px; padding-top: 14px; }
-      .soft-panel p { color: var(--muted); font-size: 14px; }
-
-      .detail-card { display: grid; gap: 16px; }
-      .detail-list { display: grid; gap: 14px; margin: 0; }
-      .detail-list > div { border-top: 1px solid var(--line); display: grid; gap: 5px; padding-top: 12px; }
-      dt { color: var(--muted); font-size: 12px; }
-      dd { margin: 0; }
-
-      .lab-grid { display: grid; gap: 16px; grid-template-columns: 1.1fr 0.9fr; }
-      .lab-card { display: grid; gap: 16px; }
-      .timeline { align-items: stretch; gap: 5px; }
-      .phase { border-top: 4px solid var(--line); display: grid; gap: 5px; padding-top: 9px; width: 25%; }
-      .phase.complete { border-color: var(--green); }
-      .phase.active { border-color: var(--blue); }
-      .phase span { color: var(--muted); font-size: 11px; }
-      .phase strong { font-size: 12px; }
-
-      .spark { color: var(--green); overflow: visible; width: 100%; }
-      .spark .grid { stroke: var(--line); stroke-width: 1; }
-      .spark .line { fill: none; stroke: currentColor; stroke-width: 2.5; }
-      .spark .point { fill: var(--surface); stroke: currentColor; stroke-width: 2.5; }
-
-      .checkin-row { border-top: 1px solid var(--line); flex-wrap: wrap; gap: 12px; justify-content: space-between; padding-top: 14px; }
-      .scale { display: flex; gap: 5px; }
-      .scale-button { border: 1px solid var(--line); height: 32px; width: 32px; }
-      .scale-button[aria-pressed="true"] { background: var(--green); border-color: var(--green); color: var(--green-ink); font-weight: 800; }
-
-      .playbook-card { display: grid; gap: 0; }
-      .playbook-entry { border-top: 1px solid var(--line); display: grid; gap: 8px; padding: 17px 0; }
-      .playbook-entry:first-child { border-top: 0; padding-top: 0; }
-      .playbook-entry:last-child { padding-bottom: 0; }
-      .playbook-title { flex-wrap: wrap; }
-      .badge { background: rgba(156, 169, 184, 0.12); color: var(--muted); font-size: 12px; padding: 5px 8px; }
-      .badge.good { background: rgba(231, 255, 87, 0.11); color: var(--green); }
-      .badge.test { background: rgba(127, 199, 255, 0.12); color: var(--blue); }
-      .badge.neutral { background: rgba(255, 179, 107, 0.12); color: var(--amber); }
-
-      .assistant-card { display: grid; gap: 16px; }
-      .question-row { flex-wrap: wrap; }
-      .text-button { border: 1px solid var(--line); font-size: 13px; padding: 8px 10px; }
-      .text-button[aria-pressed="true"] { border-color: var(--blue); color: var(--text); }
-      .answer { border-left: 3px solid var(--green); display: grid; gap: 14px; padding-left: 15px; }
-      .answer-meta { color: var(--muted); flex-wrap: wrap; font-size: 12px; }
-
-      .data-card { display: grid; gap: 16px; }
-      .data-source { align-items: flex-start; border-top: 1px solid var(--line); gap: 12px; justify-content: space-between; padding-top: 13px; }
-      .data-source:first-of-type { border-top: 0; padding-top: 0; }
-      .data-source > div { display: grid; gap: 4px; }
-      .data-card[hidden] { display: none; }
-
-      .nav { border-top: 1px solid var(--line); display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); padding: 10px; }
-      .nav-button { font-size: 12px; padding: 9px 5px; }
-      .nav-button[aria-current="page"] { color: var(--green); font-weight: 800; }
-
-      .site-footer { color: var(--muted); flex-wrap: wrap; font-size: 12px; gap: 12px; justify-content: space-between; }
-      .site-footer span { max-width: 640px; }
-
-      @media (max-width: 680px) {
-        .shell { padding: 18px 14px 34px; }
-        .site-header { align-items: flex-start; display: grid; gap: 14px; }
-        .app-frame { border-radius: 22px; }
-        .app-main { min-height: 620px; padding: 16px; }
-        .appbar { align-items: flex-start; display: grid; gap: 12px; }
-        .stage-switch { width: 100%; }
-        .stage-button { flex: 1; }
-        .two-up, .lab-grid { grid-template-columns: 1fr; }
-        .hero-card, .detail-card, .lab-card, .playbook-card, .assistant-card, .data-card { border-radius: 18px; padding: 16px; }
-        .space-preview { min-height: 300px; }
-        .space-canvas { min-height: 365px; }
-        .node { font-size: 11px; padding: 8px 9px; }
-        .node.nutrition { left: 80%; }
-        .node.movement { left: 20%; }
-        .node.mind { left: 72%; }
-        .node.markers { left: 28%; }
-        .nav { grid-template-columns: repeat(5, minmax(0, 1fr)); }
-        .nav-button { font-size: 10px; padding: 9px 1px; }
-      }
+      :root { --ink:#0b0e0d; --card:#141918; --card-2:#1a211e; --line:rgba(235,244,236,.13); --text:#eff3ef; --muted:#9ca7a0; --green:#e7ff57; --green-ink:#17200a; --blue:#96d6ff; --amber:#ffc878; --shadow:0 30px 100px rgba(0,0,0,.32); }
+      * { box-sizing:border-box; }
+      body { background:radial-gradient(circle at 86% 7%,rgba(231,255,87,.12),transparent 23rem),radial-gradient(circle at 12% 90%,rgba(150,214,255,.08),transparent 24rem),var(--ink); color:var(--text); font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; margin:0; min-height:100vh; }
+      button { font:inherit; } button:focus-visible { outline:2px solid var(--green); outline-offset:3px; }
+      .shell { margin:0 auto; max-width:980px; padding:28px 22px 50px; }
+      .masthead,.masthead__right,.appbar,.stepper,.evidence,.action,.meta,.source,.chart-key,.playbook-head,.question-row,.footer { align-items:center; display:flex; }
+      .masthead { justify-content:space-between; margin-bottom:26px; }
+      .brand { align-items:baseline; display:flex; gap:10px; } .wordmark { font-size:25px; font-weight:850; letter-spacing:-.07em; } .label { color:var(--green); font-size:10px; font-weight:800; letter-spacing:.14em; text-transform:uppercase; }
+      .masthead__right { gap:10px; } .quiet { color:var(--muted); font-size:12px; }
+      .button,.icon-button,.step,.chip,.score { background:transparent; border:0; color:inherit; cursor:pointer; }
+      .button { border:1px solid var(--line); border-radius:999px; color:var(--muted); font-size:13px; padding:9px 13px; } .button:hover { border-color:rgba(231,255,87,.48); color:var(--text); }
+      .app { background:rgba(20,25,24,.86); border:1px solid var(--line); border-radius:28px; box-shadow:var(--shadow); overflow:hidden; }
+      .appbar { border-bottom:1px solid var(--line); justify-content:space-between; padding:16px 20px; } .appbar__title { display:grid; gap:3px; } .appbar__title strong { font-size:14px; } .appbar__title span { color:var(--muted); font-size:12px; }
+      .horizon { display:flex; gap:2px; } .horizon button { background:transparent; border:0; border-radius:999px; color:var(--muted); cursor:pointer; font-size:11px; padding:7px 9px; } .horizon button[aria-pressed="true"] { background:rgba(231,255,87,.13); color:var(--green); }
+      .main { min-height:545px; padding:26px; } .screen { animation:enter .28s ease-out; display:grid; gap:24px; } .screen[hidden] { display:none; } @keyframes enter { from { opacity:0; transform:translateY(8px) } to { opacity:1; transform:none } }
+      .intro { display:grid; gap:13px; max-width:620px; } h1,h2,h3,p { margin:0; } h1 { font-size:clamp(31px,5vw,52px); letter-spacing:-.065em; line-height:1; } h2 { font-size:clamp(25px,4vw,37px); letter-spacing:-.055em; line-height:1.05; } h3 { font-size:15px; letter-spacing:-.02em; } p { line-height:1.55; } .lede { color:var(--muted); font-size:16px; max-width:560px; }
+      .eyebrow { color:var(--green); font-size:11px; font-weight:800; letter-spacing:.12em; text-transform:uppercase; }
+      .evidence { color:var(--muted); flex-wrap:wrap; font-size:12px; gap:8px; } .evidence strong { background:rgba(231,255,87,.12); border-radius:999px; color:var(--green); font-size:11px; padding:6px 9px; } .separator { background:var(--line); border-radius:50%; height:4px; width:4px; }
+      .action { background:linear-gradient(135deg,rgba(231,255,87,.13),rgba(231,255,87,.035)); border:1px solid rgba(231,255,87,.28); border-radius:19px; gap:18px; justify-content:space-between; margin-top:4px; padding:16px 17px; } .action__copy { display:grid; gap:3px; } .action__copy span { color:var(--muted); font-size:12px; } .action__copy strong { font-size:16px; letter-spacing:-.02em; } .primary { background:var(--green); border:0; border-radius:999px; color:var(--green-ink); cursor:pointer; font-weight:850; padding:11px 15px; white-space:nowrap; }
+      .aside-link { align-items:center; color:var(--muted); display:flex; font-size:13px; gap:8px; justify-content:space-between; margin-top:2px; } .text-link { background:transparent; border:0; color:var(--green); cursor:pointer; font-size:13px; padding:0; }
+      .visual { background:linear-gradient(150deg,rgba(34,44,40,.76),rgba(17,22,20,.78)); border:1px solid var(--line); border-radius:22px; min-height:260px; overflow:hidden; position:relative; }
+      .halo { background:radial-gradient(circle,rgba(231,255,87,.15),rgba(231,255,87,.02) 42%,transparent 68%); height:360px; left:50%; position:absolute; top:50%; transform:translate(-50%,-50%); width:360px; }
+      .map-line { border-top:1px solid rgba(231,255,87,.56); left:50%; position:absolute; top:50%; transform-origin:left center; width:29%; } .map-line.observed { border-color:rgba(156,167,160,.5); border-top-style:dashed; } .map-line.testing { border-color:var(--blue); border-top-width:2px; }
+      .map-line.a { transform:rotate(-92deg); } .map-line.b { transform:rotate(-28deg); } .map-line.c { transform:rotate(38deg); } .map-line.d { transform:rotate(145deg); }
+      .orb { background:rgba(15,19,18,.88); border:1px solid var(--line); border-radius:999px; color:var(--muted); cursor:pointer; font-size:12px; padding:9px 11px; position:absolute; transform:translate(-50%,-50%); } .orb:hover,.orb[aria-pressed="true"] { border-color:var(--green); color:var(--text); } .orb.goal { background:var(--green); border-color:var(--green); color:var(--green-ink); font-weight:850; left:50%; top:50%; } .orb.recovery { left:50%; top:19%; } .orb.nutrition { left:79%; top:35%; } .orb.mind { left:71%; top:76%; } .orb.movement { left:25%; top:69%; }
+      .visual-caption { bottom:16px; color:var(--muted); font-size:12px; left:20px; position:absolute; right:20px; text-align:center; }
+      .detail { border-top:1px solid var(--line); display:grid; gap:11px; padding-top:18px; } .detail p { color:var(--muted); font-size:14px; max-width:630px; } .detail-grid { display:grid; gap:12px; grid-template-columns:repeat(3,minmax(0,1fr)); } .detail-grid div { border-left:1px solid var(--line); display:grid; gap:4px; padding-left:12px; } .detail-grid span { color:var(--muted); font-size:11px; } .detail-grid strong { font-size:13px; font-weight:600; }
+      .experiment { display:grid; gap:18px; grid-template-columns:1.1fr .9fr; } .card { background:linear-gradient(150deg,rgba(35,44,41,.66),rgba(19,24,23,.66)); border:1px solid var(--line); border-radius:20px; padding:18px; } .card--stack { display:grid; gap:18px; } .timeline { display:grid; gap:6px; grid-template-columns:repeat(4,1fr); } .phase { border-top:3px solid var(--line); display:grid; gap:4px; padding-top:8px; } .phase span { color:var(--muted); font-size:10px; } .phase strong { font-size:11px; } .phase.complete { border-color:var(--green); } .phase.active { border-color:var(--blue); }
+      .chart { height:110px; margin-top:7px; width:100%; } .chart line { stroke:var(--line); } .chart polyline { fill:none; stroke:var(--green); stroke-width:2.5; } .chart circle { fill:var(--card); stroke:var(--green); stroke-width:2.5; } .chart-key { color:var(--muted); font-size:11px; gap:12px; } .chart-key i { background:var(--green); border-radius:50%; display:inline-block; height:6px; margin-right:5px; width:6px; }
+      .checkin { display:grid; gap:11px; } .score-row { display:flex; gap:5px; } .score { border:1px solid var(--line); border-radius:50%; color:var(--muted); height:33px; width:33px; } .score[aria-pressed="true"] { background:var(--green); border-color:var(--green); color:var(--green-ink); font-weight:850; }
+      .playbook { display:grid; gap:0; } .play { border-top:1px solid var(--line); display:grid; gap:6px; padding:16px 0; } .play:first-child { border-top:0; padding-top:0; } .play:last-child { padding-bottom:0; } .playbook-head { gap:8px; justify-content:space-between; } .badge { border-radius:999px; font-size:11px; padding:5px 8px; white-space:nowrap; } .badge.good { background:rgba(231,255,87,.12); color:var(--green); } .badge.test { background:rgba(150,214,255,.13); color:var(--blue); } .badge.neutral { background:rgba(255,200,120,.12); color:var(--amber); } .play p,.play small { color:var(--muted); font-size:13px; }
+      .answer { border-left:2px solid var(--green); display:grid; gap:13px; padding-left:16px; } .answer p { font-size:17px; max-width:660px; } .answer small { color:var(--muted); } .question-row { flex-wrap:wrap; gap:7px; } .chip { border:1px solid var(--line); border-radius:999px; color:var(--muted); font-size:12px; padding:8px 10px; } .chip[aria-pressed="true"] { border-color:var(--blue); color:var(--text); }
+      .data { background:rgba(12,15,14,.74); border-top:1px solid var(--line); display:grid; gap:12px; padding:18px 20px; } .data[hidden] { display:none; } .source { border-top:1px solid var(--line); font-size:13px; gap:18px; justify-content:space-between; padding-top:11px; } .source:first-of-type { border-top:0; padding-top:0; } .source div { display:grid; gap:3px; } .source span { color:var(--muted); font-size:12px; }
+      .stepper { border-top:1px solid var(--line); gap:0; justify-content:space-between; padding:10px 14px; } .step { align-items:center; color:var(--muted); display:flex; flex:1; font-size:12px; gap:7px; justify-content:center; padding:9px 4px; } .step::before { background:var(--line); border-radius:50%; content:""; height:5px; width:5px; } .step[aria-current="step"] { color:var(--green); font-weight:800; } .step[aria-current="step"]::before { background:var(--green); box-shadow:0 0 0 4px rgba(231,255,87,.11); }
+      .footer { color:var(--muted); flex-wrap:wrap; font-size:11px; gap:8px; justify-content:space-between; margin-top:18px; } .footer span { max-width:590px; }
+      @media(max-width:680px) { .shell { padding:18px 14px 34px; } .masthead__right .quiet { display:none; } .app { border-radius:22px; } .main { min-height:570px; padding:20px 17px; } .appbar { align-items:flex-start; display:grid; gap:11px; } .horizon { width:100%; } .horizon button { flex:1; } h1 { font-size:35px; } .action { align-items:flex-start; display:grid; } .primary { justify-self:start; } .detail-grid,.experiment { grid-template-columns:1fr; } .visual { min-height:285px; } .step { font-size:10px; gap:4px; } .step::before { display:none; } .source { align-items:flex-start; } }
     </style>
   </head>
   <body>
     <div class="shell">
-      <header class="site-header">
-        <div class="brand">
-          <span class="wordmark">OL1</span>
-          <span class="tag">CONCEPT LAB</span>
-        </div>
-        <div class="header-actions">
-          <div class="context">
-            <strong>Future-state product simulation</strong>
-            <span class="muted small">Fixture-only · private concept · not medical advice</span>
-          </div>
-          <button class="guide-button" id="guide-button" type="button">Start guided journey</button>
-        </div>
-      </header>
-
-      <main class="app-frame" aria-label="OL1 interactive future-state concept">
-        <header class="appbar">
-          <div class="appbar-copy">
-            <strong id="screen-title">Today</strong>
-            <span class="muted tiny" id="screen-subtitle">One relevant question, not another score</span>
-          </div>
-          <div class="stage-switch" aria-label="Simulated value horizon" role="group">
-            <button class="stage-button" data-stage="start" type="button">Onboarding</button>
-            <button class="stage-button" data-stage="learning" type="button">6 weeks</button>
-            <button aria-pressed="true" class="stage-button" data-stage="mature" type="button">6 months</button>
-          </div>
-        </header>
-
-        <section class="data-card" hidden id="data-card" aria-label="Data sources and control">
-          <div class="section-heading">
-            <div>
-              <span class="eyebrow">Designed local-first</span>
-              <h3>What informs this concept</h3>
-            </div>
-            <button class="text-button" id="close-data" type="button">Close</button>
-          </div>
-          <div class="data-source">
-            <div><strong>Health Connect</strong><span class="muted small">Sleep, resting heart rate, HRV, steps, workouts · provenance retained</span></div>
-            <span class="muted small">218 days</span>
-          </div>
-          <div class="data-source">
-            <div><strong>Your check-ins</strong><span class="muted small">Daytime energy and perceived recovery · always voluntary</span></div>
-            <span class="muted small">61 days</span>
-          </div>
-          <div class="data-source">
-            <div><strong>Meal timing</strong><span class="muted small">Timing only · no calorie target inferred</span></div>
-            <span class="muted small">44 days</span>
-          </div>
-          <div class="data-source">
-            <div><strong>Health records</strong><span class="muted small">Background context · never silently treated as a recommendation</span></div>
-            <span class="muted small">1 report</span>
-          </div>
-        </section>
-
-        <div class="app-main">
+      <header class="masthead"><div class="brand"><span class="wordmark">OL1</span><span class="label">Concept Lab</span></div><div class="masthead__right"><span class="quiet">Private, fixture-only future state</span><button class="button" id="guide" type="button">Start walkthrough</button></div></header>
+      <main class="app" aria-label="OL1 interactive future-state concept">
+        <header class="appbar"><div class="appbar__title"><strong id="screen-title">Today</strong><span id="screen-subtitle">One useful decision, made calmly</span></div><div class="horizon" aria-label="Simulated value horizon"><button data-stage="start" type="button">Start</button><button data-stage="learning" type="button">6 weeks</button><button aria-pressed="true" data-stage="mature" type="button">6 months</button></div></header>
+        <section class="data" hidden id="data"><div class="playbook-head"><div><span class="eyebrow">Your control</span><h3>What informs this view</h3></div><button class="button" id="close-data" type="button">Close</button></div><div class="source"><div><strong>Health Connect</strong><span>Sleep, resting heart rate, HRV, movement · provenance retained</span></div><small>218 days</small></div><div class="source"><div><strong>Voluntary context</strong><span>Energy, workload and meal timing · never silently inferred</span></div><small>61 days</small></div><div class="source"><div><strong>Health records</strong><span>Background context, not an automatic recommendation</span></div><small>1 report</small></div></section>
+        <div class="main">
           <section class="screen" data-screen="today">
-            <article class="hero-card">
-              <div class="hero-head">
-                <span class="eyebrow">Tuesday · goal: steady daytime energy</span>
-                <h1 id="today-title">Protect a recovery pattern you have already proven.</h1>
-                <p id="today-body">On hard training days, finishing dinner earlier is linked to steadier next-day energy in your own repeated tests.</p>
-              </div>
-              <span class="evidence-pill" id="today-evidence">Personal evidence · moderate</span>
-              <div class="meta-row"><span id="today-meta">218 days · 5 sources · 91% usable</span><span class="dot"></span><button class="text-button" data-open="space" type="button">See why</button></div>
-              <div class="action-row">
-                <div class="action-copy"><span class="muted small" id="action-label">Today’s useful lever</span><strong id="action-copy">Finish dinner by 7:30 pm</strong></div>
-                <button class="primary-button" id="done-button" type="button">Mark done</button>
-              </div>
-            </article>
-
-            <section>
-              <div class="section-heading">
-                <div><span class="eyebrow">Personal Evidence Space</span><h2>One goal, multiple domains, explicit evidence.</h2></div>
-                <button class="text-button" data-open="space" type="button">Explore</button>
-              </div>
-              <div class="space-preview" id="space-preview"></div>
-              <div class="legend" aria-label="Evidence legend"><span class="legend-item"><i class="legend-line observed"></i>Observed</span><span class="legend-item"><i class="legend-line testing"></i>Under test</span><span class="legend-item"><i class="legend-line learned"></i>Personal evidence</span></div>
-            </section>
-
-            <section class="two-up">
-              <article class="soft-panel"><span class="eyebrow">Active inquiry</span><h3 id="today-lab-title">Does a short lunch walk protect afternoon energy?</h3><p id="today-lab-body">A small reversible test that makes uncertainty useful.</p><button class="text-button" data-open="lab" type="button">Open Personal Lab</button></article>
-              <article class="soft-panel"><span class="eyebrow">Compounding value</span><h3 id="today-playbook-title">5 personal learnings</h3><p id="today-playbook-body">OL1 remembers what helped, what did not, and under which conditions.</p><button class="text-button" data-open="playbook" type="button">Open Playbook</button></article>
-            </section>
+            <div class="intro"><span class="eyebrow">Tuesday · goal: steady daytime energy</span><h1 id="today-title">Protect a recovery pattern you have already proven.</h1><p class="lede" id="today-body">On hard training days, an earlier dinner is linked to steadier next-day energy in your own repeated tests.</p></div>
+            <div class="evidence"><strong id="today-evidence">Personal evidence · moderate</strong><span id="today-meta">218 days · 5 sources · 91% usable</span><span class="separator"></span><button class="text-link" data-open="space" type="button">See why</button></div>
+            <div class="action"><div class="action__copy"><span id="action-label">Today’s useful lever</span><strong id="action-copy">Finish dinner by 7:30 pm</strong></div><button class="primary" id="done" type="button">Mark done</button></div>
+            <div class="aside-link"><span>One signal. One small choice. No health score.</span><button class="text-link" data-open="lab" type="button">See the active experiment →</button></div>
           </section>
-
           <section class="screen" data-screen="space" hidden>
-            <div class="section-heading"><div><span class="eyebrow">Personal Evidence Space</span><h2>See the whole system without flattening it into one score.</h2></div><button class="text-button" id="open-data" type="button">Data &amp; control</button></div>
-            <div class="space-canvas" id="space-canvas"></div>
-            <div class="legend" aria-label="Evidence legend"><span class="legend-item"><i class="legend-line observed"></i>Observed</span><span class="legend-item"><i class="legend-line testing"></i>Under test</span><span class="legend-item"><i class="legend-line learned"></i>Personal evidence</span></div>
-            <article class="detail-card" id="detail-card"></article>
+            <div class="intro"><span class="eyebrow">Personal Evidence Space</span><h2>One goal, a few visible relationships.</h2><p class="lede">The map does not diagnose or rank you. It makes clear what is observed, being tested, and personally supported.</p></div>
+            <div class="visual" id="map"></div>
+            <div class="detail" id="detail"></div>
           </section>
-
           <section class="screen" data-screen="lab" hidden>
-            <div class="section-heading"><div><span class="eyebrow">Personal Lab</span><h2>Turn a worthwhile question into a small, honest test.</h2></div><span class="badge test" id="lab-status">Day 6 of 12</span></div>
-            <section class="lab-grid">
-              <article class="lab-card">
-                <div><span class="eyebrow">Active inquiry</span><h3 id="lab-title">10-minute outdoor walk after lunch</h3></div>
-                <p id="lab-question">Does a brief light-and-movement break reduce the afternoon energy dip on desk-heavy days?</p>
-                <dl class="detail-list">
-                  <div><dt>Primary outcome</dt><dd>3 pm energy check-in, supported by sleep continuity and timing.</dd></div>
-                  <div><dt>Designed before starting</dt><dd>Usual → change → usual → change, with missing days and context retained.</dd></div>
-                  <div><dt>Stop condition</dt><dd>Stop if the routine adds burden, worsens symptoms, or produces no decision value.</dd></div>
-                </dl>
-              </article>
-              <article class="lab-card">
-                <div><span class="eyebrow">Evidence so far</span><h3 id="lab-result">Energy is slightly steadier on completed test days. Too early to call.</h3></div>
-                <svg class="spark" viewBox="0 0 320 128" role="img" aria-label="Fixture energy observations over twelve days"><line class="grid" x1="20" y1="28" x2="300" y2="28"></line><line class="grid" x1="20" y1="62" x2="300" y2="62"></line><line class="grid" x1="20" y1="96" x2="300" y2="96"></line><polyline class="line" id="spark-line" points="20,77 45,68 70,73 95,61 120,67 145,48 170,54 195,58 220,46 245,52 270,42 295,48"></polyline><circle class="point" cx="20" cy="77" r="4"></circle><circle class="point" cx="295" cy="48" r="4"></circle></svg>
-                <div class="timeline" aria-label="Experiment phases"><div class="phase complete"><strong>Usual</strong><span>3 days</span></div><div class="phase complete"><strong>Change</strong><span>3 days</span></div><div class="phase complete"><strong>Usual</strong><span>3 days</span></div><div class="phase active"><strong>Change</strong><span>3 days</span></div></div>
-              </article>
-            </section>
-            <article class="lab-card"><div class="checkin-row"><div><span class="eyebrow">One-tap subjective context</span><h3 id="checkin-title">How is your energy at 3 pm?</h3></div><div class="scale" aria-label="Energy from one to five" role="group"><button class="scale-button" data-checkin="1" type="button">1</button><button class="scale-button" data-checkin="2" type="button">2</button><button class="scale-button" data-checkin="3" type="button">3</button><button class="scale-button" data-checkin="4" type="button">4</button><button class="scale-button" data-checkin="5" type="button">5</button></div></div></article>
+            <div class="intro"><span class="eyebrow">Personal Lab</span><h2 id="lab-title">10-minute outdoor walk after lunch</h2><p class="lede" id="lab-question">Does a light-and-movement break reduce the afternoon energy dip on desk-heavy days?</p></div>
+            <div class="experiment"><article class="card card--stack"><div class="timeline"><div class="phase complete"><span>1</span><strong>Choose</strong></div><div class="phase complete"><span>2</span><strong>Compare</strong></div><div class="phase active"><span>3</span><strong>Learn</strong></div><div class="phase"><span>4</span><strong>Keep / stop</strong></div></div><div><span class="eyebrow" id="lab-status">Day 6 of 12</span><p id="lab-result">Energy is slightly steadier on completed test days. Too early to call.</p></div><div class="chart-key"><span><i></i>Energy check-in</span><span>Fixture data · not a clinical measure</span></div><svg class="chart" viewBox="0 0 300 110" preserveAspectRatio="none" aria-label="Fixture energy trend"><line x1="0" y1="22" x2="300" y2="22"/><line x1="0" y1="55" x2="300" y2="55"/><line x1="0" y1="88" x2="300" y2="88"/><polyline id="chart-line" points="10,67 40,60 70,65 100,50 130,56 160,41 190,47 220,39 250,46 290,35"/></svg></article><aside class="card checkin"><div><span class="eyebrow">One-tap input</span><h3 id="checkin-title">How is your energy at 3 pm?</h3></div><div class="score-row" aria-label="Energy check-in"><button class="score" data-checkin="1" type="button">1</button><button class="score" data-checkin="2" type="button">2</button><button class="score" data-checkin="3" type="button">3</button><button class="score" data-checkin="4" type="button">4</button><button class="score" data-checkin="5" type="button">5</button></div><p class="lede" style="font-size:13px">A small subjective input helps the pattern stay yours, not just your wearable’s.</p></aside></div>
           </section>
-
           <section class="screen" data-screen="playbook" hidden>
-            <div class="section-heading"><div><span class="eyebrow">Personal Health Playbook</span><h2>Keep the answers you earned.</h2></div><span class="badge good" id="playbook-count">5 learnings</span></div>
-            <p class="muted" id="playbook-intro">A private record of useful, inconclusive, and negative results. Population guidance does not become personal evidence automatically.</p>
-            <article class="playbook-card" id="playbook-card"></article>
+            <div class="intro"><span class="eyebrow">Personal Health Playbook</span><h2>The answers you have earned.</h2><p class="lede" id="playbook-intro">Useful, inconclusive and negative results are all worth keeping.</p></div><article class="card playbook" id="playbook"></article>
           </section>
-
           <section class="screen" data-screen="ask" hidden>
-            <div class="section-heading"><div><span class="eyebrow">One OL1 assistant · specialized context behind the scenes</span><h2>Ask across your health without inventing certainty.</h2></div><span class="badge">Recovery + movement + nutrition</span></div>
-            <article class="assistant-card">
-              <div class="question-row" role="group" aria-label="Suggested questions"><button class="text-button" data-question="priority" type="button">What matters today?</button><button class="text-button" data-question="why" type="button">Why meal timing?</button><button class="text-button" data-question="uncertain" type="button">What is uncertain?</button></div>
-              <div class="answer"><span class="eyebrow" id="answer-question">What should I prioritize today?</span><p id="answer-body">Protect the earlier dinner window tonight. Today follows a hard training session, and this is one of the few routines with repeated personal evidence for steadier next-day energy.</p><div class="answer-meta"><span>Uses: personal goal, 30-day context, relevant Playbook entries</span><span>Raw values hidden from this answer surface</span></div></div>
-            </article>
-            <section class="two-up"><article class="soft-panel"><span class="eyebrow">May do</span><p>Explain evidence, compare periods, reveal limitations, suggest a small reversible test, and help prepare a clinician-facing summary.</p></article><article class="soft-panel"><span class="eyebrow">May not pretend</span><p>Diagnose, convert weak correlation into causation, hide missing data, or perform provider theatre through multiple coach personas.</p></article></section>
+            <div class="intro"><span class="eyebrow">Ask OL1</span><h2>One calm assistant, grounded in the relevant context.</h2><p class="lede">No visible coach theatre; the answer shows its basis and its limits.</p></div><div class="question-row" aria-label="Suggested questions"><button class="chip" data-question="priority" type="button">What matters today?</button><button class="chip" data-question="why" type="button">Why meal timing?</button><button class="chip" data-question="uncertain" type="button">What remains uncertain?</button></div><article class="card answer"><span class="eyebrow" id="answer-question">What should I prioritize today?</span><p id="answer-body">Protect the earlier dinner window tonight. It is one of the few routines with repeated personal evidence for steadier next-day energy.</p><small>Uses: personal goal, comparable days, relevant Playbook entries · Raw values remain on-device.</small></article><button class="text-link" id="open-data" type="button">Review data and control →</button>
           </section>
         </div>
-
-        <nav class="nav" aria-label="Concept preview navigation"><button aria-current="page" class="nav-button" data-screen-button="today" type="button">Today</button><button class="nav-button" data-screen-button="space" type="button">Space</button><button class="nav-button" data-screen-button="lab" type="button">Lab</button><button class="nav-button" data-screen-button="playbook" type="button">Playbook</button><button class="nav-button" data-screen-button="ask" type="button">Ask</button></nav>
+        <nav class="stepper" aria-label="Concept walkthrough"><button aria-current="step" class="step" data-screen-button="today" type="button">Today</button><button class="step" data-screen-button="space" type="button">Pattern</button><button class="step" data-screen-button="lab" type="button">Experiment</button><button class="step" data-screen-button="playbook" type="button">Playbook</button><button class="step" data-screen-button="ask" type="button">Ask</button></nav>
       </main>
-
-      <footer class="site-footer"><span>OL1 Concept Lab is a deliberately fictional, fixture-only future-state simulation. It is not a product release, native proof, or medical recommendation.</span><span>Designed to test: clarity, desire, trust, and long-term value.</span></footer>
+      <footer class="footer"><span>OL1 Concept Lab is a fictional, fixture-only future-state simulation — not a product release, native proof or medical advice.</span><span>Testing: clarity, desire, trust, long-term value.</span></footer>
     </div>
-
     <script>
       (() => {
-        const state = { stage: 'mature', screen: 'today', selectedNode: 'nutrition', done: false, checkin: null, question: 'priority', guided: false, guideIndex: 0 };
-        const stageContent = {
-          start: { title: 'A useful first question is already visible.', body: 'Late meals and fragmented sleep move together in 12 of 17 comparable nights. That is a testable hypothesis, not a conclusion.', evidence: 'Observation · low certainty', meta: '28 days · 3 sources · 78% usable', actionLabel: 'A possible first question', action: 'Test whether earlier dinners change next-day energy', labTitle: 'Is earlier dinner timing worth testing?', labBody: 'OL1 can propose a controllable question, but you decide whether it is worth your effort.', playbookTitle: 'No conclusions yet — intentionally', playbookBody: 'The first useful result starts the Playbook.', lab: { title: 'Earlier dinner after hard training', question: 'Does finishing dinner earlier after demanding training improve next-day energy?', status: 'Ready to decide', result: 'No data yet. OL1 will not imply a benefit before the test starts.', points: '20,70 45,70 70,70 95,70 120,70 145,70 170,70 195,70 220,70 245,70 270,70 295,70' } },
-          learning: { title: 'Your first test is producing a clearer signal.', body: 'Earlier dinner nights have shown less fragmented sleep so far. The effect on next-day energy is still uncertain.', evidence: 'Experiment in progress', meta: '71 days · 4 sources · 86% usable', actionLabel: 'Today’s measurement', action: 'Log energy at 3 pm', labTitle: 'Does earlier dinner protect next-day energy?', labBody: 'One structured test is becoming useful, even before it delivers a conclusion.', playbookTitle: '1 personal learning', playbookBody: 'OL1 starts to preserve the conditions behind an emerging pattern.', lab: { title: 'Earlier dinner after hard training', question: 'Does finishing dinner earlier after demanding training improve next-day energy?', status: 'Day 9 of 14', result: 'Sleep continuity is moving in the expected direction; daytime energy is still mixed.', points: '20,82 45,72 70,78 95,59 120,64 145,51 170,68 195,49 220,54 245,44 270,52 295,45' } },
-          mature: { title: 'Protect a recovery pattern you have already proven.', body: 'On hard training days, finishing dinner earlier is linked to steadier next-day energy in your own repeated tests.', evidence: 'Personal evidence · moderate', meta: '218 days · 5 sources · 91% usable', actionLabel: 'Today’s useful lever', action: 'Finish dinner by 7:30 pm', labTitle: 'Does a short lunch walk protect afternoon energy?', labBody: 'A small reversible test that makes uncertainty useful.', playbookTitle: '5 personal learnings', playbookBody: 'OL1 remembers what helped, what did not, and under which conditions.', lab: { title: '10-minute outdoor walk after lunch', question: 'Does a brief light-and-movement break reduce the afternoon energy dip on desk-heavy days?', status: 'Day 6 of 12', result: 'Energy is slightly steadier on completed test days. Too early to call.', points: '20,77 45,68 70,73 95,61 120,67 145,48 170,54 195,58 220,46 245,52 270,42 295,48' } }
+        const state={screen:'today',stage:'mature',node:'nutrition',done:false,checkin:null,question:'priority',guide:0};
+        const stages={
+          start:{title:'A useful first question is already visible.',body:'Late meals and fragmented sleep move together in 12 of 17 comparable nights. That is a testable hypothesis, not a conclusion.',evidence:'Observation · low certainty',meta:'28 days · 3 sources · 78% usable',label:'A possible first question',action:'Test whether earlier dinners change next-day energy',labTitle:'Earlier dinner after hard training',labQuestion:'Could an earlier dinner improve next-day energy after demanding training?',status:'Ready to decide',result:'No data yet. OL1 will not imply a benefit before a test starts.',line:'10,70 40,70 70,70 100,70 130,70 160,70 190,70 220,70 250,70 290,70'},
+          learning:{title:'Your first test is producing a clearer signal.',body:'Earlier dinner nights have shown less fragmented sleep so far. The effect on next-day energy is still uncertain.',evidence:'Experiment in progress',meta:'71 days · 4 sources · 86% usable',label:'Today’s measurement',action:'Log energy at 3 pm',labTitle:'Earlier dinner after hard training',labQuestion:'Does finishing dinner earlier after demanding training improve next-day energy?',status:'Day 9 of 14',result:'Sleep continuity is moving in the expected direction; daytime energy is still mixed.',line:'10,78 40,69 70,75 100,57 130,63 160,49 190,58 220,45 250,51 290,42'},
+          mature:{title:'Protect a recovery pattern you have already proven.',body:'On hard training days, an earlier dinner is linked to steadier next-day energy in your own repeated tests.',evidence:'Personal evidence · moderate',meta:'218 days · 5 sources · 91% usable',label:'Today’s useful lever',action:'Finish dinner by 7:30 pm',labTitle:'10-minute outdoor walk after lunch',labQuestion:'Does a light-and-movement break reduce the afternoon energy dip on desk-heavy days?',status:'Day 6 of 12',result:'Energy is slightly steadier on completed test days. Too early to call.',line:'10,67 40,60 70,65 100,50 130,56 160,41 190,47 220,39 250,46 290,35'}
         };
-        const nodeDetails = {
-          goal: { role: 'Personal outcome', title: 'Steady daytime energy', now: 'Your central goal stays stable while the surrounding evidence changes.', changed: 'Low-energy afternoons fell from 3.1 to 1.8 days per week across the fixture period.', testing: 'Which routines protect energy when training load rises?', trust: 'Outcome combines a one-tap check-in with sleep and activity context.' },
-          recovery: { role: 'Outcome hub', title: 'Energy & Recovery', now: 'Sleep timing is stable; fragmentation rises mainly after late hard sessions.', changed: 'Your baseline is more precise because OL1 has six months of comparable nights.', testing: 'Whether a short lunch walk changes afternoon energy independently of sleep.', trust: 'Sleep stages are treated as estimates; duration, timing, continuity, and your own energy carry more weight.' },
-          movement: { role: 'Context hub', title: 'Movement & Performance', now: 'Training load is balanced overall, with two recurring late-evening sessions.', changed: 'Late hard sessions are now treated as context, not automatically as a problem.', testing: 'Whether moving one hard session earlier protects sleep without reducing performance.', trust: 'Workout source and timestamps originate from Health Connect; perceived exertion remains optional.' },
-          nutrition: { role: 'Contributor hub', title: 'Nutrition & Metabolism', now: 'Meal timing is currently more actionable than calorie or macro estimates.', changed: 'Repeated tests support earlier dinners specifically after demanding training days.', testing: 'No new nutrition test is active; OL1 avoids collecting more food detail without a clear question.', trust: 'Timing is self-reported. No food-photo estimate is presented as measured intake.' },
-          mind: { role: 'Context lens', title: 'Mind & Context', now: 'High-workload days alter how energy check-ins are interpreted.', changed: 'Your own workload check-ins explain some low-energy days that biometrics alone did not.', testing: 'No mental-health inference is made from screen time or app usage.', trust: 'Subjective context is explicit and voluntary; it is not converted into a diagnosis.' },
-          markers: { role: 'Background evidence', title: 'Health Records & Markers', now: 'One lab report is available as context but does not drive today’s suggestion.', changed: 'No material change is simulated.', testing: 'None. OL1 does not invent an action when no defensible one follows.', trust: 'Report date, source, reference range, and extraction confidence remain visible.' }
-        };
-        const playbook = {
-          start: [],
-          learning: [{ title: 'Earlier dinner after hard training', badge: 'Still learning', type: 'test', body: 'Sleep continuity is improving in the active test; next-day energy remains uncertain.', scope: '9 test days · no conclusion yet' }],
-          mature: [
-            { title: 'Earlier dinner after hard training', badge: 'Likely helpful for me', type: 'good', body: 'Repeated A/B periods were followed by less fragmented sleep and steadier next-day energy.', scope: 'Applies when training ends before 6:30 pm · 26 comparable nights · moderate certainty' },
-            { title: 'Morning outdoor light', badge: 'Promising', type: 'test', body: 'Sleep timing moved earlier, but the energy effect is not yet clear.', scope: '18 paired days · one structured test · low-to-moderate certainty' },
-            { title: 'Fixed screen cut-off', badge: 'No clear personal effect', type: 'neutral', body: 'One completed test did not show a meaningful change in sleep continuity.', scope: 'Useful negative result · avoids repeating an unhelpful routine' },
-            { title: 'Late hard workouts', badge: 'Observed pattern', type: '', body: 'Sleep onset is usually later after sessions ending after 8:30 pm.', scope: 'Observation only · workload and schedule may also contribute' }
-          ]
-        };
-        const answers = {
-          priority: { question: 'What should I prioritize today?', body: 'Protect the earlier dinner window tonight. Today follows a hard training session, and this is one of the few routines with repeated personal evidence for steadier next-day energy.' },
-          why: { question: 'Why do you think dinner timing matters?', body: 'In comparable training days, later meals and more fragmented sleep often occurred together. A later structured test strengthened that pattern, but workload, meal composition, and schedule still limit certainty.' },
-          uncertain: { question: 'What is still uncertain?', body: 'Whether dinner timing itself causes the change, how much the effect depends on training intensity, and whether the same pattern applies during travel or high-workload weeks.' }
-        };
-
-        const screenLabels = { today: ['Today', 'One relevant question, not another score'], space: ['Personal Evidence Space', 'A map of evidence, not a health score'], lab: ['Personal Lab', 'Small tests, honest outcomes'], playbook: ['Personal Health Playbook', 'The answers you earned'], ask: ['Ask OL1', 'A grounded assistant, not coach theatre'] };
-
-        function mapMarkup(compact) {
-          const stateClass = state.stage === 'mature' ? 'learned' : state.stage === 'learning' ? 'testing' : 'observed';
-          return `<svg class="space-svg" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true"><line class="edge ${stateClass}" x1="50" y1="13" x2="50" y2="51"></line><line class="edge ${state.stage === 'mature' ? 'learned' : 'observed'}" x1="85" y1="38" x2="50" y2="13"></line><line class="edge ${state.stage === 'start' ? 'observed' : 'testing'}" x1="15" y1="38" x2="50" y2="13"></line><line class="edge observed" x1="75" y1="80" x2="50" y2="51"></line><line class="edge observed" x1="25" y1="80" x2="50" y2="51"></line></svg><button class="node recovery" data-node="recovery" type="button">Recovery</button><button class="node nutrition" data-node="nutrition" type="button">Nutrition</button><button class="node mind" data-node="mind" type="button">Mind</button><button class="node markers" data-node="markers" type="button">Markers</button><button class="node movement" data-node="movement" type="button">Movement</button><button class="node goal" data-node="goal" type="button">Steady energy</button><div class="space-caption">${compact ? (state.stage === 'mature' ? 'Solid paths are learned. Bright green is relevant today.' : 'Your goal anchors the map; relationships remain provisional.') : 'Select a domain to see what OL1 knows, what changed, and what remains uncertain.'}</div>`;
-        }
-
-        function render() {
-          const content = stageContent[state.stage];
-          document.querySelector('#today-title').textContent = content.title;
-          document.querySelector('#today-body').textContent = content.body;
-          document.querySelector('#today-evidence').textContent = content.evidence;
-          document.querySelector('#today-meta').textContent = content.meta;
-          document.querySelector('#action-label').textContent = content.actionLabel;
-          document.querySelector('#action-copy').textContent = state.done ? 'Marked complete' : content.action;
-          document.querySelector('#done-button').textContent = state.done ? 'Undo' : 'Mark done';
-          document.querySelector('#today-lab-title').textContent = content.labTitle;
-          document.querySelector('#today-lab-body').textContent = content.labBody;
-          document.querySelector('#today-playbook-title').textContent = content.playbookTitle;
-          document.querySelector('#today-playbook-body').textContent = content.playbookBody;
-          document.querySelector('#space-preview').innerHTML = mapMarkup(true);
-          document.querySelector('#space-canvas').innerHTML = mapMarkup(false);
-
-          const detail = nodeDetails[state.selectedNode];
-          document.querySelector('#detail-card').innerHTML = `<div class="section-heading"><div><span class="eyebrow">${detail.role}</span><h3>${detail.title}</h3></div><button class="text-button" data-open="ask" type="button">Ask OL1</button></div><dl class="detail-list"><div><dt>What OL1 sees now</dt><dd>${detail.now}</dd></div><div><dt>What changed</dt><dd>${detail.changed}</dd></div><div><dt>What is being tested</dt><dd>${detail.testing}</dd></div><div><dt>Why to trust this framing</dt><dd>${detail.trust}</dd></div></dl>`;
-
-          document.querySelector('#lab-title').textContent = content.lab.title;
-          document.querySelector('#lab-question').textContent = content.lab.question;
-          document.querySelector('#lab-status').textContent = content.lab.status;
-          document.querySelector('#lab-result').textContent = content.lab.result;
-          document.querySelector('#spark-line').setAttribute('points', content.lab.points);
-          document.querySelector('#checkin-title').textContent = state.checkin ? `Energy logged: ${state.checkin} of 5` : 'How is your energy at 3 pm?';
-          document.querySelectorAll('[data-checkin]').forEach(button => button.setAttribute('aria-pressed', String(Number(button.dataset.checkin) === state.checkin)));
-
-          const entries = playbook[state.stage];
-          document.querySelector('#playbook-count').textContent = `${entries.length} learning${entries.length === 1 ? '' : 's'}`;
-          document.querySelector('#playbook-intro').textContent = entries.length ? 'A private record of useful, inconclusive, and negative results. Population guidance does not become personal evidence automatically.' : 'OL1 deliberately starts with no conclusions. The first test is allowed to be useful before it is impressive.';
-          document.querySelector('#playbook-card').innerHTML = entries.length ? entries.map(entry => `<article class="playbook-entry"><div class="playbook-title"><strong>${entry.title}</strong><span class="badge ${entry.type}">${entry.badge}</span></div><p>${entry.body}</p><span class="muted small">${entry.scope}</span></article>`).join('') : `<article class="playbook-entry"><h3>No conclusions yet — intentionally.</h3><p>OL1 has enough history to suggest a useful question, not enough personal evidence to claim what works.</p></article>`;
-
-          const answer = answers[state.question];
-          document.querySelector('#answer-question').textContent = answer.question;
-          document.querySelector('#answer-body').textContent = state.stage === 'start' && state.question === 'priority' ? 'Choose one low-burden question to test. Meal timing is the clearest candidate, but OL1 does not yet know whether changing it will help you.' : answer.body;
-          document.querySelectorAll('[data-question]').forEach(button => button.setAttribute('aria-pressed', String(button.dataset.question === state.question)));
-
-          document.querySelectorAll('[data-stage]').forEach(button => button.setAttribute('aria-pressed', String(button.dataset.stage === state.stage)));
-          document.querySelectorAll('[data-screen-button]').forEach(button => button.setAttribute('aria-current', button.dataset.screenButton === state.screen ? 'page' : 'false'));
-          document.querySelectorAll('[data-screen]').forEach(section => { section.hidden = section.dataset.screen !== state.screen; });
-          const [title, subtitle] = screenLabels[state.screen];
-          document.querySelector('#screen-title').textContent = title;
-          document.querySelector('#screen-subtitle').textContent = subtitle;
-          document.querySelectorAll('[data-node]').forEach(button => button.setAttribute('aria-pressed', String(button.dataset.node === state.selectedNode)));
-        }
-
-        document.addEventListener('click', event => {
-          const stageButton = event.target.closest('[data-stage]');
-          if (stageButton) { state.stage = stageButton.dataset.stage; state.done = false; state.checkin = null; render(); return; }
-          const screenButton = event.target.closest('[data-screen-button], [data-open]');
-          if (screenButton) { state.screen = screenButton.dataset.screenButton || screenButton.dataset.open; render(); return; }
-          const nodeButton = event.target.closest('[data-node]');
-          if (nodeButton) { state.selectedNode = nodeButton.dataset.node; state.screen = 'space'; render(); return; }
-          const checkinButton = event.target.closest('[data-checkin]');
-          if (checkinButton) { state.checkin = Number(checkinButton.dataset.checkin); render(); return; }
-          const questionButton = event.target.closest('[data-question]');
-          if (questionButton) { state.question = questionButton.dataset.question; render(); return; }
-          if (event.target.closest('#done-button')) { state.done = !state.done; render(); return; }
-          if (event.target.closest('#open-data')) { document.querySelector('#data-card').hidden = false; return; }
-          if (event.target.closest('#close-data')) { document.querySelector('#data-card').hidden = true; return; }
-          if (event.target.closest('#guide-button')) {
-            const sequence = [ ['today', 'mature'], ['space', 'mature'], ['lab', 'learning'], ['playbook', 'mature'], ['ask', 'mature'] ];
-            const [screen, stage] = sequence[state.guideIndex % sequence.length];
-            state.screen = screen; state.stage = stage; state.guideIndex += 1; render();
-            document.querySelector('#guide-button').textContent = state.guideIndex % sequence.length === 0 ? 'Start guided journey' : 'Next moment';
-          }
-        });
-
-        render();
+        const nodes={goal:{role:'Personal outcome',title:'Steady daytime energy',now:'Your central goal stays stable while the surrounding evidence changes.',change:'Low-energy afternoons fell from 3.1 to 1.8 days per week in this fixture period.',limit:'Outcome combines a voluntary check-in with sleep and activity context.'},recovery:{role:'Outcome hub',title:'Energy & recovery',now:'Sleep timing is stable; fragmentation rises mainly after late hard sessions.',change:'Six months of comparable nights makes the baseline more precise.',limit:'Sleep stages are estimates; timing, continuity and your own energy carry more weight.'},nutrition:{role:'Contributor hub',title:'Nutrition & metabolism',now:'Meal timing is more actionable here than calorie or macro estimates.',change:'Repeated tests support earlier dinners after demanding training days.',limit:'Timing is self-reported. No food-photo estimate is treated as measured intake.'},mind:{role:'Context lens',title:'Mind & context',now:'High-workload days alter how energy check-ins are interpreted.',change:'Voluntary workload context explains some low-energy days biometrics did not.',limit:'No mental-health inference is made from app or screen use.'},movement:{role:'Context hub',title:'Movement & performance',now:'Training load is balanced, with two recurring late-evening sessions.',change:'Late sessions are context, not automatically a problem.',limit:'Workout time comes from Health Connect; perceived exertion is optional.'}};
+        const learnings={start:[],learning:[['Earlier dinner after hard training','Still learning','test','Sleep continuity is improving; next-day energy is still uncertain.','9 test days · no conclusion yet']],mature:[['Earlier dinner after hard training','Likely helpful for me','good','Repeated A/B periods were followed by less fragmented sleep and steadier next-day energy.','26 comparable nights · moderate certainty'],['Morning outdoor light','Promising','test','Sleep timing moved earlier, but the energy effect is not yet clear.','18 paired days · still learning'],['Fixed screen cut-off','No clear personal effect','neutral','A completed test did not show meaningful change in sleep continuity.','Useful negative result · avoids repeating it']]};
+        const answers={priority:['What should I prioritize today?','Protect the earlier dinner window tonight. It is one of the few routines with repeated personal evidence for steadier next-day energy.'],why:['Why do you think dinner timing matters?','On comparable training days, later meals and more fragmented sleep occurred together. A structured test strengthened the pattern, but workload and schedule still limit certainty.'],uncertain:['What remains uncertain?','Whether dinner timing itself causes the change, how much training intensity matters, and whether this pattern applies during travel or high-workload weeks.']};
+        const labels={today:['Today','One useful decision, made calmly'],space:['Pattern','A map of evidence, not a health score'],lab:['Experiment','Small tests, honest outcomes'],playbook:['Playbook','The answers you earned'],ask:['Ask OL1','Grounded help, not coach theatre']};
+        function map(){const mode=state.stage==='mature'?'':'testing';return `<div class="halo"></div><i class="map-line a"></i><i class="map-line b ${mode}"></i><i class="map-line c observed"></i><i class="map-line d observed"></i><button class="orb recovery" data-node="recovery" type="button">Recovery</button><button class="orb nutrition" data-node="nutrition" type="button">Nutrition</button><button class="orb mind" data-node="mind" type="button">Context</button><button class="orb movement" data-node="movement" type="button">Movement</button><button class="orb goal" data-node="goal" type="button">Steady energy</button><span class="visual-caption">Green = supported personally · blue = under test · dashed = observed only</span>`}
+        function render(){const c=stages[state.stage],d=nodes[state.node],[t,s]=labels[state.screen];document.querySelector('#screen-title').textContent=t;document.querySelector('#screen-subtitle').textContent=s;document.querySelector('#today-title').textContent=c.title;document.querySelector('#today-body').textContent=c.body;document.querySelector('#today-evidence').textContent=c.evidence;document.querySelector('#today-meta').textContent=c.meta;document.querySelector('#action-label').textContent=c.label;document.querySelector('#action-copy').textContent=state.done?'Marked complete':c.action;document.querySelector('#done').textContent=state.done?'Undo':'Mark done';document.querySelector('#lab-title').textContent=c.labTitle;document.querySelector('#lab-question').textContent=c.labQuestion;document.querySelector('#lab-status').textContent=c.status;document.querySelector('#lab-result').textContent=c.result;document.querySelector('#chart-line').setAttribute('points',c.line);document.querySelector('#checkin-title').textContent=state.checkin?`Energy logged: ${state.checkin} of 5`:'How is your energy at 3 pm?';document.querySelector('#map').innerHTML=map();document.querySelector('#detail').innerHTML=`<span class="eyebrow">${d.role}</span><h3>${d.title}</h3><p>${d.now}</p><div class="detail-grid"><div><span>What changed</span><strong>${d.change}</strong></div><div><span>What stays open</span><strong>${state.stage==='mature'?'A new, small question':'The relationship needs more comparable days'}</strong></div><div><span>Trust boundary</span><strong>${d.limit}</strong></div></div>`;document.querySelectorAll('[data-node]').forEach(x=>x.setAttribute('aria-pressed',String(x.dataset.node===state.node)));const list=learnings[state.stage];document.querySelector('#playbook-intro').textContent=list.length?'Useful, inconclusive and negative results are all worth keeping.':'No conclusions yet — the first useful test is allowed to be unremarkable.';document.querySelector('#playbook').innerHTML=list.length?list.map(x=>`<article class="play"><div class="playbook-head"><strong>${x[0]}</strong><span class="badge ${x[2]}">${x[1]}</span></div><p>${x[3]}</p><small>${x[4]}</small></article>`).join(''):`<article class="play"><h3>No conclusions yet — intentionally.</h3><p>OL1 has enough history to suggest a question, not enough evidence to claim what works.</p></article>`;const a=answers[state.question];document.querySelector('#answer-question').textContent=a[0];document.querySelector('#answer-body').textContent=state.stage==='start'&&state.question==='priority'?'Choose one low-burden question to test. Meal timing is a candidate, but OL1 does not know whether changing it will help you yet.':a[1];document.querySelectorAll('[data-question]').forEach(x=>x.setAttribute('aria-pressed',String(x.dataset.question===state.question)));document.querySelectorAll('[data-checkin]').forEach(x=>x.setAttribute('aria-pressed',String(Number(x.dataset.checkin)===state.checkin)));document.querySelectorAll('[data-stage]').forEach(x=>x.setAttribute('aria-pressed',String(x.dataset.stage===state.stage)));document.querySelectorAll('[data-screen]').forEach(x=>x.hidden=x.dataset.screen!==state.screen);document.querySelectorAll('[data-screen-button]').forEach(x=>x.setAttribute('aria-current',x.dataset.screenButton===state.screen?'step':'false'))}
+        document.addEventListener('click',e=>{const stage=e.target.closest('[data-stage]');if(stage){state.stage=stage.dataset.stage;state.done=false;state.checkin=null;render();return}const screen=e.target.closest('[data-screen-button],[data-open]');if(screen){state.screen=screen.dataset.screenButton||screen.dataset.open;render();return}const node=e.target.closest('[data-node]');if(node){state.node=node.dataset.node;render();return}const score=e.target.closest('[data-checkin]');if(score){state.checkin=Number(score.dataset.checkin);render();return}const question=e.target.closest('[data-question]');if(question){state.question=question.dataset.question;render();return}if(e.target.closest('#done')){state.done=!state.done;render();return}if(e.target.closest('#open-data')){document.querySelector('#data').hidden=false;return}if(e.target.closest('#close-data')){document.querySelector('#data').hidden=true;return}if(e.target.closest('#guide')){const steps=[['today','mature'],['space','mature'],['lab','learning'],['playbook','mature'],['ask','mature']],[screen,stage]=steps[state.guide%steps.length];state.screen=screen;state.stage=stage;state.guide++;e.target.textContent=state.guide%steps.length?'Next moment':'Start walkthrough';render()}});render();
       })();
     </script>
   </body>
