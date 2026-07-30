@@ -1,6 +1,6 @@
 # Product specification
 
-## Confirmed
+## Bestätigt
 
 - OL1 is initially an Android-first application.
 - The first reference and physical test device is a OnePlus 13R.
@@ -13,7 +13,7 @@
 - The existing application, data, identifiers, signing, builds, and infrastructure remain unchanged.
 - `com.onel1fe.mobile` is reserved only as a possible later Android production upgrade path.
 
-## Open
+## Offen
 
 - Product structure, screens, navigation, and user flows.
 - Final health metrics and permissions beyond the bootstrap steps smoke test.
@@ -22,7 +22,7 @@
 - Production cutover, signing, store distribution, and EAS Update.
 - AI, file import, background work, telemetry, and external integrations.
 
-## Rejected
+## Verworfen
 
 - Treating Legacy code or documentation as current product truth.
 - Forking, importing, or copying Legacy history into OL1.
