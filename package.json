@@ -1,0 +1,55 @@
+{
+  "name": "ol1",
+  "main": "expo-router/entry",
+  "version": "0.1.0",
+  "packageManager": "npm@11.6.2",
+  "engines": {
+    "node": "22.13.x",
+    "npm": "11.6.x"
+  },
+  "dependencies": {
+    "expo": "~57.0.9",
+    "expo-build-properties": "~57.0.8",
+    "expo-constants": "~57.0.8",
+    "expo-dev-client": "~57.0.10",
+    "expo-health-connect": "0.1.1",
+    "expo-linking": "~57.0.4",
+    "expo-router": "~57.0.9",
+    "expo-splash-screen": "~57.0.5",
+    "expo-sqlite": "~57.0.1",
+    "expo-status-bar": "~57.0.1",
+    "react": "19.2.3",
+    "react-dom": "19.2.3",
+    "react-native": "0.86.2",
+    "react-native-health-connect": "3.5.3",
+    "react-native-safe-area-context": "~5.7.0",
+    "react-native-screens": "~4.26.0",
+    "react-native-web": "~0.21.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.20.1",
+    "@types/react": "~19.2.2",
+    "eslint": "^9.39.5",
+    "eslint-config-expo": "^57.0.1",
+    "tsx": "^4.23.1",
+    "typescript": "~6.0.3"
+  },
+  "scripts": {
+    "start": "APP_VARIANT=development expo start --dev-client",
+    "start:preview": "APP_VARIANT=preview expo start --dev-client",
+    "android": "APP_VARIANT=development expo run:android",
+    "ios": "APP_VARIANT=development expo run:ios",
+    "web": "APP_VARIANT=preview expo start --web",
+    "typecheck": "tsc --noEmit",
+    "lint": "expo lint",
+    "test": "tsx --test tests/*.test.ts",
+    "check:boundaries": "node scripts/check-boundaries.mjs",
+    "check:sensitive": "node scripts/check-sensitive-content.mjs",
+    "export:web": "APP_VARIANT=preview expo export --platform web --output-dir dist",
+    "doctor": "APP_VARIANT=development npx expo-doctor@latest",
+    "prebuild:android": "APP_VARIANT=development expo prebuild --platform android --clean",
+    "prebuild:ios": "APP_VARIANT=development expo prebuild --platform ios --clean",
+    "check": "npm run typecheck && npm run lint && npm run test && npm run check:boundaries && npm run check:sensitive && npm run export:web"
+  },
+  "private": true
+}
