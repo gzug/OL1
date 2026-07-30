@@ -2,7 +2,7 @@
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "buildCommand": "npm run export:web",
   "outputDirectory": "dist",
-  "installCommand": "npm ci",
+  "installCommand": "npm_config_engine_strict=false npm ci",
   "headers": [
     {
       "source": "/(.*)",
