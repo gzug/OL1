@@ -3,10 +3,11 @@
   "buildCommand": "npm run export:web",
   "outputDirectory": "dist",
   "installCommand": "npm_config_engine_strict=false npm ci",
-  "rewrites": [
+  "redirects": [
     {
       "source": "/",
-      "destination": "/concept-lab.html"
+      "destination": "/concept-lab.html",
+      "permanent": false
     }
   ],
   "headers": [
