@@ -7,7 +7,7 @@ features.
 ## Requirements
 
 - Node 22.13.1
-- npm 11.6.x
+- npm 10.9.x
 - Android Studio/JDK 17 for local Android builds
 - Xcode 26.4+ for local iOS builds, or EAS Build for the configured simulator proof
 

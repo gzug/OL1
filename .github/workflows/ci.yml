@@ -15,6 +15,6 @@ jobs:
         with:
           node-version-file: .node-version
           cache: npm
-      - run: npm install --global npm@11.6.2
+      - run: npm install --global npm@10.9.2
       - run: npm ci
       - run: npm run check

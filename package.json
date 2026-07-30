@@ -2,10 +2,10 @@
   "name": "ol1",
   "main": "expo-router/entry",
   "version": "0.1.0",
-  "packageManager": "npm@11.6.2",
+  "packageManager": "npm@10.9.2",
   "engines": {
     "node": "22.13.x",
-    "npm": "11.6.x"
+    "npm": "10.9.x"
   },
   "dependencies": {
     "expo": "~57.0.9",
@@ -46,7 +46,7 @@
     "check:boundaries": "node scripts/check-boundaries.mjs",
     "check:sensitive": "node scripts/check-sensitive-content.mjs",
     "export:web": "APP_VARIANT=preview expo export --platform web --output-dir dist",
-    "doctor": "APP_VARIANT=development npx expo-doctor@latest",
+    "doctor": "APP_VARIANT=development npm exec --yes --package expo-doctor@latest -- expo-doctor",
     "prebuild:android": "APP_VARIANT=development expo prebuild --platform android --clean",
     "prebuild:ios": "APP_VARIANT=development expo prebuild --platform ios --clean",
     "check": "npm run typecheck && npm run lint && npm run test && npm run check:boundaries && npm run check:sensitive && npm run export:web"

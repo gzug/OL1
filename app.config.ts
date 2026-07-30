@@ -43,6 +43,10 @@ export default ({ config }: ConfigContext): ExpoConfig => {
     ios: {
       ...config.ios,
       bundleIdentifier: variant.bundleIdentifier,
+      infoPlist: {
+        ...config.ios?.infoPlist,
+        ITSAppUsesNonExemptEncryption: false,
+      },
       supportsTablet: false,
     },
     android: {
