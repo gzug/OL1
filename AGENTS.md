@@ -33,3 +33,15 @@ npm run prebuild:ios
 - Use CNG and reviewed config plugins; do not hand-edit generated `android/` or `ios/` files.
 - Access Legacy only after explicit authorization.
 - Document durable truths only. Do not add parallel checkpoint, session, memory, or skill systems.
+- Both owners are non-developers. Say what changed and what it costs, in plain language.
+
+## Commits and removals
+
+- Every commit carries an `Agent:` trailer (`claude-code`, `codex`, `gemini`, `none`). The author
+  field does not survive a squash merge; a trailer does.
+- Removing a stated rule, constraint, or product decision needs an entry in `docs/decisions/`.
+  The commit message says what changed; the entry says why the previous answer stopped being right.
+- A rule worth having is a check. Guards have no environment-variable escape hatch — an exemption
+  belongs in a diff someone can review.
+- Before believing a new guard, feed it a known violation and watch it go red. An empty baseline
+  and a blind gate look identical.

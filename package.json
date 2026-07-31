@@ -45,11 +45,13 @@
     "test": "tsx --test tests/*.test.ts",
     "check:boundaries": "node scripts/check-boundaries.mjs",
     "check:sensitive": "tsx scripts/check-sensitive-content.ts",
+    "check:rationale": "tsx scripts/check-change-rationale.ts",
+    "check:trailers": "tsx scripts/check-commit-trailers.ts",
     "export:web": "APP_VARIANT=preview expo export --platform web --output-dir dist",
     "doctor": "APP_VARIANT=development npm exec --yes --package expo-doctor@latest -- expo-doctor",
     "prebuild:android": "APP_VARIANT=development expo prebuild --platform android --clean",
     "prebuild:ios": "APP_VARIANT=development expo prebuild --platform ios --clean",
-    "check": "npm run typecheck && npm run lint && npm run test && npm run check:boundaries && npm run check:sensitive && npm run export:web"
+    "check": "node scripts/run-check.mjs"
   },
   "private": true
 }
