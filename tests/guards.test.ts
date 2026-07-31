@@ -111,5 +111,7 @@ test('the agent instruction files stay short enough to be read', () => {
     .join('\n')
     .split('\n').length;
 
-  assert.ok(lines <= 60, `AGENTS.md + CLAUDE.md are ${lines} lines; the cap is 60`);
+  // 60 was a guess made when these files held enforcement rules only. Raised to 75 on 2026-07-31
+  // for the owner-communication section; published guidance puts the real risk nearer 200.
+  assert.ok(lines <= 75, `AGENTS.md + CLAUDE.md are ${lines} lines; the cap is 75`);
 });
