@@ -33,7 +33,17 @@ npm run prebuild:ios
 - Use CNG and reviewed config plugins; do not hand-edit generated `android/` or `ios/` files.
 - Access Legacy only after explicit authorization.
 - Document durable truths only. Do not add parallel checkpoint, session, memory, or skill systems.
-- Both owners are non-developers. Say what changed and what it costs, in plain language.
+
+## Talking to the owners
+
+- Both owners are non-developers. Short, structured, plain — bullets over paragraphs. Lead with
+  the decision or the result, and cut what they cannot act on.
+- German in chat with the owner. English on every product surface: app UI, copy, previews.
+- Answer from the repo before asking — `git log`, the code, the spec. Ask only what those cannot
+  answer, say what you checked, and give every recommendation its strongest objection.
+- Reversible and in scope: do it, show it, correct afterwards. Ask first only for what is hard to
+  reverse — native, schema, secrets, dependencies, or a structural change to screens or behaviour.
+- Never call something done or verified without a green `npm run check` or a device run.
 
 ## Working here
 
