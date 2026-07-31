@@ -1,10 +1,22 @@
 name: CI
 
+# Runs on every branch, not only on main and open pull requests. Before this, a branch with no
+# pull request had never had a check run against it — which is how four commits of product
+# thinking on codex/concept-lab-preview stayed unchecked.
+#
+# A push to a branch with an open pull request runs twice. That is accepted: correctness over
+# runner minutes, and cancel-in-progress kills superseded runs.
 on:
-  pull_request:
   push:
-    branches:
-      - main
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   check:
@@ -18,3 +30,22 @@ jobs:
       - run: npm install --global npm@10.9.2
       - run: npm ci
       - run: npm run check
+
+  # History checks: they read a range of commits, so they only run where a range exists.
+  pr-guards:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .node-version
+          cache: npm
+      - run: npm ci
+      - name: Every commit says who wrote it
+        run: npm run check:trailers ${{ github.event.pull_request.base.sha }} ${{ github.event.pull_request.head.sha }}
+      - name: Nothing was removed without a recorded reason
+        if: '!cancelled()'
+        run: npm run check:rationale ${{ github.event.pull_request.base.sha }} ${{ github.event.pull_request.head.sha }}
