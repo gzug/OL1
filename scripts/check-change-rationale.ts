@@ -1,5 +1,5 @@
 /**
- * Fails a pull request that removes something without recording why.
+ * Asks for a short note when a change removes a lot.
  *
  * Walks the range COMMIT BY COMMIT. The cumulative diff of a branch hides deletions that were
  * later re-added or shrunk: gzug/ol1's own codex/concept-lab-preview branch reads +107/-0 as a
@@ -11,7 +11,12 @@
 
 import { execFileSync } from 'node:child_process';
 
-import { evaluate, type CommitChange, type FileChange } from './change-rationale';
+import {
+  evaluate,
+  nextDecisionNumber,
+  type CommitChange,
+  type FileChange,
+} from './change-rationale';
 
 function git(args: string[]): string {
   return execFileSync('git', args, { encoding: 'utf8' }).trim();
@@ -66,21 +71,30 @@ function main(): void {
   if (verdict.ok) {
     console.log(
       verdict.findings.length === 0
-        ? 'Change rationale: nothing removed that needs a recorded reason'
-        : `Change rationale: ${verdict.findings.length} removal(s), explained by ${verdict.decisionFiles.join(', ')}`,
+        ? 'Change rationale: nothing large was removed'
+        : `Change rationale: explained by ${verdict.decisionFiles.join(', ')}`,
     );
     return;
   }
 
-  console.error('This change removes things without recording why:\n');
+  const number = nextDecisionNumber(git(['ls-files', 'docs/decisions']).split('\n'));
+
+  console.error('This change removes a lot. Worth a sentence for whoever reads it next.\n');
   for (const finding of verdict.findings) {
-    console.error(`  ${finding.sha} ${finding.subject}`);
-    console.error(`    ${finding.path} — ${finding.reason}\n`);
+    console.error(
+      `  ${finding.path} — ${finding.deletions} lines gone in ${finding.sha} "${finding.subject}"`,
+    );
   }
-  console.error(
-    'Add docs/decisions/NNNN-<slug>.md in this pull request saying why the previous answer',
-    '\nstopped being right. See docs/decisions/README.md. There is no skip flag.',
-  );
+  console.error(`
+Not a rule you broke — a note nobody can reconstruct later. Two minutes:
+
+  cp docs/decisions/TEMPLATE.md docs/decisions/${number}-short-slug.md
+
+Fill in what you removed and why the previous answer stopped being right, then commit it
+alongside this change. Format and examples: docs/decisions/README.md
+
+If this fired on something harmless, that is a bug in the guard — raise the threshold in
+scripts/change-rationale.ts and say so in a decision note. Do not add a way around it.`);
   process.exit(1);
 }
 

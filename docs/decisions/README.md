@@ -1,31 +1,31 @@
 # Decisions
 
-Numbered records of why something changed. Not a log of everything — the trigger is narrow:
+Short notes on why something was removed. Not a log of everything, and not a policy — a prompt at
+the moment you still remember the reason.
 
-**Write an entry when you remove or reverse a stated rule, constraint, or product decision.**
+**Write one when a change removes a lot** (more than 200 lines from a single file). CI asks for it
+and hands you the filename to copy.
 
-Adding things does not need one. Removing does, because a deleted reason is invisible: to the next
-person, and to the next agent, absent evidence and deleted evidence look identical.
+Adding things needs nothing. Removing does, because a deleted reason is invisible: to the next
+person and to the next agent, absent evidence and deleted evidence look identical.
 
-The commit message says what changed. The entry says why the previous answer stopped being right.
+The commit message says what changed. The note says why the previous answer stopped being right.
 "refactor: simplify X" is not a reason.
 
-## Format
+## How
 
-`NNNN-short-slug.md`, four digits, next number wins. Keep it short:
-
-```markdown
-# NNNN — Title
-
-Date: YYYY-MM-DD
-
-## What changed
-
-## Why the previous answer stopped being right
-
-## What this costs
+```sh
+cp docs/decisions/TEMPLATE.md docs/decisions/0002-short-slug.md
 ```
 
-`scripts/check-change-rationale.ts` fails a pull request that removes a lot, or removes anything
-from `AGENTS.md`, `CLAUDE.md`, `README.md`, or `docs/product-spec.md`, without adding an entry
-here. There is no skip flag: writing the reason is the point, not a formality to route around.
+Four digits, next free number, lowercase slug. Keep it to a few sentences — a paragraph you would
+say out loud is better than a page nobody finishes.
+
+## What this gate is and is not
+
+Both owners approve their own pull requests, so this gate is opened by the same person it
+constrains. That is fine and intended. It is a reminder at the right moment, not an approval step,
+and it is worth having for exactly that.
+
+If it fires on something harmless, the fix is to raise the threshold in
+`scripts/change-rationale.ts` — in a diff someone can see. Never add a way around it.

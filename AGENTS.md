@@ -35,13 +35,13 @@ npm run prebuild:ios
 - Document durable truths only. Do not add parallel checkpoint, session, memory, or skill systems.
 - Both owners are non-developers. Say what changed and what it costs, in plain language.
 
-## Commits and removals
+## Working here
 
-- Every commit carries an `Agent:` trailer (`claude-code`, `codex`, `gemini`, `none`). The author
-  field does not survive a squash merge; a trailer does.
-- Removing a stated rule, constraint, or product decision needs an entry in `docs/decisions/`.
-  The commit message says what changed; the entry says why the previous answer stopped being right.
-- A rule worth having is a check. Guards have no environment-variable escape hatch — an exemption
-  belongs in a diff someone can review.
+- Branch names start with whoever is driving: `don/<slug>`, and the agent's own name when it runs
+  unattended (`claude/<slug>`). `main` takes pull requests only.
+- Removing more than 200 lines from a file needs a short note in `docs/decisions/`. The commit
+  message says what changed; the note says why the previous answer stopped being right.
+- A rule worth having is a check. Guards have no environment-variable escape hatch — when one
+  fires on something harmless, tune the guard in a visible diff.
 - Before believing a new guard, feed it a known violation and watch it go red. An empty baseline
   and a blind gate look identical.
