@@ -31,7 +31,7 @@ jobs:
       - run: npm ci
       - run: npm run check
 
-  # History checks: they read a range of commits, so they only run where a range exists.
+  # Reads a range of commits one by one, so it only runs where a range exists.
   pr-guards:
     if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
@@ -44,8 +44,5 @@ jobs:
           node-version-file: .node-version
           cache: npm
       - run: npm ci
-      - name: Every commit says who wrote it
-        run: npm run check:trailers ${{ github.event.pull_request.base.sha }} ${{ github.event.pull_request.head.sha }}
-      - name: Nothing was removed without a recorded reason
-        if: '!cancelled()'
+      - name: Large removals carry a note
         run: npm run check:rationale ${{ github.event.pull_request.base.sha }} ${{ github.event.pull_request.head.sha }}

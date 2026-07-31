@@ -35,7 +35,18 @@ async function main(): Promise<void> {
   }
 
   if (violations.length > 0) {
-    console.error(`Sensitive-content scan failed:\n${violations.join('\n')}`);
+    console.error(`A file looks like it contains a secret or personal health data:\n`);
+    for (const violation of violations) {
+      console.error(`  ${violation}`);
+    }
+    console.error(`
+Remove it from the file, then remove the file from git if it was already added:
+
+  git rm --cached <file>   # then add it to .gitignore
+
+If the match is harmless — a fixture, a type name, an example — the pattern is too broad.
+Fix it in scripts/sensitive-patterns.ts and add the harmless case to
+tests/sensitive-content.test.ts so it stays fixed. Do not skip the scan.`);
     process.exit(1);
   }
 

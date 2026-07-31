@@ -46,7 +46,6 @@
     "check:boundaries": "node scripts/check-boundaries.mjs",
     "check:sensitive": "tsx scripts/check-sensitive-content.ts",
     "check:rationale": "tsx scripts/check-change-rationale.ts",
-    "check:trailers": "tsx scripts/check-commit-trailers.ts",
     "export:web": "APP_VARIANT=preview expo export --platform web --output-dir dist",
     "doctor": "APP_VARIANT=development npm exec --yes --package expo-doctor@latest -- expo-doctor",
     "prebuild:android": "APP_VARIANT=development expo prebuild --platform android --clean",

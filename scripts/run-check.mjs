@@ -38,6 +38,10 @@ for (const { passed, stage } of results) {
 const failed = results.filter((result) => !result.passed);
 if (failed.length > 0) {
   console.error(`\ncheck FAILED: ${failed.map((result) => result.stage).join(', ')}`);
+  console.error(`Re-run just one of them, without waiting for the rest:\n`);
+  for (const { stage } of failed) {
+    console.error(`  npm run ${stage}`);
+  }
   process.exit(1);
 }
 

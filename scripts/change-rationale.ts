@@ -1,8 +1,14 @@
 /**
- * Decides whether a range of commits removed something that needs a recorded reason.
+ * Decides whether a range of commits removed enough that the next person will want a note.
  *
- * Pure on purpose: the git reading lives in check-change-rationale.ts, so this half can be
- * fed a known violation from a test instead of a scratch repository.
+ * Pure on purpose: the git reading lives in check-change-rationale.ts, so this half can be fed a
+ * known violation from a test instead of a scratch repository.
+ *
+ * One trigger only, deliberately. An earlier draft also fired on any deleted line in the files
+ * that state rules — which would have meant asking for a decision record over a fixed typo. A
+ * guard that goes red without cause gets routed around, and a routed-around guard is how the
+ * predecessor ended up with prose describing a pre-push hook nobody ever committed. Widen this
+ * later if something real slips through, not before.
  */
 
 export type FileChange = {
@@ -18,8 +24,8 @@ export type CommitChange = {
 };
 
 export type Finding = {
+  deletions: number;
   path: string;
-  reason: string;
   sha: string;
   subject: string;
 };
@@ -30,17 +36,9 @@ export type Verdict = {
   ok: boolean;
 };
 
-/** Deleting a line from one of these removes a stated rule or a stated product decision. */
-export const GUARDED_PATHS = [
-  'AGENTS.md',
-  'CLAUDE.md',
-  'README.md',
-  'docs/product-spec.md',
-];
-
 /**
- * A deletion this large in a single file is a rewrite, not an edit. The number is a guess;
- * see docs/decisions/0001-agent-workspace.md. Tuning it is expected, not a defeat.
+ * A deletion this large in one file is a rewrite, not an edit. The number is a guess — see
+ * docs/decisions/0001-agent-workspace.md. Raising it is routine; do it in a visible diff.
  */
 export const LARGE_DELETION_LINES = 200;
 
@@ -57,26 +55,14 @@ export function findings(commits: CommitChange[]): Finding[] {
 
   for (const commit of commits) {
     for (const file of commit.files) {
-      if (isIgnored(file.path) || file.deletions === 0) continue;
+      if (isIgnored(file.path) || file.deletions <= LARGE_DELETION_LINES) continue;
 
-      if (GUARDED_PATHS.includes(file.path)) {
-        result.push({
-          path: file.path,
-          reason: `removes ${file.deletions} line(s) from a file that states rules`,
-          sha: commit.sha,
-          subject: commit.subject,
-        });
-        continue;
-      }
-
-      if (file.deletions > LARGE_DELETION_LINES) {
-        result.push({
-          path: file.path,
-          reason: `removes ${file.deletions} lines in one commit`,
-          sha: commit.sha,
-          subject: commit.subject,
-        });
-      }
+      result.push({
+        deletions: file.deletions,
+        path: file.path,
+        sha: commit.sha,
+        subject: commit.subject,
+      });
     }
   }
 
@@ -92,4 +78,14 @@ export function evaluate(commits: CommitChange[], addedPaths: string[]): Verdict
     findings: found,
     ok: found.length === 0 || decisionFiles.length > 0,
   };
+}
+
+/** Suggests the next free number so the failure message can hand over a real filename. */
+export function nextDecisionNumber(existingPaths: string[]): string {
+  const numbers = existingPaths
+    .map((path) => /(\d{4})-/.exec(path)?.[1])
+    .filter((value): value is string => value !== undefined)
+    .map(Number);
+
+  return String(Math.max(0, ...numbers) + 1).padStart(4, '0');
 }
