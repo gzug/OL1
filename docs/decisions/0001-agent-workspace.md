@@ -51,9 +51,10 @@ masking bug it was added to route around.
 - **A commit trailer naming the agent vendor.** Built, then removed before merge. Two scripts and
   a test suite wrote a field nothing downstream reads and no decision depends on — the same defect
   the predecessor review flagged in `focus_choice_log`: written, capped, never read. Half its
-  purpose was that squash-merge destroys the author field; turning squash-merge off fixes that
-  directly, keeps individual commits visible on `main`, and costs one setting. **Which human** made
-  a change is what matters now, and the author field already carries that.
+  purpose was that squash-merge destroys the author field; **rebase merge** fixes that directly —
+  it lands each commit on `main` with its author intact and adds no merge nodes, so history stays
+  readable at agent commit volume. **Which human** made a change is what matters now, and the
+  author field already carries that.
 - **A second trigger on the rationale check** — any deleted line in `AGENTS.md`, `README.md`, or
   `docs/product-spec.md`. It would have demanded a decision record for a fixed typo. A guard that
   goes red without cause gets routed around.
@@ -77,5 +78,6 @@ masking bug it was added to route around.
   the trade: a check that did not run must never look like a check that passed.
 - The rationale check is opened by the same two people it constrains. It is a reminder, not an
   approval step, and is worth having as one.
-- Merge commits instead of squash means `main` carries individual commits. Accepted: that is how
-  authorship survives.
+- Rebase merge instead of squash means `main` carries every individual commit. Accepted: that is
+  how authorship survives, and it is why squash merging is turned off. Merge commits stay enabled
+  for the occasional case that genuinely wants one; rebase is the default.
