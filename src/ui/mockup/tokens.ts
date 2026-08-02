@@ -1,22 +1,17 @@
 /**
- * Mockup tokens. Shared by both screens so the two read as one system.
- *
- * These are the bootstrap screen's colours, kept deliberately: the mockups are meant to look like
- * the same product, not like a separate design exercise. When a real design system lands, this file
- * is the single place it replaces.
+ * Mockup-only constants. Everything with a colour that belongs to the product now comes from
+ * `@/ui/theme` instead — this file holds the two things that deliberately do NOT theme.
  */
 
-export const color = {
-  accent: '#E7FF57',
-  background: '#0A0D12',
-  hairline: '#252C38',
-  /** Deliberately outside the product palette, so the mockup banner cannot be mistaken for UI. */
-  mockup: '#C8A227',
-  surface: '#151A22',
-  surfaceRaised: '#1C222C',
-  text: '#FFFFFF',
-  textMuted: '#AAB2BF',
-  textQuiet: '#7F8998',
+/**
+ * The mockup banner sits outside the palette on purpose, so it cannot be mistaken for product UI.
+ * Both values are fixed rather than themed: the amber is the warning, and the ink is chosen to stay
+ * legible on that amber in light and dark alike. Theming either one would let the banner blend in,
+ * which is the single thing it must never do.
+ */
+export const banner = {
+  background: '#C8A227',
+  ink: '#1B2420',
 } as const;
 
 /** The Android reference size (OnePlus 13R class). On web the mockup refuses to stretch past this. */

@@ -2,8 +2,12 @@
 
 ## Sources of truth
 
-Current source, tests, `README.md`, and `docs/product-spec.md` are authoritative. Legacy code and
-history are not product truth.
+Current source, tests, `README.md`, and `docs/product-spec.md` are authoritative.
+
+Legacy — `github.com/gzug/01-One-L1fe` — is a knowledge base, open to read without asking. Its
+design system, Gemini integration and chat persistence are the reference implementations here, and
+its code comments carry reasoning worth reusing rather than re-deriving. It is still not product
+truth: what the product does comes from the spec, never from what Legacy happened to do.
 
 ## Commands
 
@@ -27,11 +31,12 @@ npm run prebuild:ios
 ## Operating rules
 
 - Keep changes small; add no speculative abstractions or dependencies without a current need.
+- Read what exists — here first, then Legacy — before writing something new. Say what you reused,
+  and when you deliberately did not reuse something, say why.
 - Derive no product, screen, navigation, or data-model assumption from Legacy.
 - Never commit secrets, PHI, keystores, signed builds, or real device data.
 - Screens and routes never import SQLite, Health Connect, provider SDKs, or native infrastructure.
 - Use CNG and reviewed config plugins; do not hand-edit generated `android/` or `ios/` files.
-- Access Legacy only after explicit authorization.
 - Document durable truths only. Do not add parallel checkpoint, session, memory, or skill systems.
 
 ## Talking to the owners

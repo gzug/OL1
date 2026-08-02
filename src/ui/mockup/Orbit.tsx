@@ -1,8 +1,9 @@
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
+import { fontFamily, useTheme } from '@/ui/theme';
+
 import { HUBS, type HubId } from './fixtures';
 import { CENTRE, HUB_RADIUS, ORBIT_RADIUS, STAGE, hubCentre, spoke } from './geometry';
-import { color } from './tokens';
 
 type OrbitProps = {
   onHubPress: (id: HubId) => void;
@@ -12,6 +13,8 @@ type OrbitProps = {
 };
 
 export function Orbit({ onHubPress, selecting, selected }: OrbitProps) {
+  const { colors } = useTheme();
+
   return (
     <View style={styles.stage}>
       {selecting &&
@@ -29,7 +32,9 @@ export function Orbit({ onHubPress, selecting, selected }: OrbitProps) {
                   transform: [{ rotate: line.rotate }],
                   width: line.length,
                 },
-                selected.includes(hub.id) ? styles.spokeOn : styles.spokeOff,
+                selected.includes(hub.id)
+                  ? { backgroundColor: colors.accent, opacity: 0.8 }
+                  : { backgroundColor: colors.border },
               ]}
             />
           );
@@ -37,8 +42,8 @@ export function Orbit({ onHubPress, selecting, selected }: OrbitProps) {
 
       {HUBS.map((hub, index) => {
         const position = hubCentre(index);
-        const isSelected = selected.includes(hub.id);
-        const isDimmed = selecting && !isSelected;
+        const isSelected = selecting && selected.includes(hub.id);
+        const isDimmed = selecting && !selected.includes(hub.id);
 
         return (
           <Pressable
@@ -48,14 +53,18 @@ export function Orbit({ onHubPress, selecting, selected }: OrbitProps) {
             style={({ pressed }) => [
               styles.hub,
               {
+                backgroundColor: isSelected ? colors.accentSoft : colors.surface,
+                borderColor: isSelected ? colors.accentBorder : colors.border,
+                borderWidth: isSelected ? 1.5 : 1,
                 left: position.x - HUB_RADIUS,
                 top: position.y - HUB_RADIUS,
               },
-              selecting && isSelected && styles.hubSelected,
               isDimmed && styles.hubDimmed,
               pressed && styles.hubPressed,
             ]}>
-            <Text style={[styles.hubLabel, isDimmed && styles.hubLabelDimmed]}>{hub.label}</Text>
+            <Text style={[styles.hubLabel, { color: isDimmed ? colors.textSubtle : colors.text }]}>
+              {hub.label}
+            </Text>
           </Pressable>
         );
       })}
@@ -70,10 +79,7 @@ export const ORBIT_RING = ORBIT_RADIUS;
 const styles = StyleSheet.create({
   hub: {
     alignItems: 'center',
-    backgroundColor: color.surface,
-    borderColor: color.hairline,
     borderRadius: HUB_RADIUS,
-    borderWidth: 1,
     height: HUB_RADIUS * 2,
     justifyContent: 'center',
     position: 'absolute',
@@ -83,31 +89,15 @@ const styles = StyleSheet.create({
     opacity: 0.32,
   },
   hubLabel: {
-    color: color.textMuted,
+    fontFamily: fontFamily.medium,
     fontSize: 11,
-    fontWeight: '600',
-  },
-  hubLabelDimmed: {
-    color: color.textQuiet,
   },
   hubPressed: {
     opacity: 0.65,
   },
-  hubSelected: {
-    backgroundColor: color.surfaceRaised,
-    borderColor: color.accent,
-    borderWidth: 1.5,
-  },
   spoke: {
     height: 1,
     position: 'absolute',
-  },
-  spokeOff: {
-    backgroundColor: color.hairline,
-  },
-  spokeOn: {
-    backgroundColor: color.accent,
-    opacity: 0.8,
   },
   stage: {
     height: STAGE,

@@ -1,15 +1,10 @@
-import { SafeAreaView } from 'react-native-safe-area-context';
-
 import { HomeMockup } from '@/ui/mockup/HomeMockup';
-import { MockupFrame } from '@/ui/mockup/MockupFrame';
-import { color } from '@/ui/mockup/tokens';
+import { MockupScreen } from '@/ui/mockup/MockupScreen';
 
 export default function HomeRoute() {
   return (
-    <SafeAreaView edges={['top', 'bottom']} style={{ backgroundColor: color.background, flex: 1 }}>
-      <MockupFrame>
-        <HomeMockup />
-      </MockupFrame>
-    </SafeAreaView>
+    <MockupScreen>
+      <HomeMockup />
+    </MockupScreen>
   );
 }

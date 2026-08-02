@@ -44,5 +44,11 @@ exists.
 - `tests/`: configuration and contract tests
 - `docs/product-spec.md`: confirmed, open, and rejected product foundations
 
-The Legacy repository is a controlled reference only. It is not product truth and may be inspected
-only with explicit authorization.
+The Legacy repository — `github.com/gzug/01-One-L1fe` — is a knowledge base and may be read freely.
+It is a reference, not product truth: the product comes from `docs/product-spec.md`.
+
+## Design
+
+`src/ui/theme/` holds the design system, ported from Legacy: brand green `#31796D`, a light and a
+dark set, Manrope for the interface and Fraunces for hero moments. Components read colours through
+`useTheme()` and everything else from the token exports — nothing hardcodes a colour.

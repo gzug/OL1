@@ -2,8 +2,9 @@ import { Link } from 'expo-router';
 import { Fragment } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
+import { fontFamily, lineHeights, radius, spacing, typography, useTheme } from '@/ui/theme';
+
 import { centre, twin } from './fixtures';
-import { color } from './tokens';
 
 /**
  * Digital Twin.
@@ -21,78 +22,94 @@ import { color } from './tokens';
  * fourteen, and the centre of Home cannot carry a permanently static element.
  */
 export function TwinMockup() {
+  const { colors } = useTheme();
+
   return (
     <ScrollView contentContainerStyle={styles.content}>
       <Link asChild href="/">
         <Pressable accessibilityRole="link" style={styles.homeLink}>
-          <Text style={styles.homeLinkText}>⌄  Home</Text>
+          <Text style={[styles.homeLinkText, { color: colors.textMuted }]}>⌄  Home</Text>
         </Pressable>
       </Link>
 
-      <Text style={styles.personName}>{twin.person.name}</Text>
-      <Text style={styles.personFacts}>{twin.person.facts.join(' · ')}</Text>
+      <Text style={[styles.personName, { color: colors.text }]}>{twin.person.name}</Text>
+      <Text style={[styles.personFacts, { color: colors.textSubtle }]}>
+        {twin.person.facts.join(' · ')}
+      </Text>
 
       <Section title="Running test">
-        <View style={styles.card}>
+        <View style={[styles.card, { backgroundColor: colors.surface }]}>
           <View style={styles.cardHeader}>
-            <Text style={styles.cardTitle}>{twin.runningTest.title}</Text>
-            <Text style={styles.cardMeta}>{twin.runningTest.label}</Text>
+            <Text style={[styles.cardTitle, { color: colors.text }]}>{twin.runningTest.title}</Text>
+            <Text style={[styles.cardMeta, { color: colors.textSubtle }]}>
+              {twin.runningTest.label}
+            </Text>
           </View>
           <View style={styles.ticks}>
             {Array.from({ length: twin.runningTest.daysTotal }, (_, index) => (
               <View
                 key={index}
-                style={[styles.tick, index < twin.runningTest.daysDone && styles.tickDone]}
+                style={[
+                  styles.tick,
+                  {
+                    backgroundColor:
+                      index < twin.runningTest.daysDone ? colors.accent : colors.border,
+                  },
+                ]}
               />
             ))}
           </View>
-          <Text style={styles.cardNote}>Nothing conclusive yet.</Text>
+          <Text style={[styles.cardNote, { color: colors.textSubtle }]}>Nothing conclusive yet.</Text>
         </View>
 
-        <View style={styles.focusPill}>
-          <Text style={styles.focusText}>{centre.focus}</Text>
+        <View style={[styles.focusPill, { backgroundColor: colors.accentSoft }]}>
+          <Text style={[styles.focusText, { color: colors.accent }]}>{centre.focus}</Text>
         </View>
       </Section>
 
       <Section title="Insights">
         {twin.insights.map((insight) => (
-          <View key={insight} style={styles.card}>
-            <Text style={styles.insight}>{insight}</Text>
+          <View key={insight} style={[styles.card, { backgroundColor: colors.surface }]}>
+            <Text style={[styles.insight, { color: colors.text }]}>{insight}</Text>
           </View>
         ))}
       </Section>
 
       <Section title="Completed tests">
         {twin.completedTests.map((test) => (
-          <View key={test.title} style={styles.card}>
-            <Text style={styles.cardTitle}>{test.title}</Text>
-            <Text style={styles.outcome}>Result · {test.outcome}</Text>
+          <View key={test.title} style={[styles.card, { backgroundColor: colors.surface }]}>
+            <Text style={[styles.cardTitle, { color: colors.text }]}>{test.title}</Text>
+            <Text style={[styles.outcome, { color: colors.textMuted }]}>
+              Result · {test.outcome}
+            </Text>
           </View>
         ))}
       </Section>
 
       <Section title="Ledger">
-        <View style={styles.card}>
+        <View style={[styles.card, { backgroundColor: colors.surface }]}>
           {twin.ledger.map((row, index) => (
             <Fragment key={`${row.date}-${row.entry}`}>
-              {index > 0 && <View style={styles.rowRule} />}
+              {index > 0 && <View style={[styles.rowRule, { backgroundColor: colors.borderSubtle }]} />}
               <View style={styles.ledgerRow}>
-                <Text style={styles.ledgerDate}>{row.date}</Text>
-                <Text style={styles.ledgerEntry}>{row.entry}</Text>
+                <Text style={[styles.ledgerDate, { color: colors.textSubtle }]}>{row.date}</Text>
+                <Text style={[styles.ledgerEntry, { color: colors.textMuted }]}>{row.entry}</Text>
               </View>
             </Fragment>
           ))}
         </View>
-        <Text style={styles.ledgerFooter}>{twin.ledgerFooter}</Text>
+        <Text style={[styles.ledgerFooter, { color: colors.textSubtle }]}>{twin.ledgerFooter}</Text>
       </Section>
     </ScrollView>
   );
 }
 
 function Section({ children, title }: { children: React.ReactNode; title: string }) {
+  const { colors } = useTheme();
+
   return (
     <View style={styles.section}>
-      <Text style={styles.sectionTitle}>{title}</Text>
+      <Text style={[styles.sectionTitle, { color: colors.textSubtle }]}>{title}</Text>
       {children}
     </View>
   );
@@ -100,10 +117,9 @@ function Section({ children, title }: { children: React.ReactNode; title: string
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: color.surface,
-    borderRadius: 12,
-    marginBottom: 8,
-    padding: 14,
+    borderRadius: radius.md,
+    marginBottom: spacing.sm,
+    padding: spacing.md,
   },
   cardHeader: {
     alignItems: 'baseline',
@@ -111,63 +127,61 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
   },
   cardMeta: {
-    color: color.textQuiet,
-    fontSize: 12,
+    fontFamily: fontFamily.body,
+    fontSize: typography.micro,
   },
   cardNote: {
-    color: color.textQuiet,
-    fontSize: 12,
-    marginTop: 10,
+    fontFamily: fontFamily.body,
+    fontSize: typography.micro,
+    marginTop: spacing.sm,
   },
   cardTitle: {
-    color: color.text,
-    fontSize: 15,
-    fontWeight: '600',
+    fontFamily: fontFamily.semi,
+    fontSize: typography.body,
   },
   content: {
     paddingBottom: 48,
-    paddingHorizontal: 20,
+    paddingHorizontal: spacing.lg,
   },
   /** Styled exactly like Home's daily focus, so the repeat reads as the same object. */
   focusPill: {
     alignSelf: 'flex-start',
-    backgroundColor: 'rgba(231, 255, 87, 0.10)',
     borderRadius: 13,
-    paddingHorizontal: 12,
+    paddingHorizontal: spacing.md,
     paddingVertical: 5,
   },
   focusText: {
-    color: color.accent,
+    fontFamily: fontFamily.medium,
     fontSize: 11.5,
   },
   homeLink: {
     alignSelf: 'center',
-    paddingBottom: 10,
-    paddingTop: 14,
+    paddingBottom: spacing.sm,
+    paddingTop: spacing.md,
   },
   homeLinkText: {
-    color: color.textQuiet,
-    fontSize: 13,
+    fontFamily: fontFamily.body,
+    fontSize: typography.caption,
     letterSpacing: 0.4,
   },
   insight: {
-    color: color.text,
-    fontSize: 14,
-    lineHeight: 20,
+    fontFamily: fontFamily.body,
+    fontSize: typography.bodySmall,
+    lineHeight: lineHeights.body,
   },
   ledgerDate: {
-    color: color.textQuiet,
-    fontSize: 12,
+    fontFamily: fontFamily.body,
+    fontSize: typography.micro,
     width: 56,
   },
   ledgerEntry: {
-    color: color.textMuted,
     flex: 1,
-    fontSize: 13,
+    fontFamily: fontFamily.body,
+    fontSize: typography.caption,
   },
   ledgerFooter: {
-    color: color.textQuiet,
-    fontSize: 12,
+    fontFamily: fontFamily.body,
+    fontSize: typography.micro,
     paddingLeft: 2,
   },
   ledgerRow: {
@@ -175,48 +189,40 @@ const styles = StyleSheet.create({
     paddingVertical: 9,
   },
   outcome: {
-    color: color.textMuted,
-    fontSize: 13,
-    marginTop: 4,
+    fontFamily: fontFamily.body,
+    fontSize: typography.caption,
+    marginTop: spacing.xs,
   },
   personFacts: {
-    color: color.textQuiet,
-    fontSize: 12,
-    marginTop: 4,
+    fontFamily: fontFamily.body,
+    fontSize: typography.micro,
+    marginTop: spacing.xs,
   },
   personName: {
-    color: color.text,
+    fontFamily: fontFamily.semi,
     fontSize: 18,
-    fontWeight: '600',
   },
   rowRule: {
-    backgroundColor: color.hairline,
     height: 1,
   },
   section: {
     marginTop: 26,
   },
   sectionTitle: {
-    color: color.textQuiet,
+    fontFamily: fontFamily.strong,
     fontSize: 11,
-    fontWeight: '700',
     letterSpacing: 0.9,
-    marginBottom: 10,
+    marginBottom: spacing.sm,
     textTransform: 'uppercase',
   },
-  ticks: {
-    flexDirection: 'row',
-    gap: 4,
-    marginTop: 12,
-  },
   tick: {
-    backgroundColor: color.hairline,
     borderRadius: 2,
     flex: 1,
     height: 6,
   },
-  tickDone: {
-    backgroundColor: color.accent,
-    opacity: 0.75,
+  ticks: {
+    flexDirection: 'row',
+    gap: spacing.xs,
+    marginTop: spacing.md,
   },
 });
