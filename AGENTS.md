@@ -60,6 +60,11 @@ npm run prebuild:ios
   fires on something harmless, tune the guard in a visible diff.
 - Before believing a new guard, feed it a known violation and watch it go red. An empty baseline
   and a blind gate look identical.
+- Sessions share one `.git`. Never edit `.git/info/exclude`, hooks or config, and never copy
+  another session's files — a worktree is not a sandbox. If a dependency does not exist yet, stop
+  and say so; a second copy of it is exactly the drift the guards exist to catch.
+- A green check is not a review. Open the exported screen before calling anything done — contrast,
+  collisions and crowding are invisible to every gate here; two were caught that way in one day.
 
 ## Two people at once
 
