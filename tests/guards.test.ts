@@ -112,6 +112,8 @@ test('the agent instruction files stay short enough to be read', () => {
     .split('\n').length;
 
   // 60 was a guess made when these files held enforcement rules only. Raised to 75 on 2026-07-31
-  // for the owner-communication section; published guidance puts the real risk nearer 200.
-  assert.ok(lines <= 75, `AGENTS.md + CLAUDE.md are ${lines} lines; the cap is 75`);
+  // for the owner-communication section, and to 90 on 2026-08-02 for the second-person section —
+  // both are contract, not bloat, and published guidance puts the real risk nearer 200. Raising
+  // this to make room for a rule is fine; raising it to make room for prose is the failure.
+  assert.ok(lines <= 90, `AGENTS.md + CLAUDE.md are ${lines} lines; the cap is 90`);
 });

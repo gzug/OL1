@@ -58,6 +58,7 @@ npm run prebuild:ios
 
 ## Two people at once
 
+- Someone here for the first time reads `START-HERE.md` once, then never again. Point them there.
 - Open a draft pull request on the first commit of a piece of work, not when it is finished. The
   list of open pull requests is the only answer to "who is on what" that cannot go stale.
 - Two open pull requests never touch the same file. If they have to, the second one waits and

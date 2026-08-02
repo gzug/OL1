@@ -1,8 +1,12 @@
 # OL1
 
+**New here? Read [`START-HERE.md`](START-HERE.md) first.** It is the plain-language version of this
+page and takes five minutes.
+
 Fresh Android-first, iOS-ready rebuild with a fixture-only web preview. This repository is at
-bootstrap status: it proves platform configuration and minimal native boundaries, not product
-features.
+bootstrap status plus two mockup screens: it proves platform configuration and minimal native
+boundaries, and it renders a Home screen and a Digital Twin screen for layout review. Nothing
+behind those two screens is wired up, and that is deliberate.
 
 ## Requirements
 
@@ -21,8 +25,18 @@ npm run prebuild:android
 npm run prebuild:ios
 ```
 
-Development starts with `npm start`; the fixture-only web preview starts with `npm run web`.
-Generated `android/` and `ios/` directories are not versioned.
+`npm run web` opens the mockup screens in a browser. It is the only way to see them without Android
+Studio or a device, and it needs neither. Development on a device starts with `npm start`. Generated
+`android/` and `ios/` directories are not versioned.
+
+## Working here to two
+
+Both owners have write access and work in parallel. Three habits, in full in `AGENTS.md`:
+
+- A draft pull request opens on the **first** commit of a piece of work, not the last. The open-PR
+  list is how each of you sees what the other is on; there is no status file by design.
+- Two open pull requests never change the same file.
+- `npm run check` green — all six stages — before anything is called done.
 
 ## Variants
 
@@ -41,8 +55,10 @@ exists.
 - `src/core/`: platform-neutral contracts
 - `src/infrastructure/health/`: Android Health Connect, iOS unavailable, web fixtures
 - `src/infrastructure/storage/`: native SQLite and web in-memory storage
+- `src/ui/mockup/`: the Home and Digital Twin mockups, their geometry, and their fixtures
 - `tests/`: configuration and contract tests
 - `docs/product-spec.md`: confirmed, open, and rejected product foundations
+- `docs/decisions/`: why an earlier answer stopped being right
 
 The Legacy repository is a controlled reference only. It is not product truth and may be inspected
 only with explicit authorization.
