@@ -115,7 +115,7 @@ export function HomeMockup() {
       </View>
 
       {selecting && (
-        <Text style={[styles.prompt, { color: colors.textMuted }]}>
+        <Text style={[styles.prompt, { color: colors.onScrimMuted }]}>
           Who should be at the table?
         </Text>
       )}
@@ -161,7 +161,7 @@ function ConfirmBar({
   return (
     <View style={styles.confirmRow}>
       <Pressable accessibilityRole="button" onPress={onCancel} style={styles.cancel}>
-        <Text style={[styles.cancelText, { color: colors.textMuted }]}>Cancel</Text>
+        <Text style={[styles.cancelText, { color: colors.onScrimMuted }]}>Cancel</Text>
       </Pressable>
       <Pressable
         accessibilityRole="button"
@@ -169,9 +169,12 @@ function ConfirmBar({
         onPress={onConfirm}
         style={({ pressed }) => [
           styles.confirm,
+          // Inert is an outline on the scrim, never a filled surface: `surface` is the brightest
+          // colour in the light theme, so filling it made the one disabled control the loudest
+          // thing on a deliberately dimmed screen.
           ready
             ? { backgroundColor: colors.accent }
-            : { backgroundColor: colors.surface, borderColor: colors.border, borderWidth: 1 },
+            : { borderColor: colors.onScrimMuted, borderWidth: 1 },
           pressed && styles.pressed,
         ]}>
         <Text
@@ -180,7 +183,7 @@ function ConfirmBar({
             styles.confirmText,
             ready
               ? { color: colors.onAccent, fontFamily: fontFamily.semi }
-              : { color: colors.textSubtle, fontFamily: fontFamily.body },
+              : { color: colors.onScrimMuted, fontFamily: fontFamily.body },
           ]}>
           {ready ? `Ask with ${names}` : 'Pick at least one'}
         </Text>

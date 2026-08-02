@@ -72,6 +72,12 @@ export type ThemeColors = {
   danger: string;
   hairline: string;
   onAccent: string;
+  /**
+   * Text and outlines that sit ON the scrim. Light in BOTH themes, because the scrim is dark in
+   * both — reaching for the normal text colours here puts dark grey on dark grey.
+   */
+  onScrim: string;
+  onScrimMuted: string;
   positive: string;
   /** Dims the screen behind a modal step. Ink-tinted in both themes, never pure black. */
   scrim: string;
@@ -95,6 +101,8 @@ export const lightColors: ThemeColors = {
   danger: l.critical,
   hairline: l.hairline,
   onAccent: l.onBrand,
+  onScrim: '#F4F4EF',
+  onScrimMuted: 'rgba(244, 244, 239, 0.72)',
   positive: l.success,
   scrim: 'rgba(27, 36, 32, 0.55)',
   statusBar: 'dark',
@@ -117,6 +125,8 @@ export const darkColors: ThemeColors = {
   danger: d.critical,
   hairline: d.hairline,
   onAccent: d.onBrand,
+  onScrim: '#F0F3EE',
+  onScrimMuted: 'rgba(240, 243, 238, 0.72)',
   positive: d.success,
   scrim: 'rgba(14, 15, 16, 0.72)',
   statusBar: 'light',
@@ -189,5 +199,11 @@ export const elevation = {
   lifted: { elevation: 6, shadowColor: '#000000', shadowOffset: { height: 8, width: 0 }, shadowOpacity: 0.12, shadowRadius: 16 },
 } as const;
 
-/** Measurements use tabular figures so digits do not jitter as values change. Judgements do not. */
-export const numerals = { tabular: { fontVariant: ['tabular-nums' as const] } } as const;
+/**
+ * Measurements use tabular figures so digits do not jitter as values change. Judgements do not.
+ *
+ * Deliberately not `as const`, unlike every other token here: React Native types `fontVariant` as a
+ * mutable array, so a readonly tuple will not assign inside `StyleSheet.create`. The cast says that
+ * in the only way this file can — it stays import-free, so it cannot name `TextStyle` directly.
+ */
+export const numerals = { tabular: { fontVariant: ['tabular-nums'] as 'tabular-nums'[] } };
