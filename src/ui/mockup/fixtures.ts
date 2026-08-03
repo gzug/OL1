@@ -28,6 +28,44 @@ export const centre = {
   insight: 'Your later nights landed on evening training days.',
 } as const;
 
+/**
+ * What the twin is built out of, and how much of it is actually there.
+ *
+ * The owner asked that tapping the centre show "the pheno age or what data is included like
+ * genomics, blood work, microbiome, wearable". Those four are listed — and separated by whether they
+ * feed THE NUMBER or merely feed the twin, because they are not the same claim.
+ *
+ * PhenoAge is computed from a blood panel and an age. Today that is its only input, and a screen
+ * that listed four sources under one number would imply the number gets richer as they connect. It
+ * would not: connecting a wearable makes the twin know more, not the drift number more certain.
+ */
+export const twinSources = [
+  {
+    detail: '9 of 9 markers, from the panel drawn 12 Mar',
+    feedsNumber: true,
+    label: 'Blood work',
+    state: 'reading',
+  },
+  {
+    detail: 'Nightly, from your watch',
+    feedsNumber: false,
+    label: 'Wearable',
+    state: 'reading',
+  },
+  {
+    detail: 'Not connected yet',
+    feedsNumber: false,
+    label: 'Genomics',
+    state: 'missing',
+  },
+  {
+    detail: 'Not connected yet',
+    feedsNumber: false,
+    label: 'Microbiome',
+    state: 'missing',
+  },
+] as const;
+
 export const twin = {
   completedTests: [
     { outcome: 'No clear difference', title: 'Morning light · finished 12 Mar' },

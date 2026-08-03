@@ -4,12 +4,15 @@ import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { fontFamily, lineHeights, radius, spacing, typography, useTheme } from '@/ui/theme';
 
-import { centre, twin } from './fixtures';
+import { centre, twin, twinSources } from './fixtures';
 
 /**
  * Digital Twin.
  *
  * Scroll order is an argument, not a preference:
+ *   the number     — PhenoAge, and immediately under it what it is actually made of. It leads
+ *                    because the spec calls the twin the core idea of the app, and because a number
+ *                    this heavy has to arrive with its provenance rather than acquire it later
  *   person file    — whose twin is this, and what does it already know
  *   running test   — the only time-bound thing here, and the only thing you are inside
  *   today's ask    — pinned directly under it, styled exactly like Home's daily focus, so the rule
@@ -31,6 +34,43 @@ export function TwinMockup() {
           <Text style={[styles.homeLinkText, { color: colors.textMuted }]}>⌄  Home</Text>
         </Pressable>
       </Link>
+
+      <View style={styles.driftBlock}>
+        <Text style={[styles.driftNumber, { color: colors.text }]}>{centre.driftNumber}</Text>
+        <Text style={[styles.driftCaption, { color: colors.textSubtle }]}>
+          {centre.driftCaption}
+        </Text>
+      </View>
+
+      <Section title="What this number is made of">
+        <View style={[styles.card, { backgroundColor: colors.surface }]}>
+          {twinSources
+            .filter((source) => source.feedsNumber)
+            .map((source) => (
+              <SourceRow key={source.label} source={source} />
+            ))}
+          {/* The honest caveat. Four sources listed under one number would imply the number gets
+              more certain as they connect; it does not — the others make the twin know more. */}
+          <Text style={[styles.cardNote, { color: colors.textSubtle }]}>
+            A second panel is what turns this from a reading into a direction.
+          </Text>
+        </View>
+      </Section>
+
+      <Section title="What else the twin reads">
+        <View style={[styles.card, { backgroundColor: colors.surface }]}>
+          {twinSources
+            .filter((source) => !source.feedsNumber)
+            .map((source, index) => (
+              <Fragment key={source.label}>
+                {index > 0 && (
+                  <View style={[styles.rowRule, { backgroundColor: colors.borderSubtle }]} />
+                )}
+                <SourceRow source={source} />
+              </Fragment>
+            ))}
+        </View>
+      </Section>
 
       <Text style={[styles.personName, { color: colors.text }]}>{twin.person.name}</Text>
       <Text style={[styles.personFacts, { color: colors.textSubtle }]}>
@@ -104,6 +144,31 @@ export function TwinMockup() {
   );
 }
 
+function SourceRow({
+  source,
+}: {
+  source: { detail: string; label: string; state: 'missing' | 'reading' };
+}) {
+  const { colors } = useTheme();
+
+  return (
+    <View style={styles.sourceRow}>
+      <View
+        style={[
+          styles.dot,
+          source.state === 'reading'
+            ? { backgroundColor: colors.accent }
+            : { borderColor: colors.hairline, borderWidth: 1 },
+        ]}
+      />
+      <Text style={[styles.sourceLabel, { color: colors.text }]}>{source.label}</Text>
+      <Text numberOfLines={1} style={[styles.sourceDetail, { color: colors.textMuted }]}>
+        {source.detail}
+      </Text>
+    </View>
+  );
+}
+
 function Section({ children, title }: { children: React.ReactNode; title: string }) {
   const { colors } = useTheme();
 
@@ -120,6 +185,48 @@ const styles = StyleSheet.create({
     borderRadius: radius.md,
     marginBottom: spacing.sm,
     padding: spacing.md,
+  },
+  /** Matches Home's centre exactly — the same number in two places must not be two numbers. */
+  driftBlock: {
+    alignItems: 'center',
+    paddingBottom: spacing.md,
+    paddingTop: spacing.sm,
+  },
+  driftCaption: {
+    fontFamily: fontFamily.body,
+    fontSize: 9.5,
+    letterSpacing: 0.7,
+    marginTop: 2,
+    textAlign: 'center',
+    textTransform: 'uppercase',
+  },
+  driftNumber: {
+    fontFamily: fontFamily.display,
+    fontSize: 40,
+    lineHeight: 46,
+  },
+  dot: {
+    borderRadius: 4,
+    height: 8,
+    marginRight: spacing.sm,
+    width: 8,
+  },
+  sourceDetail: {
+    flexShrink: 1,
+    fontFamily: fontFamily.body,
+    fontSize: typography.micro,
+    textAlign: 'right',
+  },
+  sourceLabel: {
+    flexGrow: 1,
+    fontFamily: fontFamily.body,
+    fontSize: typography.bodySmall,
+    paddingRight: spacing.sm,
+  },
+  sourceRow: {
+    alignItems: 'center',
+    flexDirection: 'row',
+    paddingVertical: spacing.xs,
   },
   cardHeader: {
     alignItems: 'baseline',
