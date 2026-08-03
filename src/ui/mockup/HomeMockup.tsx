@@ -59,7 +59,7 @@ export function HomeMockup() {
   const chosenHubs = useMemo(
     () =>
       orbitHubs()
-        .filter((hub) => selected.includes(hub.coachId))
+        .filter((hub) => hub.coachId !== undefined && selected.includes(hub.coachId))
         .map((hub) => hub.id),
     [selected],
   );

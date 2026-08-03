@@ -32,8 +32,20 @@ export type Coach = {
 
 export type HubOrigin = 'builtIn' | 'user';
 
+/**
+ * What a place on the ring is for.
+ *
+ * `domain` is every hub in the ordinary sense: it has a coach, a cockpit, and data of its own.
+ * `table` is the Open Table, which the owner asked to sit on the ring "as one of the hubs" rather
+ * than as a button at the bottom. It has no coach of its own because it is the one that reaches
+ * every coach, and no cockpit because it holds no data — so it is a place on the ring and not a
+ * hub, and the type says which.
+ */
+export type HubRole = 'domain' | 'table';
+
 export type HubDefinition = {
-  readonly coachId: CoachId;
+  /** Absent only for the Open Table, which reaches every coach rather than having one. */
+  readonly coachId?: CoachId;
   readonly id: HubId;
   readonly label: string;
   /**
@@ -43,6 +55,8 @@ export type HubDefinition = {
    */
   readonly parentId?: HubId;
   readonly origin: HubOrigin;
+  /** Defaults to `domain`. Only the Open Table is anything else. */
+  readonly role?: HubRole;
 };
 
 /**
@@ -98,6 +112,16 @@ export const SEED_HUBS: readonly HubDefinition[] = [
   { coachId: 'longevity', id: 'labs', label: 'Labs', origin: 'builtIn' },
   { coachId: 'sleep', id: 'sleep', label: 'Sleep', origin: 'builtIn' },
 
+  /**
+   * The seventh place on the ring. The owner moved it here from a button under the orbit — "on the
+   * bottom should just be the chat bar" — so it is one of the seven the ring ships with.
+   *
+   * It has no coach and no cockpit, and both absences are the point: it is the way to reach EVERY
+   * coach, so giving it one of its own would make it a domain competing with the six. Tapping it
+   * goes to the chat surface, which `src/app/hub/[id].tsx` routes without Home needing to know.
+   */
+  { id: 'open-table', label: 'Open Table', origin: 'builtIn', role: 'table' },
+
   { coachId: 'running', id: 'running', label: 'Running', origin: 'builtIn', parentId: 'activity' },
   { coachId: 'strength', id: 'gym', label: 'Gym', origin: 'builtIn', parentId: 'activity' },
   { coachId: 'cycling', id: 'cycling', label: 'Cycling', origin: 'builtIn', parentId: 'activity' },
@@ -143,5 +167,11 @@ export function coachForHub(
   coaches: readonly Coach[] = COACHES,
 ): Coach | undefined {
   const hub = findHub(id, hubs);
-  return hub === undefined ? undefined : findCoach(hub.coachId, coaches);
+  if (hub?.coachId === undefined) return undefined;
+  return findCoach(hub.coachId, coaches);
+}
+
+/** Whether this place on the ring is a domain hub rather than the Open Table. */
+export function isDomainHub(hub: HubDefinition): boolean {
+  return (hub.role ?? 'domain') === 'domain';
 }

@@ -35,6 +35,12 @@ const HUB_GAP = 12;
  * Past this the gap closes faster than the circle shrinks. The circles do not actually collide until
  * about twenty-five — this is the readability limit, not the collision one, and it is a guess worth
  * tuning once anyone has really filled a ring.
+ *
+ * **This is not "how many hubs OL1 has".** The ring ships with SEVEN — six domains plus the Open
+ * Table — and that number lives in `catalog.ts` as seed data. This one is the ceiling for what a
+ * user may add on top, and the two were briefly read as contradicting each other. They do not: seven
+ * is what arrives, nineteen is where the geometry stops being readable. A cap of seven would make
+ * "create a new hub" a feature that can be used once.
  */
 export const MAX_ORBIT_HUBS = 19;
 

@@ -8,8 +8,10 @@ import {
   coachForHub,
   findCoach,
   findHub,
+  isDomainHub,
   orbitHubs,
 } from '../src/ui/hubs/catalog';
+import { hubStateFor } from '../src/ui/hubs/states';
 
 /**
  * Hub ids stopped being a union type when hubs became data, so the compiler no longer catches a hub
@@ -17,10 +19,16 @@ import {
  * reason the union could be given up safely.
  */
 
-test('every hub resolves to a coach', () => {
+test('every domain hub resolves to a coach, and only the Open Table has none', () => {
   for (const hub of SEED_HUBS) {
+    if (!isDomainHub(hub)) {
+      // The Open Table reaches every coach, so having one of its own would make it a seventh
+      // domain competing with the six.
+      assert.equal(hub.coachId, undefined, `"${hub.id}" is not a domain hub but claims a coach`);
+      continue;
+    }
     assert.ok(
-      findCoach(hub.coachId) !== undefined,
+      hub.coachId !== undefined && findCoach(hub.coachId) !== undefined,
       `hub "${hub.id}" points at coach "${hub.coachId}", which does not exist`,
     );
   }
@@ -51,10 +59,10 @@ test('every nested hub names a parent that exists, and no parent is itself neste
  * degrees, so this sequence is what decides where each hub sits on screen. Labs next to the drift
  * number is deliberate. If this assertion is ever updated, the orbit moved.
  */
-test('the orbit is the six built-in hubs, in ring order', () => {
+test('the orbit is the seven built-in places, in ring order', () => {
   assert.deepEqual(
     orbitHubs().map((hub) => hub.id),
-    ['activity', 'nutrition', 'body', 'resilience', 'labs', 'sleep'],
+    ['activity', 'nutrition', 'body', 'resilience', 'labs', 'sleep', 'open-table'],
   );
 });
 
@@ -69,12 +77,24 @@ test('exercise types live inside Activity, not on the ring', () => {
   }
 });
 
-test('every hub the orbit draws has a coach with a focus line', () => {
-  for (const hub of orbitHubs()) {
+test('every domain hub the orbit draws has a coach with a focus line', () => {
+  for (const hub of orbitHubs().filter(isDomainHub)) {
     const coach = coachForHub(hub.id);
     assert.ok(coach !== undefined, `hub "${hub.id}" has no coach`);
     assert.ok((coach?.focus.length ?? 0) > 0, `coach "${coach?.id}" has no focus line`);
   }
+});
+
+/**
+ * The Open Table is on the ring but is not a hub: no coach, no cockpit, and tapping it goes to the
+ * chat surface rather than a hub screen. If it ever grows either, it has become a seventh domain.
+ */
+test('the Open Table has no coach and no cockpit', () => {
+  const table = findHub('open-table');
+  assert.ok(table !== undefined, 'the Open Table is missing from the ring');
+  assert.equal(table?.role, 'table');
+  assert.equal(coachForHub('open-table'), undefined);
+  assert.equal(hubStateFor('open-table'), undefined, 'the Open Table must not have a cockpit');
 });
 
 /**
