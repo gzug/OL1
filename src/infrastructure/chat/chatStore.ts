@@ -30,7 +30,12 @@ export function createMemoryChatStore(): ChatStore {
     },
 
     async listThreads() {
-      return [...threads.values()].sort((a, b) => b.updatedAt.localeCompare(a.updatedAt));
+      return [...threads.values()]
+        .map((thread) => ({
+          ...thread,
+          preview: turns.get(thread.id)?.find((turn) => turn.role === 'user')?.text ?? '',
+        }))
+        .sort((a, b) => b.updatedAt.localeCompare(a.updatedAt));
     },
 
     async readTurns(threadId) {

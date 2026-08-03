@@ -28,11 +28,22 @@ export type ChatThread = {
   readonly updatedAt: string;
 };
 
+/**
+ * A thread as the history list needs it: the thread, plus the first thing that was asked in it.
+ *
+ * The preview is carried here rather than fetched per row, because a list that reads every thread's
+ * turns to render one line is one query per row — cheap at three threads and not at three hundred.
+ */
+export type ChatThreadSummary = ChatThread & {
+  /** The first question asked. Empty for a thread that was created and never used. */
+  readonly preview: string;
+};
+
 export interface ChatStore {
   appendTurn(threadId: string, turn: ChatTurn): Promise<void>;
   /** Idempotent. Thread ids are derived from the coach selection, so "ensure it exists" is the call. */
   createThread(thread: ChatThread): Promise<void>;
-  listThreads(): Promise<readonly ChatThread[]>;
+  listThreads(): Promise<readonly ChatThreadSummary[]>;
   readTurns(threadId: string): Promise<readonly ChatTurn[]>;
 }
 

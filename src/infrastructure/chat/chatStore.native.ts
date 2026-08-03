@@ -18,7 +18,7 @@
 
 import * as SQLite from 'expo-sqlite';
 
-import type { ChatStore, ChatThread } from '@/core/chat';
+import type { ChatStore, ChatThreadSummary } from '@/core/chat';
 import { storageAdapter } from '@/infrastructure/storage/storageAdapter';
 
 const TURN_LIMIT = 200;
@@ -37,14 +37,21 @@ function database(): Promise<SQLite.SQLiteDatabase> {
   return opening;
 }
 
-type ThreadRow = { coach_ids: string; created_at: string; id: string; updated_at: string };
+type ThreadRow = {
+  coach_ids: string;
+  created_at: string;
+  id: string;
+  preview: string | null;
+  updated_at: string;
+};
 type TurnRow = { id: string; role: string; text: string };
 
-function toThread(row: ThreadRow): ChatThread {
+function toSummary(row: ThreadRow): ChatThreadSummary {
   return {
     coachIds: row.coach_ids.length === 0 ? [] : row.coach_ids.split(','),
     createdAt: row.created_at,
     id: row.id,
+    preview: row.preview ?? '',
     updatedAt: row.updated_at,
   };
 }
@@ -77,10 +84,17 @@ export const chatStore: ChatStore = {
 
   async listThreads() {
     const db = await database();
+    // The preview comes from a correlated subquery rather than a second round trip per row: the
+    // history list is one query whether there are three threads or three hundred.
     const rows = await db.getAllAsync<ThreadRow>(
-      'SELECT id, coach_ids, created_at, updated_at FROM chat_thread ORDER BY updated_at DESC;',
+      `SELECT t.id, t.coach_ids, t.created_at, t.updated_at,
+              (SELECT text FROM chat_turn
+                WHERE thread_id = t.id AND role = 'user'
+                ORDER BY created_at ASC LIMIT 1) AS preview
+         FROM chat_thread t
+        ORDER BY t.updated_at DESC;`,
     );
-    return rows.map(toThread);
+    return rows.map(toSummary);
   },
 
   async readTurns(threadId) {

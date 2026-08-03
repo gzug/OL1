@@ -18,7 +18,7 @@
 import type {
   ChatModel,
   ChatStore,
-  ChatThread,
+  ChatThreadSummary,
   ChatTurn,
   CoachDescriptor,
   CoachReply,
@@ -40,7 +40,7 @@ export type CoachChat = {
   /** Read the last turn's question and answer it. Returns null when nothing is waiting. */
   answer(coaches: readonly CoachDescriptor[]): Promise<CoachReply | null>;
   isConfigured(): boolean;
-  listThreads(): Promise<readonly ChatThread[]>;
+  listThreads(): Promise<readonly ChatThreadSummary[]>;
   /** Write the question. Always completes before anything is asked of the model. */
   persist(coachIds: readonly string[], text: string): Promise<void>;
   readTurns(coachIds: readonly string[]): Promise<readonly ChatTurn[]>;
