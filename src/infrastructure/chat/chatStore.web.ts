@@ -14,7 +14,7 @@
  * does not exist, and an unguarded `localStorage` there fails the `export:web` stage of the check.
  */
 
-import type { ChatStore, ChatThread, ChatTurn } from '@/core/chat';
+import type { ChatStore, ChatThread, ChatThreadSummary, ChatTurn } from '@/core/chat';
 
 const THREADS_KEY = 'ol1.chat.threads';
 const TURNS_PREFIX = 'ol1.chat.turns.';
@@ -72,10 +72,15 @@ export const chatStore: ChatStore = {
     write(THREADS_KEY, [...threads, thread]);
   },
 
-  async listThreads() {
-    return read<ChatThread[]>(THREADS_KEY, []).sort((a, b) =>
-      b.updatedAt.localeCompare(a.updatedAt),
-    );
+  async listThreads(): Promise<readonly ChatThreadSummary[]> {
+    return read<ChatThread[]>(THREADS_KEY, [])
+      .map((thread) => ({
+        ...thread,
+        preview:
+          read<ChatTurn[]>(`${TURNS_PREFIX}${thread.id}`, []).find((turn) => turn.role === 'user')
+            ?.text ?? '',
+      }))
+      .sort((a, b) => b.updatedAt.localeCompare(a.updatedAt));
   },
 
   async readTurns(threadId) {

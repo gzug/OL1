@@ -6,6 +6,7 @@ import { coachChat } from '@/application/chat/coachChat';
 import { toggleCoach } from '@/application/chat/threads';
 import { ChatBar } from '@/ui/chat/ChatBar';
 import { CoachSelector } from '@/ui/chat/CoachSelector';
+import { ThreadList } from '@/ui/chat/ThreadList';
 import { coachesAtTable } from '@/ui/chat/coachList';
 import { ATTACHMENTS_NOTE } from '@/ui/chat/messages';
 import { coachForHub, orbitHubs, type HubId } from '@/ui/hubs/catalog';
@@ -46,10 +47,13 @@ import { Orbit } from './Orbit';
  * colour from the accent too — which is the thing to watch when reviewing this rendered, because
  * the drift number and the send button now compete for the same channel from opposite ends.
  */
+type Sheet = 'coaches' | 'history' | null;
+
 export function HomeMockup() {
   const { colors } = useTheme();
   const router = useRouter();
-  const [selecting, setSelecting] = useState(false);
+  /** One sheet at a time. Two booleans could both be true; this cannot. */
+  const [sheet, setSheet] = useState<Sheet>(null);
   const [selected, setSelected] = useState<readonly string[]>([]);
   const centreBox = stackBox(orbitHubs().length);
 
@@ -65,7 +69,7 @@ export function HomeMockup() {
   );
 
   function handleHubPress(id: HubId) {
-    if (!selecting) {
+    if (sheet !== 'coaches') {
       // A hub opens two doors — its coach, and its cockpit. `docs/decisions/0005-the-hub-model.md`
       // records why "chat is one step further in" stopped being right.
       router.push(`/hub/${id}`);
@@ -79,30 +83,48 @@ export function HomeMockup() {
     // Persist first, then navigate. What was typed reaches the conversation through the store, so
     // it never becomes a URL parameter — see `src/application/chat/coachChat.ts`.
     await coachChat.persist(selected, text);
-    setSelecting(false);
+    setSheet(null);
     router.push(`/table?coaches=${selected.join(',')}`);
   }
 
   return (
     <View style={styles.screen}>
-      <Link asChild href="/twin">
-        <Pressable accessibilityRole="link" style={styles.twinLink}>
-          <Text style={[styles.twinLinkText, { color: colors.textMuted }]}>⌃  Digital Twin</Text>
-        </Pressable>
-      </Link>
+      {/* The top row is navigation. Earlier conversations belong here rather than only inside a
+          chat: reaching yesterday's thread should not require starting a new one first. */}
+      <View style={styles.topRow}>
+        <View style={styles.topSide} />
+        <Link asChild href="/twin">
+          <Pressable accessibilityRole="link" style={styles.twinLink}>
+            <Text style={[styles.twinLinkText, { color: colors.textMuted }]}>⌃  Digital Twin</Text>
+          </Pressable>
+        </Link>
+        <View style={styles.topSide}>
+          <Pressable
+            accessibilityLabel="Earlier conversations"
+            accessibilityRole="button"
+            onPress={() => setSheet((open) => (open === 'history' ? null : 'history'))}
+            style={({ pressed }) => [styles.earlier, pressed && styles.pressed]}>
+            <Text style={[styles.earlierText, { color: colors.textMuted }]}>Earlier</Text>
+          </Pressable>
+        </View>
+      </View>
 
-      {selecting && (
+      {sheet !== null && (
         <Pressable
-          accessibilityLabel="Close the coach list"
+          accessibilityLabel="Close"
           accessibilityRole="button"
-          onPress={() => setSelecting(false)}
+          onPress={() => setSheet(null)}
           style={[styles.scrim, { backgroundColor: colors.scrim }]}
         />
       )}
 
       <View style={styles.stageWrapper}>
         <View style={styles.stage}>
-          <Orbit onHubPress={handleHubPress} selected={chosenHubs} selecting={selecting} />
+          <Orbit
+            onHubPress={handleHubPress}
+            selected={chosenHubs}
+            selecting={sheet === 'coaches'}
+          />
 
           <View
             pointerEvents="none"
@@ -134,18 +156,24 @@ export function HomeMockup() {
       </View>
 
       <View style={styles.bottom}>
-        {selecting && (
+        {sheet === 'coaches' && (
           <CoachSelector
-            onClose={() => setSelecting(false)}
+            onClose={() => setSheet(null)}
             onToggle={(coachId) => setSelected((current) => toggleCoach(current, coachId))}
             selected={selected}
+          />
+        )}
+        {sheet === 'history' && (
+          <ThreadList
+            onClose={() => setSheet(null)}
+            onOpen={(ids) => router.push(`/table?coaches=${ids.join(',')}`)}
           />
         )}
         <View style={styles.barSlot}>
           <ChatBar
             attachmentsNote={ATTACHMENTS_NOTE}
             coachNames={coaches.map((coach) => coach.name)}
-            onOpenSelector={() => setSelecting((open) => !open)}
+            onOpenSelector={() => setSheet((open) => (open === 'coaches' ? null : 'coaches'))}
             onSend={(text) => void send(text)}
           />
         </View>
@@ -214,6 +242,17 @@ const styles = StyleSheet.create({
     marginTop: spacing.md,
     textAlign: 'center',
   },
+  earlier: {
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.xs,
+  },
+  earlierText: {
+    fontFamily: fontFamily.body,
+    fontSize: typography.caption,
+  },
+  pressed: {
+    opacity: 0.6,
+  },
   screen: {
     flex: 1,
     justifyContent: 'space-between',
@@ -239,10 +278,21 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     zIndex: 2,
   },
-  twinLink: {
-    alignSelf: 'center',
+  topRow: {
+    alignItems: 'center',
+    flexDirection: 'row',
+    justifyContent: 'space-between',
     paddingBottom: spacing.xs,
     paddingTop: spacing.md,
+    zIndex: 4,
+  },
+  /** Equal sides, so "Digital Twin" centres against the screen and not against what is left. */
+  topSide: {
+    alignItems: 'flex-end',
+    flex: 1,
+  },
+  twinLink: {
+    paddingVertical: spacing.xs,
   },
   twinLinkText: {
     fontFamily: fontFamily.body,

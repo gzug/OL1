@@ -17,6 +17,7 @@ import {
 
 import { ChatBar } from './ChatBar';
 import { CoachSelector } from './CoachSelector';
+import { ThreadList } from './ThreadList';
 import { coachesAtTable } from './coachList';
 import { isPending } from './chatTurns';
 import { ATTACHMENTS_NOTE, unavailableMessage } from './messages';
@@ -33,11 +34,14 @@ import { useCoachChat } from './useCoachChat';
  * several coaches rather than as one long paragraph with names in it.
  */
 
+type Sheet = 'coaches' | 'history' | null;
+
 export function ChatSurface({ coachIds }: { coachIds: readonly string[] }) {
   const { colors } = useTheme();
   const router = useRouter();
   const [selected, setSelected] = useState<readonly string[]>(coachIds);
-  const [selecting, setSelecting] = useState(false);
+  /** One sheet at a time. Two booleans could both be true; this cannot. */
+  const [sheet, setSheet] = useState<Sheet>(null);
   const scroller = useRef<ScrollView>(null);
 
   const coaches = useMemo(() => coachesAtTable(selected), [selected]);
@@ -49,6 +53,12 @@ export function ChatSurface({ coachIds }: { coachIds: readonly string[] }) {
     // The route says which conversation this is, so it has to keep up. `setParams` rather than
     // `push`: changing who is at the table is not a new screen to go back from.
     router.setParams({ coaches: next.join(',') });
+  }
+
+  function reopen(ids: readonly string[]) {
+    setSheet(null);
+    setSelected(ids);
+    router.setParams({ coaches: ids.join(',') });
   }
 
   return (
@@ -66,6 +76,13 @@ export function ChatSurface({ coachIds }: { coachIds: readonly string[] }) {
         <Text numberOfLines={1} style={[styles.title, { color: colors.text }]}>
           {coaches.length === 0 ? 'Assistant' : coaches.map((coach) => coach.name).join(', ')}
         </Text>
+        <Pressable
+          accessibilityLabel="Earlier conversations"
+          accessibilityRole="button"
+          onPress={() => setSheet((open) => (open === 'history' ? null : 'history'))}
+          style={({ pressed }) => [styles.history, pressed && styles.pressed]}>
+          <Text style={[styles.historyText, { color: colors.textMuted }]}>Earlier</Text>
+        </Pressable>
       </View>
 
       <ScrollView
@@ -92,29 +109,26 @@ export function ChatSurface({ coachIds }: { coachIds: readonly string[] }) {
         )}
       </ScrollView>
 
-      {selecting && (
+      {sheet !== null && (
         <Pressable
-          accessibilityLabel="Close the coach list"
+          accessibilityLabel="Close"
           accessibilityRole="button"
-          onPress={() => setSelecting(false)}
+          onPress={() => setSheet(null)}
           style={[styles.scrim, { backgroundColor: colors.scrim }]}
         />
       )}
 
       <View style={styles.bottom}>
-        {selecting && (
-          <CoachSelector
-            onClose={() => setSelecting(false)}
-            onToggle={choose}
-            selected={selected}
-          />
+        {sheet === 'coaches' && (
+          <CoachSelector onClose={() => setSheet(null)} onToggle={choose} selected={selected} />
         )}
+        {sheet === 'history' && <ThreadList onClose={() => setSheet(null)} onOpen={reopen} />}
         <View style={styles.barSlot}>
           <ChatBar
             attachmentsNote={ATTACHMENTS_NOTE}
             coachNames={coaches.map((coach) => coach.name)}
             generating={status === 'generating'}
-            onOpenSelector={() => setSelecting((open) => !open)}
+            onOpenSelector={() => setSheet((open) => (open === 'coaches' ? null : 'coaches'))}
             onSend={(text) => void send(text)}
           />
         </View>
@@ -192,6 +206,14 @@ const styles = StyleSheet.create({
     lineHeight: lineHeights.caption,
     paddingTop: spacing.xl,
     textAlign: 'center',
+  },
+  history: {
+    paddingLeft: spacing.sm,
+    paddingVertical: spacing.xs,
+  },
+  historyText: {
+    fontFamily: fontFamily.body,
+    fontSize: typography.caption,
   },
   header: {
     alignItems: 'center',
