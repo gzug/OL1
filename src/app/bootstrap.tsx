@@ -9,6 +9,7 @@ import {
   runHealthReadSmoke,
   type BootstrapCapability,
 } from '@/application/bootstrapCompatibility';
+import { fontFamily, radius, spacing, typography, useTheme } from '@/ui/theme';
 
 type CheckState = 'idle' | 'running' | 'complete';
 
@@ -16,6 +17,7 @@ const environment =
   (Constants.expoConfig?.extra?.environmentLabel as string | undefined) ?? 'UNKNOWN';
 
 export default function BootstrapRoute() {
+  const { colors } = useTheme();
   const [capability, setCapability] = useState<BootstrapCapability | null>(null);
   const [storageStatus, setStorageStatus] = useState('not checked');
   const [healthStatus, setHealthStatus] = useState('not checked');
@@ -42,34 +44,38 @@ export default function BootstrapRoute() {
   }
 
   return (
-    <SafeAreaView style={styles.safeArea}>
+    <SafeAreaView style={[styles.safeArea, { backgroundColor: colors.background }]}>
       <ScrollView contentContainerStyle={styles.content}>
-        <View style={styles.environmentBadge}>
-          <Text style={styles.environmentText}>{environment}</Text>
+        <View style={[styles.environmentBadge, { backgroundColor: colors.accent }]}>
+          <Text style={[styles.environmentText, { color: colors.onAccent }]}>{environment}</Text>
         </View>
-        <Text style={styles.title}>OL1</Text>
-        <Text style={styles.subtitle}>Bootstrap compatibility surface</Text>
-        <Text style={styles.body}>
+        <Text style={[styles.title, { color: colors.text }]}>OL1</Text>
+        <Text style={[styles.subtitle, { color: colors.textMuted }]}>
+          Bootstrap compatibility surface
+        </Text>
+        <Text style={[styles.body, { color: colors.textMuted }]}>
           No product flow, navigation model, or legacy data is defined here.
         </Text>
 
         {Platform.OS === 'web' && (
-          <View style={styles.previewNotice}>
-            <Text style={styles.previewNoticeText}>
+          <View style={[styles.previewNotice, { borderColor: colors.accent }]}>
+            <Text style={[styles.previewNoticeText, { color: colors.accent }]}>
               WEB PREVIEW · fixture data only · native capabilities are not proven here
             </Text>
           </View>
         )}
 
-        <View style={styles.panel}>
-          <Text style={styles.label}>Platform</Text>
-          <Text style={styles.value}>{Platform.OS}</Text>
-          <Text style={styles.label}>Health capability</Text>
-          <Text style={styles.value}>{capability?.health ?? 'checking'}</Text>
-          <Text style={styles.label}>Storage</Text>
-          <Text style={styles.value}>{storageStatus}</Text>
-          <Text style={styles.label}>Health read smoke</Text>
-          <Text style={styles.value}>{healthStatus}</Text>
+        <View style={[styles.panel, { backgroundColor: colors.surface }]}>
+          <Text style={[styles.label, { color: colors.textSubtle }]}>Platform</Text>
+          <Text style={[styles.value, { color: colors.text }]}>{Platform.OS}</Text>
+          <Text style={[styles.label, { color: colors.textSubtle }]}>Health capability</Text>
+          <Text style={[styles.value, { color: colors.text }]}>
+            {capability?.health ?? 'checking'}
+          </Text>
+          <Text style={[styles.label, { color: colors.textSubtle }]}>Storage</Text>
+          <Text style={[styles.value, { color: colors.text }]}>{storageStatus}</Text>
+          <Text style={[styles.label, { color: colors.textSubtle }]}>Health read smoke</Text>
+          <Text style={[styles.value, { color: colors.text }]}>{healthStatus}</Text>
         </View>
 
         <Pressable
@@ -78,10 +84,11 @@ export default function BootstrapRoute() {
           onPress={runCompatibilityCheck}
           style={({ pressed }) => [
             styles.button,
+            { backgroundColor: colors.accent },
             pressed && styles.buttonPressed,
             checkState === 'running' && styles.buttonDisabled,
           ]}>
-          <Text style={styles.buttonText}>
+          <Text style={[styles.buttonText, { color: colors.onAccent }]}>
             {checkState === 'running' ? 'Checking…' : 'Run compatibility check'}
           </Text>
         </Pressable>
@@ -91,89 +98,79 @@ export default function BootstrapRoute() {
 }
 
 const styles = StyleSheet.create({
-  safeArea: {
-    flex: 1,
-    backgroundColor: '#0A0D12',
-  },
-  content: {
-    width: '100%',
-    maxWidth: 680,
-    alignSelf: 'center',
-    padding: 24,
-    gap: 16,
-  },
-  environmentBadge: {
-    alignSelf: 'flex-start',
-    backgroundColor: '#E7FF57',
-    borderRadius: 6,
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-  },
-  environmentText: {
-    color: '#0A0D12',
-    fontSize: 13,
-    fontWeight: '800',
-    letterSpacing: 1.2,
-  },
-  title: {
-    color: '#FFFFFF',
-    fontSize: 42,
-    fontWeight: '800',
-  },
-  subtitle: {
-    color: '#D6DAE1',
-    fontSize: 20,
-    fontWeight: '600',
-  },
   body: {
-    color: '#AAB2BF',
+    fontFamily: fontFamily.body,
     fontSize: 16,
     lineHeight: 24,
   },
-  previewNotice: {
-    borderColor: '#E7FF57',
-    borderWidth: 1,
-    borderRadius: 10,
-    padding: 12,
-  },
-  previewNoticeText: {
-    color: '#E7FF57',
-    fontSize: 13,
-    fontWeight: '700',
-  },
-  panel: {
-    backgroundColor: '#151A22',
-    borderRadius: 14,
-    padding: 18,
-    gap: 6,
-  },
-  label: {
-    color: '#7F8998',
-    fontSize: 12,
-    fontWeight: '700',
-    letterSpacing: 0.8,
-    marginTop: 8,
-    textTransform: 'uppercase',
-  },
-  value: {
-    color: '#FFFFFF',
-    fontSize: 16,
-  },
   button: {
     alignItems: 'center',
-    backgroundColor: '#E7FF57',
-    borderRadius: 12,
+    borderRadius: radius.md,
     padding: 16,
-  },
-  buttonPressed: {
-    opacity: 0.8,
   },
   buttonDisabled: {
     opacity: 0.5,
   },
+  buttonPressed: {
+    opacity: 0.8,
+  },
   buttonText: {
-    color: '#0A0D12',
+    fontFamily: fontFamily.strong,
     fontSize: 16,
-    fontWeight: '800',
+  },
+  content: {
+    alignSelf: 'center',
+    gap: spacing.md,
+    /** Wider than `layout.maxWidth` on purpose: this is a diagnostic table, not a product screen. */
+    maxWidth: 680,
+    padding: spacing.xl,
+    width: '100%',
+  },
+  environmentBadge: {
+    alignSelf: 'flex-start',
+    borderRadius: radius.sm,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+  },
+  environmentText: {
+    fontFamily: fontFamily.strong,
+    fontSize: typography.caption,
+    letterSpacing: 1.2,
+  },
+  label: {
+    fontFamily: fontFamily.strong,
+    fontSize: typography.micro,
+    letterSpacing: 0.8,
+    marginTop: spacing.sm,
+    textTransform: 'uppercase',
+  },
+  panel: {
+    borderRadius: radius.lg,
+    gap: 6,
+    padding: 18,
+  },
+  previewNotice: {
+    borderRadius: radius.md,
+    borderWidth: 1,
+    padding: spacing.md,
+  },
+  previewNoticeText: {
+    fontFamily: fontFamily.semi,
+    fontSize: typography.caption,
+  },
+  safeArea: {
+    flex: 1,
+  },
+  subtitle: {
+    fontFamily: fontFamily.semi,
+    fontSize: typography.heroInterpretation,
+  },
+  title: {
+    fontFamily: fontFamily.display,
+    fontSize: 42,
+  },
+  value: {
+    fontFamily: fontFamily.body,
+    fontSize: 16,
   },
 });

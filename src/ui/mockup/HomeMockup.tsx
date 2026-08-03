@@ -2,10 +2,19 @@ import { Link, useRouter } from 'expo-router';
 import { useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
+import {
+  fontFamily,
+  lineHeights,
+  numerals,
+  radius,
+  spacing,
+  typography,
+  useTheme,
+} from '@/ui/theme';
+
 import { HUBS, type HubId, centre } from './fixtures';
 import { CENTRE, DISC_RADIUS, STAGE } from './geometry';
 import { Orbit } from './Orbit';
-import { color } from './tokens';
 
 /**
  * Sized against the free circle inside the ring, not by eye: the widest row (the insight) sits near
@@ -28,9 +37,11 @@ function labelFor(id: HubId): string {
  *
  * One element wins per visual channel: size goes to the drift number, contrast to the weekly
  * insight, colour to the daily focus. Nothing competes on the same axis, so the eye resolves the
- * order in one pass. That is the rule to review this screen against.
+ * order in one pass. That is the rule to review this screen against, and it survived the move off
+ * the placeholder palette — only the hues changed.
  */
 export function HomeMockup() {
+  const { colors } = useTheme();
   const router = useRouter();
   const [selecting, setSelecting] = useState(false);
   const [selected, setSelected] = useState<readonly HubId[]>([]);
@@ -55,7 +66,7 @@ export function HomeMockup() {
     <View style={styles.screen}>
       <Link asChild href="/twin">
         <Pressable accessibilityRole="link" style={styles.twinLink}>
-          <Text style={styles.twinLinkText}>⌃  Digital Twin</Text>
+          <Text style={[styles.twinLinkText, { color: colors.textMuted }]}>⌃  Digital Twin</Text>
         </Pressable>
       </Link>
 
@@ -64,7 +75,7 @@ export function HomeMockup() {
           accessibilityLabel="Close the open table"
           accessibilityRole="button"
           onPress={close}
-          style={styles.scrim}
+          style={[styles.scrim, { backgroundColor: colors.scrim }]}
         />
       )}
 
@@ -74,18 +85,26 @@ export function HomeMockup() {
 
           <View pointerEvents="none" style={styles.centreBox}>
             {selecting ? (
-              <View style={styles.disc}>
-                <Text style={styles.discText}>Open{'\n'}Table</Text>
+              <View
+                style={[
+                  styles.disc,
+                  { backgroundColor: colors.surfaceSoft, borderColor: colors.border },
+                ]}>
+                <Text style={[styles.discText, { color: colors.textMuted }]}>Open{'\n'}Table</Text>
               </View>
             ) : (
               <>
-                <Text style={styles.driftNumber}>{centre.driftNumber}</Text>
-                <Text style={styles.driftCaption}>{centre.driftCaption}</Text>
-                <Text numberOfLines={2} style={styles.insight}>
+                <Text style={[styles.driftNumber, { color: colors.textMuted }]}>
+                  {centre.driftNumber}
+                </Text>
+                <Text style={[styles.driftCaption, { color: colors.textSubtle }]}>
+                  {centre.driftCaption}
+                </Text>
+                <Text numberOfLines={2} style={[styles.insight, { color: colors.text }]}>
                   {centre.insight}
                 </Text>
-                <View style={styles.focusPill}>
-                  <Text numberOfLines={1} style={styles.focusText}>
+                <View style={[styles.focusPill, { backgroundColor: colors.accentSoft }]}>
+                  <Text numberOfLines={1} style={[styles.focusText, { color: colors.accent }]}>
                     {centre.focus}
                   </Text>
                 </View>
@@ -96,7 +115,9 @@ export function HomeMockup() {
       </View>
 
       {selecting && (
-        <Text style={styles.prompt}>Who should be at the table?</Text>
+        <Text style={[styles.prompt, { color: colors.onScrimMuted }]}>
+          Who should be at the table?
+        </Text>
       )}
 
       <View style={styles.bottom}>
@@ -110,8 +131,12 @@ export function HomeMockup() {
           <Pressable
             accessibilityRole="button"
             onPress={() => setSelecting(true)}
-            style={({ pressed }) => [styles.openPill, pressed && styles.pressed]}>
-            <Text style={styles.openPillText}>Open Table</Text>
+            style={({ pressed }) => [
+              styles.openPill,
+              { backgroundColor: colors.surface, borderColor: colors.border },
+              pressed && styles.pressed,
+            ]}>
+            <Text style={[styles.openPillText, { color: colors.text }]}>Open Table</Text>
           </Pressable>
         )}
       </View>
@@ -128,6 +153,7 @@ function ConfirmBar({
   onConfirm: () => void;
   selected: readonly HubId[];
 }) {
+  const { colors } = useTheme();
   const ready = selected.length > 0;
   /** Named, never counted: the number of chosen domains varies, so "asks two" breaks at one and six. */
   const names = selected.map(labelFor).join(', ');
@@ -135,7 +161,7 @@ function ConfirmBar({
   return (
     <View style={styles.confirmRow}>
       <Pressable accessibilityRole="button" onPress={onCancel} style={styles.cancel}>
-        <Text style={styles.cancelText}>Cancel</Text>
+        <Text style={[styles.cancelText, { color: colors.onScrimMuted }]}>Cancel</Text>
       </Pressable>
       <Pressable
         accessibilityRole="button"
@@ -143,10 +169,22 @@ function ConfirmBar({
         onPress={onConfirm}
         style={({ pressed }) => [
           styles.confirm,
-          !ready && styles.confirmInert,
+          // Inert is an outline on the scrim, never a filled surface: `surface` is the brightest
+          // colour in the light theme, so filling it made the one disabled control the loudest
+          // thing on a deliberately dimmed screen.
+          ready
+            ? { backgroundColor: colors.accent }
+            : { borderColor: colors.onScrimMuted, borderWidth: 1 },
           pressed && styles.pressed,
         ]}>
-        <Text numberOfLines={1} style={[styles.confirmText, !ready && styles.confirmTextInert]}>
+        <Text
+          numberOfLines={1}
+          style={[
+            styles.confirmText,
+            ready
+              ? { color: colors.onAccent, fontFamily: fontFamily.semi }
+              : { color: colors.onScrimMuted, fontFamily: fontFamily.body },
+          ]}>
           {ready ? `Ask with ${names}` : 'Pick at least one'}
         </Text>
       </Pressable>
@@ -156,17 +194,17 @@ function ConfirmBar({
 
 const styles = StyleSheet.create({
   bottom: {
-    paddingBottom: 28,
-    paddingHorizontal: 20,
+    paddingBottom: spacing.xl,
+    paddingHorizontal: spacing.lg,
     zIndex: 3,
   },
   cancel: {
-    paddingHorizontal: 14,
-    paddingVertical: 14,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.md,
   },
   cancelText: {
-    color: color.textQuiet,
-    fontSize: 14,
+    fontFamily: fontFamily.body,
+    fontSize: typography.bodySmall,
   },
   centreBox: {
     alignItems: 'center',
@@ -178,36 +216,22 @@ const styles = StyleSheet.create({
     width: CENTRE_BOX.width,
   },
   confirm: {
-    backgroundColor: color.accent,
-    borderRadius: 22,
+    borderRadius: radius.xl,
     flex: 1,
-    paddingHorizontal: 18,
+    paddingHorizontal: spacing.lg,
     paddingVertical: 13,
-  },
-  confirmInert: {
-    backgroundColor: color.surface,
-    borderColor: color.hairline,
-    borderWidth: 1,
   },
   confirmRow: {
     alignItems: 'center',
     flexDirection: 'row',
-    gap: 4,
+    gap: spacing.xs,
   },
   confirmText: {
-    color: color.background,
-    fontSize: 14,
-    fontWeight: '700',
+    fontSize: typography.bodySmall,
     textAlign: 'center',
-  },
-  confirmTextInert: {
-    color: color.textQuiet,
-    fontWeight: '500',
   },
   disc: {
     alignItems: 'center',
-    backgroundColor: color.surfaceRaised,
-    borderColor: color.hairline,
     borderRadius: DISC_RADIUS,
     borderWidth: 1,
     height: DISC_RADIUS * 2,
@@ -215,68 +239,67 @@ const styles = StyleSheet.create({
     width: DISC_RADIUS * 2,
   },
   discText: {
-    color: color.textMuted,
-    fontSize: 12,
-    fontWeight: '600',
+    fontFamily: fontFamily.medium,
+    fontSize: typography.micro,
     lineHeight: 16,
     textAlign: 'center',
   },
   driftCaption: {
-    color: color.textQuiet,
+    fontFamily: fontFamily.body,
     fontSize: 9.5,
     letterSpacing: 0.7,
     marginTop: 2,
     textAlign: 'center',
     textTransform: 'uppercase',
   },
-  /** Large so it anchors, thin and grey so it never reads as today's verdict. */
+  /**
+   * Large so it anchors, and set in the lightest weight the brand has so it never reads as today's
+   * verdict. Tabular figures: this number drifts slowly, and digits that jitter imply daily motion.
+   */
   driftNumber: {
-    color: color.textMuted,
+    ...numerals.tabular,
+    fontFamily: fontFamily.display,
     fontSize: 40,
-    fontWeight: '300',
-    lineHeight: 44,
+    lineHeight: 46,
   },
   focusPill: {
-    backgroundColor: 'rgba(231, 255, 87, 0.10)',
     borderRadius: 13,
-    marginTop: 14,
+    marginTop: spacing.md,
     maxWidth: 210,
-    paddingHorizontal: 12,
+    paddingHorizontal: spacing.md,
     paddingVertical: 5,
   },
   focusText: {
-    color: color.accent,
+    fontFamily: fontFamily.medium,
     fontSize: 11.5,
   },
   /** The loudest thing on the screen, by contrast rather than by size. */
   insight: {
-    color: color.text,
-    fontSize: 14,
-    lineHeight: 19,
-    marginTop: 16,
+    fontFamily: fontFamily.body,
+    fontSize: typography.bodySmall,
+    lineHeight: lineHeights.bodySmall,
+    marginTop: spacing.md,
     textAlign: 'center',
   },
   openPill: {
     alignItems: 'center',
     alignSelf: 'center',
-    borderColor: color.hairline,
-    borderRadius: 22,
+    borderRadius: radius.xl,
     borderWidth: 1,
     paddingHorizontal: 26,
-    paddingVertical: 12,
+    paddingVertical: spacing.md,
   },
   openPillText: {
-    color: color.textMuted,
-    fontSize: 14,
-    fontWeight: '600',
+    fontFamily: fontFamily.medium,
+    fontSize: typography.bodySmall,
   },
   pressed: {
     opacity: 0.75,
   },
   prompt: {
-    color: color.textMuted,
-    fontSize: 13,
-    paddingBottom: 10,
+    fontFamily: fontFamily.body,
+    fontSize: typography.caption,
+    paddingBottom: spacing.sm,
     textAlign: 'center',
     zIndex: 3,
   },
@@ -285,7 +308,6 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
   },
   scrim: {
-    backgroundColor: 'rgba(10, 13, 18, 0.72)',
     bottom: 0,
     left: 0,
     position: 'absolute',
@@ -306,12 +328,12 @@ const styles = StyleSheet.create({
   },
   twinLink: {
     alignSelf: 'center',
-    paddingBottom: 4,
-    paddingTop: 14,
+    paddingBottom: spacing.xs,
+    paddingTop: spacing.md,
   },
   twinLinkText: {
-    color: color.textQuiet,
-    fontSize: 13,
+    fontFamily: fontFamily.body,
+    fontSize: typography.caption,
     letterSpacing: 0.4,
   },
 });

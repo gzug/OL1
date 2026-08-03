@@ -1,23 +1,29 @@
 import { Link } from 'expo-router';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
-import { color } from './tokens';
+import { fontFamily, lineHeights, radius, spacing, typography, useTheme } from '@/ui/theme';
 
 /**
  * Every tap that would do something real lands here. A stub that says so is honest; a screen that
  * quietly does nothing trains people to believe the mockup is broken rather than unbuilt.
  */
 export function StubScreen({ detail, title }: { detail?: string; title: string }) {
+  const { colors } = useTheme();
+
   return (
     <View style={styles.screen}>
-      <View style={styles.box}>
-        <Text style={styles.title}>{title}</Text>
-        <Text style={styles.body}>Mockup — this screen is not built yet.</Text>
-        {detail !== undefined && <Text style={styles.detail}>{detail}</Text>}
+      <View style={[styles.box, { borderColor: colors.border }]}>
+        <Text style={[styles.title, { color: colors.text }]}>{title}</Text>
+        <Text style={[styles.body, { color: colors.textSubtle }]}>
+          Mockup — this screen is not built yet.
+        </Text>
+        {detail !== undefined && (
+          <Text style={[styles.detail, { color: colors.accent }]}>{detail}</Text>
+        )}
       </View>
       <Link asChild href="/">
         <Pressable accessibilityRole="link" style={styles.back}>
-          <Text style={styles.backText}>← Back to Home</Text>
+          <Text style={[styles.backText, { color: colors.textSubtle }]}>← Back to Home</Text>
         </Pressable>
       </Link>
     </View>
@@ -26,31 +32,32 @@ export function StubScreen({ detail, title }: { detail?: string; title: string }
 
 const styles = StyleSheet.create({
   back: {
-    padding: 14,
+    padding: spacing.md,
   },
   backText: {
-    color: color.textQuiet,
-    fontSize: 14,
+    fontFamily: fontFamily.body,
+    fontSize: typography.bodySmall,
   },
   body: {
-    color: color.textQuiet,
-    fontSize: 13,
-    marginTop: 8,
+    fontFamily: fontFamily.body,
+    fontSize: typography.caption,
+    lineHeight: lineHeights.caption,
+    marginTop: spacing.sm,
     textAlign: 'center',
   },
   box: {
     alignItems: 'center',
-    borderColor: color.hairline,
-    borderRadius: 14,
+    borderRadius: radius.lg,
     borderStyle: 'dashed',
     borderWidth: 1,
-    marginHorizontal: 24,
+    marginHorizontal: spacing.xl,
     padding: 26,
   },
   detail: {
-    color: color.accent,
-    fontSize: 13,
-    marginTop: 14,
+    fontFamily: fontFamily.body,
+    fontSize: typography.caption,
+    lineHeight: lineHeights.caption,
+    marginTop: spacing.md,
     textAlign: 'center',
   },
   screen: {
@@ -59,8 +66,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   title: {
-    color: color.text,
-    fontSize: 20,
-    fontWeight: '600',
+    fontFamily: fontFamily.heading,
+    fontSize: typography.heroInterpretation,
   },
 });
