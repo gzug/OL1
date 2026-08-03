@@ -4,10 +4,11 @@ import { Pressable, ScrollView, StyleSheet, Text, View, type TextStyle } from 'r
 
 import { coachChat } from '@/application/chat/coachChat';
 import { toggleCoach } from '@/application/chat/threads';
+import { holdForHandoff, toRef } from '@/application/chat/attachments';
+import type { Attachment } from '@/core/attachments';
 import { ChatBar } from '@/ui/chat/ChatBar';
 import { CoachSelector } from '@/ui/chat/CoachSelector';
 import { coachesAtTable } from '@/ui/chat/coachList';
-import { ATTACHMENTS_NOTE } from '@/ui/chat/messages';
 import type { Coach, HubDefinition } from '@/ui/hubs/catalog';
 import { childHubs } from '@/ui/hubs/catalog';
 import type { CockpitPeriod, DayBar, FacetState, HubState } from '@/ui/hubs/hubState';
@@ -79,10 +80,12 @@ export function HubScreen({
   );
   const atTable = coachesAtTable(selected);
 
-  async function send(text: string) {
+  async function send(text: string, attachment?: Attachment) {
     // Persist first, then navigate — same order as Home, and for the same reason: what was typed
-    // reaches the conversation through the store rather than through a URL.
-    await coachChat.persist(selected, text);
+    // reaches the conversation through the store rather than through a URL. An attachment's bytes
+    // are not persisted at all, so they ride across the navigation in memory instead.
+    if (attachment !== undefined) holdForHandoff(attachment);
+    await coachChat.persist(selected, text, attachment === undefined ? undefined : toRef(attachment));
     setSelecting(false);
     router.push(`/table?coaches=${selected.join(',')}`);
   }
@@ -251,10 +254,9 @@ export function HubScreen({
 
       <View style={styles.barSlot}>
         <ChatBar
-          attachmentsNote={ATTACHMENTS_NOTE}
           coachNames={atTable.map((entry) => entry.name)}
           onOpenSelector={() => setSelecting((open) => !open)}
-          onSend={(text) => void send(text)}
+          onSend={(text, attachment) => void send(text, attachment)}
           // Names the SUBJECT, not the coach — the chip beside it already names the coach, and
           // "Sleep Coach · Ask the Sleep Coach…" said it twice in one bar. Caught on the rendered
           // screen; it reads fine in a mockup and badly at actual size.

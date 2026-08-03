@@ -7,9 +7,13 @@
  * keep straight.
  */
 
+import type { Attachment, AttachmentRef } from './attachments';
+
 export type ChatRole = 'assistant' | 'user';
 
 export type ChatTurn = {
+  /** What was attached, if anything. Metadata only — see `AttachmentRef` for why not the bytes. */
+  readonly attachment?: AttachmentRef;
   readonly id: string;
   readonly role: ChatRole;
   /**
@@ -83,6 +87,12 @@ export type CoachDescriptor = {
 };
 
 export type ChatRequest = {
+  /**
+   * What is attached to THIS message, with its bytes. History carries no attachments: the bytes are
+   * not kept, so an earlier photo cannot be re-sent, and pretending otherwise would silently drop
+   * context the model appears to have.
+   */
+  readonly attachment?: Attachment;
   /** Prior turns, oldest first. The pending placeholder is never included. */
   readonly history: readonly ChatTurn[];
   readonly message: string;

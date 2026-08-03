@@ -52,7 +52,11 @@ export default ({ config }: ConfigContext): ExpoConfig => {
     android: {
       ...config.android,
       package: variant.androidPackage,
-      permissions: ['android.permission.health.READ_STEPS'],
+      /**
+       * RECORD_AUDIO is for voice notes in the chat. Camera and media access are declared by the
+       * `expo-image-picker` plugin below rather than listed here, so the two never disagree.
+       */
+      permissions: ['android.permission.health.READ_STEPS', 'android.permission.RECORD_AUDIO'],
     },
     web: {
       ...config.web,
@@ -62,6 +66,24 @@ export default ({ config }: ConfigContext): ExpoConfig => {
     plugins: [
       'expo-router',
       'expo-health-connect',
+      /**
+       * Every string here is what the person reads in the system prompt when OL1 asks. They say
+       * what the app does with the thing, not that it "needs" it — a permission dialog is the one
+       * place the app has to justify itself in one sentence.
+       */
+      [
+        'expo-image-picker',
+        {
+          cameraPermission: 'OL1 uses the camera when you take a photo to send to a coach.',
+          photosPermission: 'OL1 reads a photo or video only when you pick one to send to a coach.',
+        },
+      ],
+      [
+        'expo-audio',
+        {
+          microphonePermission: 'OL1 uses the microphone when you record a voice note for a coach.',
+        },
+      ],
       [
         'expo-build-properties',
         {

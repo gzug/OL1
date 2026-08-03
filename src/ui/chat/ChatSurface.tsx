@@ -2,6 +2,7 @@ import { Link, useRouter } from 'expo-router';
 import { useMemo, useRef, useState } from 'react';
 import { KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
+import { describe } from '@/application/chat/attachments';
 import { splitCoachVoices, type Voice } from '@/application/chat/prompt';
 import { toggleCoach } from '@/application/chat/threads';
 import type { ChatTurn } from '@/core/chat';
@@ -20,7 +21,7 @@ import { CoachSelector } from './CoachSelector';
 import { ThreadList } from './ThreadList';
 import { coachesAtTable } from './coachList';
 import { isPending } from './chatTurns';
-import { ATTACHMENTS_NOTE, unavailableMessage } from './messages';
+import { unavailableMessage } from './messages';
 import { useCoachChat } from './useCoachChat';
 
 /**
@@ -35,6 +36,13 @@ import { useCoachChat } from './useCoachChat';
  */
 
 type Sheet = 'coaches' | 'history' | null;
+
+const ATTACHMENT_LABEL = {
+  audio: 'Voice note',
+  document: 'File',
+  image: 'Photo',
+  video: 'Video',
+} as const;
 
 export function ChatSurface({ coachIds }: { coachIds: readonly string[] }) {
   const { colors } = useTheme();
@@ -125,11 +133,10 @@ export function ChatSurface({ coachIds }: { coachIds: readonly string[] }) {
         {sheet === 'history' && <ThreadList onClose={() => setSheet(null)} onOpen={reopen} />}
         <View style={styles.barSlot}>
           <ChatBar
-            attachmentsNote={ATTACHMENTS_NOTE}
             coachNames={coaches.map((coach) => coach.name)}
             generating={status === 'generating'}
             onOpenSelector={() => setSheet((open) => (open === 'coaches' ? null : 'coaches'))}
-            onSend={(text) => void send(text)}
+            onSend={(text, attachment) => void send(text, attachment)}
           />
         </View>
       </View>
@@ -149,7 +156,16 @@ function Turn({
   if (turn.role === 'user') {
     return (
       <View style={[styles.mine, { backgroundColor: colors.surface, borderColor: colors.border }]}>
-        <Text style={[styles.mineText, { color: colors.text }]}>{turn.text}</Text>
+        {/* What was attached, never the thing itself: the bytes are not kept, so a thumbnail here
+            would be a promise the store cannot honour on the next open. */}
+        {turn.attachment !== undefined && (
+          <Text style={[styles.attached, { color: colors.accent }]}>
+            {ATTACHMENT_LABEL[turn.attachment.kind]} · {describe(turn.attachment)}
+          </Text>
+        )}
+        {turn.text.length > 0 && (
+          <Text style={[styles.mineText, { color: colors.text }]}>{turn.text}</Text>
+        )}
       </View>
     );
   }
@@ -178,6 +194,11 @@ function Turn({
 const styles = StyleSheet.create({
   answer: {
     paddingRight: spacing.lg,
+  },
+  attached: {
+    fontFamily: fontFamily.medium,
+    fontSize: typography.micro,
+    marginBottom: 3,
   },
   answerText: {
     fontFamily: fontFamily.body,

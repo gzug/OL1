@@ -22,9 +22,3 @@ export function unavailableMessage(reason: UnavailableReason): string {
       return 'That took too long and was given up on. Ask again.';
   }
 }
-
-/**
- * Shown when `+` or the microphone is tapped. Says what is missing rather than doing nothing —
- * a control that swallows a tap silently reads as broken, not as unfinished.
- */
-export const ATTACHMENTS_NOTE = 'Photos, videos, files and voice notes are not wired up yet.';

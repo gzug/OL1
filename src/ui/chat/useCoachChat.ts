@@ -16,7 +16,9 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 
+import type { Attachment } from '@/core/attachments';
 import type { ChatTurn, CoachDescriptor, UnavailableReason } from '@/core/chat';
+import { takeHeld, toRef } from '@/application/chat/attachments';
 import { coachChat } from '@/application/chat/coachChat';
 
 import { dropPendingTurn, resolvePendingTurn } from './chatTurns';
@@ -40,11 +42,11 @@ export function useCoachChat(coaches: readonly CoachDescriptor[]) {
   // decide which thread this is. Keying the effect on the joined ids is what stops a reload loop.
   const coachKey = coaches.map((coach) => coach.id).join(',');
 
-  const answer = useCallback(async () => {
+  const answer = useCallback(async (attachment?: Attachment) => {
     setStatus('generating');
     setTurns((current) => [...current, { id: 'pending', role: 'assistant', text: '' }]);
 
-    const reply = await coachChat.answer(coaches);
+    const reply = await coachChat.answer(coaches, attachment);
 
     if (!mounted.current) return;
     if (reply === null || reply.status === 'unavailable') {
@@ -69,7 +71,9 @@ export function useCoachChat(coaches: readonly CoachDescriptor[]) {
       setStatus('ready');
 
       const last = stored[stored.length - 1];
-      if (last?.role === 'user') await answer();
+      // `takeHeld` is the other half of the handoff from Home's bar: the question came through the
+      // store, the bytes came through memory, and this is where they meet again.
+      if (last?.role === 'user') await answer(takeHeld());
     })();
 
     return () => {
@@ -79,17 +83,27 @@ export function useCoachChat(coaches: readonly CoachDescriptor[]) {
   }, [coachKey, answer]);
 
   const send = useCallback(
-    async (text: string) => {
+    async (text: string, attachment?: Attachment) => {
       const trimmed = text.trim();
-      if (trimmed.length === 0 || status === 'generating') return;
+      // An attachment on its own is a message. "Look at this" with a photo needs no sentence.
+      if ((trimmed.length === 0 && attachment === undefined) || status === 'generating') return;
 
       await coachChat.persist(
         coaches.map((coach) => coach.id),
         trimmed,
+        attachment === undefined ? undefined : toRef(attachment),
       );
       if (!mounted.current) return;
-      setTurns((current) => [...current, { id: `sent-${current.length}`, role: 'user', text: trimmed }]);
-      await answer();
+      setTurns((current) => [
+        ...current,
+        {
+          ...(attachment === undefined ? {} : { attachment: toRef(attachment) }),
+          id: `sent-${current.length}`,
+          role: 'user',
+          text: trimmed,
+        },
+      ]);
+      await answer(attachment);
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps -- contents, not identity; see coachKey.
     [answer, coachKey, status],

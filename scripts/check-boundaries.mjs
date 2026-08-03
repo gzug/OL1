@@ -14,8 +14,24 @@ import { readFile, readdir } from 'node:fs/promises';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-/** Everything a screen may not reach for, whether by package name or by path alias. */
-const forbidden = ['expo-sqlite', 'react-native-health-connect', '@/infrastructure/'];
+/**
+ * Everything a screen may not reach for, whether by package name or by path alias.
+ *
+ * The media modules are here for the same reason SQLite is: they are device capabilities behind a
+ * permission, and a screen that opens a camera directly is a screen that has to know about
+ * permissions, cancellation and file reads. `expo-audio` in particular is the one that would have
+ * slipped through — its documented API is a hook, and a hook can only be called from a component,
+ * which is exactly the pull this guard exists to resist.
+ */
+const forbidden = [
+  '@/infrastructure/',
+  'expo-audio',
+  'expo-document-picker',
+  'expo-file-system',
+  'expo-image-picker',
+  'expo-sqlite',
+  'react-native-health-connect',
+];
 
 const scanned = ['../src/app/', '../src/ui/'].map((relative) =>
   fileURLToPath(new URL(relative, import.meta.url)),

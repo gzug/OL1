@@ -100,6 +100,20 @@ export async function geminiGenerate(
     throw missing;
   }
 
+  // The attachment rides with the message, not before it: Gemini reads parts in order, and a
+  // photo that arrives before the sentence about it is a photo with no question attached.
+  const parts: ({ text: string } | { inline_data: { data: string; mime_type: string } })[] = [
+    { text: request.message },
+  ];
+  if (request.attachment !== undefined) {
+    parts.push({
+      inline_data: {
+        data: request.attachment.bytes,
+        mime_type: request.attachment.mimeType,
+      },
+    });
+  }
+
   const contents = [
     ...request.history
       .filter((turn) => turn.text.length > 0)
@@ -107,7 +121,7 @@ export async function geminiGenerate(
         parts: [{ text: turn.text }],
         role: turn.role === 'assistant' ? 'model' : 'user',
       })),
-    { parts: [{ text: request.message }], role: 'user' },
+    { parts, role: 'user' },
   ];
 
   const response = await fetchWithTimeout(

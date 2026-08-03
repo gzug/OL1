@@ -79,7 +79,10 @@ same day by the owner's answers, argued in `docs/decisions/0006-one-chat-surface
 - **The chat is a way to put data into a hub**, not only a way to ask about one: a photo stored as a
   meal, a sentence stored as an activity. Anything it captures is shown back and confirmed before it
   is written.
-- Photos, videos, files and voice notes can be sent into the chat.
+- **Photos, videos, files and voice notes can be sent into the chat.** What is sent is not kept: the
+  conversation records that a photo was sent, its name and its size, never the photo itself. Argued
+  in `docs/decisions/0007-attachments-keep-nothing.md`.
+- One attachment goes with one message, and about 15MB is the most that fits in a single send.
 - The bar is wired to a real model from the first version, and shows a plainly-worded
   not-configured state until its key exists.
 - Fixture numbers come from the same sources Legacy used, and Legacy's own synthetic demo data is
@@ -95,6 +98,8 @@ same day by the owner's answers, argued in `docs/decisions/0006-one-chat-surface
 - Legacy data migration or a deliberate clean start.
 - Production cutover, signing, store distribution, and EAS Update.
 - File import, background work, telemetry, and external integrations.
+- Whether a sent photo should be viewable again later, which needs a media store rather than a
+  column — see `0007`.
 
 ## Rejected
 

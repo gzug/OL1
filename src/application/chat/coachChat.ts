@@ -15,6 +15,7 @@
  * typed ever travels in a URL to get between the two screens.
  */
 
+import type { Attachment, AttachmentRef } from '@/core/attachments';
 import type {
   ChatModel,
   ChatStore,
@@ -38,11 +39,11 @@ function turnId(): string {
 
 export type CoachChat = {
   /** Read the last turn's question and answer it. Returns null when nothing is waiting. */
-  answer(coaches: readonly CoachDescriptor[]): Promise<CoachReply | null>;
+  answer(coaches: readonly CoachDescriptor[], attachment?: Attachment): Promise<CoachReply | null>;
   isConfigured(): boolean;
   listThreads(): Promise<readonly ChatThreadSummary[]>;
   /** Write the question. Always completes before anything is asked of the model. */
-  persist(coachIds: readonly string[], text: string): Promise<void>;
+  persist(coachIds: readonly string[], text: string, attachment?: AttachmentRef): Promise<void>;
   readTurns(coachIds: readonly string[]): Promise<readonly ChatTurn[]>;
 };
 
@@ -51,7 +52,7 @@ export function createCoachChat(
   store: ChatStore = defaultStore,
 ): CoachChat {
   return {
-    async answer(coaches) {
+    async answer(coaches, attachment) {
       const coachIds = coaches.map((coach) => coach.id);
       const threadId = threadIdFor(coachIds);
       const turns = await store.readTurns(threadId);
@@ -61,6 +62,7 @@ export function createCoachChat(
       if (last === undefined || last.role !== 'user') return null;
 
       const reply = await model.generate({
+        attachment,
         history: turns.slice(0, -1),
         message: last.text,
         systemPrompt: systemPromptFor(coaches),
@@ -81,11 +83,16 @@ export function createCoachChat(
 
     listThreads: () => store.listThreads(),
 
-    async persist(coachIds, text) {
+    async persist(coachIds, text, attachment) {
       const threadId = threadIdFor(coachIds);
       const now = new Date().toISOString();
       await store.createThread({ coachIds, createdAt: now, id: threadId, updatedAt: now });
-      await store.appendTurn(threadId, { id: turnId(), role: 'user', text });
+      await store.appendTurn(threadId, {
+        ...(attachment === undefined ? {} : { attachment }),
+        id: turnId(),
+        role: 'user',
+        text,
+      });
     },
 
     readTurns(coachIds) {
