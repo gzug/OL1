@@ -28,6 +28,7 @@ export function ChatBar({
   onOpenSelector,
   onSend,
   onStop,
+  placeholder = 'Message',
 }: {
   /** Shown when `+` or the microphone is tapped, until part C wires them. */
   attachmentsNote?: string;
@@ -37,6 +38,13 @@ export function ChatBar({
   onOpenSelector: () => void;
   onSend: (text: string) => void;
   onStop?: () => void;
+  /**
+   * The invitation, not the label. On Home "Message" is right, because the bar is already the
+   * obvious thing to type in. On a hub it replaced a card that said "Ask the Sleep Coach", and the
+   * chip alone could not carry that job — a chip names who is listening, it does not ask anything.
+   * Putting the invitation in the widest text in the bar is what let the card go.
+   */
+  placeholder?: string;
 }) {
   const { colors } = useTheme();
   const [text, setText] = useState('');
@@ -81,7 +89,7 @@ export function ChatBar({
           blurOnSubmit={false}
           onChangeText={setText}
           onSubmitEditing={send}
-          placeholder="Message"
+          placeholder={placeholder}
           placeholderTextColor={colors.textSubtle}
           returnKeyType="send"
           style={[styles.input, { color: colors.text }]}
