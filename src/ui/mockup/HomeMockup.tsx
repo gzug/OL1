@@ -49,7 +49,8 @@ export function HomeMockup() {
 
   function handleHubPress(id: HubId) {
     if (!selecting) {
-      // Tapping a hub opens that hub's own state. Chat is one step further in, never the front door.
+      // A hub opens two doors — its coach, and its cockpit. `docs/decisions/0005-the-hub-model.md`
+      // records why "chat is one step further in" stopped being right. Neither door is built yet.
       router.push(`/hub/${id}`);
       return;
     }
