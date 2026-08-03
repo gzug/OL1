@@ -3,23 +3,24 @@ import type { HubState } from '../hubState';
 /**
  * FIXTURE — invented for layout review. See the header of `../hubState.ts`.
  *
- * Mind is Legacy's **Resilience**, renamed. An earlier version of this file said nothing was
- * connected to Mind at all, and that was wrong for an avoidable reason: the search for Legacy
- * material used OL1's word, "mind", and Legacy's word was "resilience". The owner caught it.
- * `hooks/useCurrentAnomalyTileIds.ts` maps `rhr_elevated → resilience`, and the domain runs through
- * `insights/engine/knowledgeBase.ts`, `WearablesGroupCard` and `data/persona/recoverySignals.ts`.
+ * This hub was called Mind for one day. The owner renamed it to **Resilience** on 2026-08-03, which
+ * is both Legacy's own name for the domain and a truer description of the evidence: heart-rate
+ * variability and resting heart rate are physiological recovery, not mood or journaling. The rename
+ * removes a mismatch rather than creating one.
  *
- * So this hub reads what Legacy's Resilience read: heart-rate variability and resting heart rate.
- * That is worth being plain about — it is PHYSIOLOGICAL recovery, not mood or journaling. A hub
- * called Mind whose evidence is entirely cardiac is a real tension, and it is the owner's call; it
- * is recorded here so nobody quietly resolves it the other way.
+ * It was also briefly written as an empty hub, which was wrong for an avoidable reason: the search
+ * for Legacy material used OL1's word, "mind", and Legacy's word was "resilience" — a word that
+ * appears in no Legacy filename at all. `hooks/useCurrentAnomalyTileIds.ts` maps
+ * `rhr_elevated → resilience`, and the domain runs through `insights/engine/knowledgeBase.ts`,
+ * `WearablesGroupCard` and `data/persona/recoverySignals.ts`.
  *
  * Two facets stay missing on purpose. Body battery and Garmin's own stress score are proprietary and
  * do NOT come through Android Health Connect, which is the route the owner chose over Legacy's
  * owner-run cloud box. Legacy's Resilience had them and this cannot, so the honest screen says so
- * rather than quietly narrowing what the domain claims to cover.
+ * rather than quietly narrowing what the domain claims to cover. HRV and SpO2 are unaffected —
+ * Health Connect carries both.
  */
-export const mind: HubState = {
+export const resilience: HubState = {
   basis: 'From heart-rate variability and resting heart rate on 6 of the last 7 nights.',
   cockpit: {
     periods: [

@@ -1,6 +1,25 @@
 import type { HubState } from '../hubState';
 
-/** FIXTURE — invented for layout review. See the header of `../hubState.ts`. */
+/**
+ * FIXTURE — invented for layout review. See the header of `../hubState.ts`.
+ *
+ * Three rules carried over from Legacy's `data/home/sleepRingModel.ts`, which records them as owner
+ * decisions from 2026-07-27. They were re-derived worse here before anyone read that file:
+ *
+ * 1. **Attribution.** A deep/light/REM breakdown is the VENDOR's claim, not ours — the app does not
+ *    compute stages, the watch does. Health Connect is *the pipe, not the measurer*, and naming it
+ *    as the source would be re-badging. Without a nameable vendor there is no breakdown to show,
+ *    only total duration, which needs no attribution because it is nobody's interpretation. That is
+ *    why the stages facet below is missing rather than merely "not connected".
+ * 2. **Denominator.** Time in bed includes awake; time asleep does not. Every number here is time
+ *    ASLEEP, and nothing may describe a share "of your sleep" unless it really excludes awake.
+ * 3. **No order.** Nothing may imply a chronology of the night. The seven-day strip is seven nights
+ *    side by side, never a shape within one night.
+ *
+ * Legacy also keeps a night that never arrived ('missing') distinct from a read that failed
+ * ('error') the whole way through. This fixture has no error state to show, but the distinction is
+ * why Friday reads as "not worn" rather than as zero.
+ */
 export const sleep: HubState = {
   basis: 'From 6 of the last 7 nights recorded by your watch.',
   cockpit: {
@@ -44,7 +63,7 @@ export const sleep: HubState = {
     { detail: '6 of the last 7 nights', label: 'Time asleep', state: 'reading' },
     { detail: 'Bed and wake times, 6 nights', label: 'Rhythm', state: 'reading' },
     { detail: 'Shared with Body', label: 'Resting heart rate', state: 'elsewhere' },
-    { detail: 'Not connected yet', label: 'Sleep stages', state: 'missing' },
+    { detail: 'Needs a watch that names itself', label: 'Sleep stages', state: 'missing' },
   ],
   observation: 'Your shortest nights land on the days you train in the evening.',
 };
