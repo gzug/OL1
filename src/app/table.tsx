@@ -1,26 +1,36 @@
 import { useLocalSearchParams } from 'expo-router';
 
-import { findHub } from '@/ui/hubs/catalog';
+import { coachForHub } from '@/ui/hubs/catalog';
+import { ChatSurface } from '@/ui/chat/ChatSurface';
 import { MockupScreen } from '@/ui/mockup/MockupScreen';
-import { StubScreen } from '@/ui/mockup/StubScreen';
 
 /**
- * The stub names the domains it was handed. That is the whole point of the route: it proves the
- * Open Table opens ONE chat carrying every selected hub, without building a chat to prove it.
+ * The conversation.
+ *
+ * The route carries coach IDS and nothing else. What the person typed never travels here — the bar
+ * on Home writes the question to the store and this screen picks it up, which keeps a health
+ * question out of browser history and out of the host's access logs.
+ *
+ * Two parameters, on purpose. `?coaches=` is what the bar sends. `?domains=` is what a hub's coach
+ * door sends — hub ids, not coach ids, and the two are not interchangeable: the Labs hub opens the
+ * Longevity Guide. `coachForHub` is the catalog's own answer to that, so this route asks it rather
+ * than assuming the ids match. Accepting both is also what keeps `HubScreen.tsx` working untouched.
  */
 export default function TableRoute() {
-  const { domains } = useLocalSearchParams<{ domains?: string }>();
-  const names = (domains ?? '')
-    .split(',')
-    .map((id) => findHub(id)?.label)
-    .filter((label): label is string => label !== undefined);
+  const { coaches, domains } = useLocalSearchParams<{ coaches?: string; domains?: string }>();
+
+  const fromCoaches = split(coaches);
+  const fromHubs = split(domains)
+    .map((hubId) => coachForHub(hubId)?.id)
+    .filter((id): id is string => id !== undefined);
 
   return (
     <MockupScreen>
-      <StubScreen
-        detail={names.length > 0 ? `One chat, carrying ${names.join(', ')}` : undefined}
-        title="Open Table"
-      />
+      <ChatSurface coachIds={[...new Set([...fromCoaches, ...fromHubs])]} />
     </MockupScreen>
   );
+}
+
+function split(value: string | undefined): readonly string[] {
+  return (value ?? '').split(',').filter((id) => id.length > 0);
 }
