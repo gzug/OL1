@@ -2,6 +2,7 @@ import { Link, useRouter } from 'expo-router';
 import { useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
+import { findHub, type HubId } from '@/ui/hubs/catalog';
 import {
   fontFamily,
   lineHeights,
@@ -12,7 +13,7 @@ import {
   useTheme,
 } from '@/ui/theme';
 
-import { HUBS, type HubId, centre } from './fixtures';
+import { centre } from './fixtures';
 import { CENTRE, DISC_RADIUS, STAGE } from './geometry';
 import { Orbit } from './Orbit';
 
@@ -24,7 +25,7 @@ import { Orbit } from './Orbit';
 const CENTRE_BOX = { height: 160, width: 240 };
 
 function labelFor(id: HubId): string {
-  return HUBS.find((hub) => hub.id === id)?.label ?? id;
+  return findHub(id)?.label ?? id;
 }
 
 /**

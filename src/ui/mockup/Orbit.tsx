@@ -2,7 +2,8 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { fontFamily, useTheme } from '@/ui/theme';
 
-import { HUBS, type HubId } from './fixtures';
+import { orbitHubs, type HubId } from '@/ui/hubs/catalog';
+
 import { CENTRE, HUB_RADIUS, ORBIT_RADIUS, STAGE, hubCentre, spoke } from './geometry';
 
 type OrbitProps = {
@@ -14,11 +15,16 @@ type OrbitProps = {
 
 export function Orbit({ onHubPress, selecting, selected }: OrbitProps) {
   const { colors } = useTheme();
+  /**
+   * Top-level hubs only. Activity's exercise types are hubs too, but they belong inside Activity —
+   * putting them on the ring would be the orbit claiming eleven domains instead of six.
+   */
+  const hubs = orbitHubs();
 
   return (
     <View style={styles.stage}>
       {selecting &&
-        HUBS.map((hub, index) => {
+        hubs.map((hub, index) => {
           const line = spoke(index);
           return (
             <View
@@ -40,7 +46,7 @@ export function Orbit({ onHubPress, selecting, selected }: OrbitProps) {
           );
         })}
 
-      {HUBS.map((hub, index) => {
+      {hubs.map((hub, index) => {
         const position = hubCentre(index);
         const isSelected = selecting && selected.includes(hub.id);
         const isDimmed = selecting && !selected.includes(hub.id);
