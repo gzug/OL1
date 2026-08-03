@@ -12,22 +12,12 @@
  * answer is whether the hierarchy holds — and that depends on whether a sentence wraps.
  */
 
-export type HubId = 'activity' | 'body' | 'labs' | 'mind' | 'nutrition' | 'sleep';
-
-export type Hub = {
-  readonly id: HubId;
-  readonly label: string;
-};
-
-/** Ring order, starting at the right and going clockwise. Labs sits next to the drift number. */
-export const HUBS: readonly Hub[] = [
-  { id: 'activity', label: 'Activity' },
-  { id: 'nutrition', label: 'Nutrition' },
-  { id: 'body', label: 'Body' },
-  { id: 'mind', label: 'Mind' },
-  { id: 'labs', label: 'Labs' },
-  { id: 'sleep', label: 'Sleep' },
-];
+/**
+ * The hubs moved to `src/ui/hubs/catalog.ts` when they stopped being a fixed six and became data the
+ * user can add to. Import them from there, not from here. Nothing about the ring order changed —
+ * `orbitHubs()` returns the same six in the same sequence, which is what keeps
+ * `tests/orbit-geometry.test.ts` meaningful across the move.
+ */
 
 export const centre = {
   /** Years with a decimal, not an index out of 100. A measurement, not a grade. */

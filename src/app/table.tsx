@@ -1,6 +1,6 @@
 import { useLocalSearchParams } from 'expo-router';
 
-import { HUBS } from '@/ui/mockup/fixtures';
+import { findHub } from '@/ui/hubs/catalog';
 import { MockupScreen } from '@/ui/mockup/MockupScreen';
 import { StubScreen } from '@/ui/mockup/StubScreen';
 
@@ -12,7 +12,7 @@ export default function TableRoute() {
   const { domains } = useLocalSearchParams<{ domains?: string }>();
   const names = (domains ?? '')
     .split(',')
-    .map((id) => HUBS.find((hub) => hub.id === id)?.label)
+    .map((id) => findHub(id)?.label)
     .filter((label): label is string => label !== undefined);
 
   return (
