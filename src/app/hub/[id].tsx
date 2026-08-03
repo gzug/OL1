@@ -1,20 +1,30 @@
 import { useLocalSearchParams } from 'expo-router';
 
 import { coachForHub, findHub } from '@/ui/hubs/catalog';
+import { HubScreen } from '@/ui/hubs/HubScreen';
+import { hubStateFor } from '@/ui/hubs/states';
 import { MockupScreen } from '@/ui/mockup/MockupScreen';
 import { StubScreen } from '@/ui/mockup/StubScreen';
 
 /**
- * A hub's front door. Still a stub: the two doors a hub opens — its coach, and its cockpit — are
- * designed but not built yet, and a hub filled in to look finished is the harder thing to correct.
+ * A hub's front door: two doors, its coach and its cockpit, on one screen.
  *
- * `[id]` is now any string, because hubs are data the user can add to. An id that resolves to
- * nothing is therefore an ordinary state rather than an impossible one, and it says so plainly.
+ * `[id]` is any string, because hubs are data the user can add to. Two different misses are possible
+ * and they say different things: an id that names no hub at all, and a hub that exists but has no
+ * state written for it yet — which will be the normal case for every hub a user creates.
  */
 export default function HubRoute() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const hub = findHub(id);
-  const coach = hub === undefined ? undefined : coachForHub(hub.id);
+  const state = hub === undefined ? undefined : hubStateFor(hub.id);
+
+  if (hub !== undefined && state !== undefined) {
+    return (
+      <MockupScreen>
+        <HubScreen coach={coachForHub(hub.id)} hub={hub} state={state} />
+      </MockupScreen>
+    );
+  }
 
   return (
     <MockupScreen>
@@ -22,7 +32,7 @@ export default function HubRoute() {
         detail={
           hub === undefined
             ? 'No hub by that name.'
-            : `Two doors go here: ${coach?.name ?? 'its coach'}, and this hub's cockpit.`
+            : 'This hub has no cockpit yet. Its coach and its own state go here.'
         }
         title={hub?.label ?? 'Hub'}
       />
