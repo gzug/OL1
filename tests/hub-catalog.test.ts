@@ -54,7 +54,7 @@ test('every nested hub names a parent that exists, and no parent is itself neste
 test('the orbit is the six built-in hubs, in ring order', () => {
   assert.deepEqual(
     orbitHubs().map((hub) => hub.id),
-    ['activity', 'nutrition', 'body', 'mind', 'labs', 'sleep'],
+    ['activity', 'nutrition', 'body', 'resilience', 'labs', 'sleep'],
   );
 });
 

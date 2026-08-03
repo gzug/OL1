@@ -15,16 +15,16 @@ import type { HubState } from '../hubState';
 import { activity } from './activity';
 import { body } from './body';
 import { labs } from './labs';
-import { mind } from './mind';
 import { nutrition } from './nutrition';
+import { resilience } from './resilience';
 import { sleep } from './sleep';
 
 export const HUB_STATES: Readonly<Record<HubId, HubState>> = {
   activity,
   body,
   labs,
-  mind,
   nutrition,
+  resilience,
   sleep,
 };
 

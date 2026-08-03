@@ -53,11 +53,15 @@ export type HubDefinition = {
  * Legacy's own: Nutrition Expert, Running Coach, Sleep Coach, Longevity Guide, Strength Coach,
  * Cycling Coach, Swimming Coach, Golf Coach.
  *
- * NOT ported, and written here for the first time: `activity`, `body` and `mind`. Legacy has no
- * umbrella activity coach (it went straight to marathon/gym/cycle/swim/golf), no body coach at all,
- * and folded mental clarity, stress, habits and mood into a catch-all called `general`. OL1 has a
- * hub for each of those, and a hub whose coach is "general" would be the only one that cannot say
- * what it is for.
+ * NOT ported, and written here for the first time: `activity`, `body` and `resilience`. Legacy has
+ * no umbrella activity coach (it went straight to marathon/gym/cycle/swim/golf) and no body coach at
+ * all. Resilience was a Legacy DOMAIN but never had a coach of its own — it was folded into a
+ * catch-all called `general`, and a hub whose coach is "general" would be the only one that cannot
+ * say what it is for.
+ *
+ * The hub is called Resilience, not Mind: the owner renamed it on 2026-08-03 to match Legacy, and
+ * because the evidence under it is recovery — heart-rate variability and resting heart rate — which
+ * "Mind" mis-described.
  *
  * Legacy's system prompts are deliberately not ported. They name a product and a scope that the spec
  * has not settled here, and a prompt is behaviour, not design — it belongs with the Gemini wiring.
@@ -66,7 +70,7 @@ export const COACHES: readonly Coach[] = [
   { focus: 'Movement across everything you do.', id: 'activity', name: 'Activity Coach' },
   { focus: 'Nutrition and metabolic context.', id: 'nutrition', name: 'Nutrition Expert' },
   { focus: 'Composition and physical change over time.', id: 'body', name: 'Body Coach' },
-  { focus: 'Clarity, stress and the habits around them.', id: 'mind', name: 'Mind Coach' },
+  { focus: 'Recovery, and what your body has left in the tank.', id: 'resilience', name: 'Resilience Coach' },
   { focus: 'Long-term health patterns.', id: 'longevity', name: 'Longevity Guide' },
   { focus: 'Sleep rhythm and recovery habits.', id: 'sleep', name: 'Sleep Coach' },
   { focus: 'Training load, pacing, and recovery.', id: 'running', name: 'Running Coach' },
@@ -90,7 +94,7 @@ export const SEED_HUBS: readonly HubDefinition[] = [
   { coachId: 'activity', id: 'activity', label: 'Activity', origin: 'builtIn' },
   { coachId: 'nutrition', id: 'nutrition', label: 'Nutrition', origin: 'builtIn' },
   { coachId: 'body', id: 'body', label: 'Body', origin: 'builtIn' },
-  { coachId: 'mind', id: 'mind', label: 'Mind', origin: 'builtIn' },
+  { coachId: 'resilience', id: 'resilience', label: 'Resilience', origin: 'builtIn' },
   { coachId: 'longevity', id: 'labs', label: 'Labs', origin: 'builtIn' },
   { coachId: 'sleep', id: 'sleep', label: 'Sleep', origin: 'builtIn' },
 
