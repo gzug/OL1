@@ -2,6 +2,12 @@ import { Link, useRouter } from 'expo-router';
 import { useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View, type TextStyle } from 'react-native';
 
+import { coachChat } from '@/application/chat/coachChat';
+import { toggleCoach } from '@/application/chat/threads';
+import { ChatBar } from '@/ui/chat/ChatBar';
+import { CoachSelector } from '@/ui/chat/CoachSelector';
+import { coachesAtTable } from '@/ui/chat/coachList';
+import { ATTACHMENTS_NOTE } from '@/ui/chat/messages';
 import type { Coach, HubDefinition } from '@/ui/hubs/catalog';
 import { childHubs } from '@/ui/hubs/catalog';
 import type { CockpitPeriod, DayBar, FacetState, HubState } from '@/ui/hubs/hubState';
@@ -21,13 +27,24 @@ import {
  * A hub's own screen.
  *
  * Two doors, per `docs/decisions/0005-the-hub-model.md`: the coach, and the cockpit. They are not
- * two screens with a chooser between them — the cockpit IS this screen, and the coach sits at the
- * top of it as the one saturated element. A chooser would spend a whole screen and a tap asking a
- * question the user has already answered by opening the hub.
+ * two screens with a chooser between them — the cockpit IS this screen, and the coach is the chat
+ * bar pinned under it. A chooser would spend a whole screen and a tap asking a question the user
+ * already answered by opening the hub.
  *
- * Bands render only when the hub has them. Mind has no observation and no data, so it shows a coach,
- * a sentence saying nothing is connected, and its coverage. That is the honest screen for it, and
- * padding it would be the score page under another name.
+ * The coach used to be a tinted card at the top. Two mockups were put side by side and the card
+ * lost on three counts: the bar is where the input lives on Home, so there is nothing to learn; the
+ * screen gets a whole data row shorter; and the coach moves from the top of a long scroll into
+ * thumb reach. What the card did better was ASK — a chip names who is listening, it does not invite
+ * anything — so the invitation moved into the bar's placeholder, which is the widest text in it.
+ * That is the whole reason `ChatBar` takes a `placeholder` prop.
+ *
+ * The bar arrives already pointed at this hub's coach. Opening Sleep and typing reaches the Sleep
+ * Coach without a selection step, which is the context a general bar here would have thrown away.
+ *
+ * Bands render only when the hub has them. A hub reading nothing shows its bar, one sentence saying
+ * so, and its coverage — that is the honest screen for it, and padding it would be the score page
+ * under another name. Labs proves the same in the other direction: no week strip at all, because a
+ * panel arrives every few months and seven empty bars would be a worse lie than an absent section.
  *
  * Paper and hairlines, not cards and shadows, carried over from Legacy's `NutritionHubScreen`.
  * Serif carries the one interpretation on the screen; sans carries every fact, with tabular numerals
@@ -52,8 +69,23 @@ export function HubScreen({
   const { colors } = useTheme();
   const router = useRouter();
   const [contributeNoted, setContributeNoted] = useState(false);
+  const [selecting, setSelecting] = useState(false);
   const inside = childHubs(hub.id);
   const contributeHref = state.contribute?.href;
+
+  /** This hub's coach, already at the table. A hub with no coach still gets the bar, unpointed. */
+  const [selected, setSelected] = useState<readonly string[]>(
+    coach === undefined ? [] : [coach.id],
+  );
+  const atTable = coachesAtTable(selected);
+
+  async function send(text: string) {
+    // Persist first, then navigate — same order as Home, and for the same reason: what was typed
+    // reaches the conversation through the store rather than through a URL.
+    await coachChat.persist(selected, text);
+    setSelecting(false);
+    router.push(`/table?coaches=${selected.join(',')}`);
+  }
 
   return (
     <View style={[styles.screen, { backgroundColor: colors.background }]}>
@@ -73,22 +105,6 @@ export function HubScreen({
       </View>
 
       <ScrollView contentContainerStyle={styles.body} showsVerticalScrollIndicator={false}>
-        {/* Door one. The only saturated element on the screen, because it is the only thing here
-            that answers back. */}
-        {coach !== undefined && (
-          <Pressable
-            accessibilityRole="button"
-            onPress={() => router.push(`/table?domains=${hub.id}`)}
-            style={({ pressed }) => [
-              styles.coach,
-              { backgroundColor: colors.accentSoft, borderColor: colors.accentBorder },
-              pressed && styles.pressed,
-            ]}>
-            <Text style={[styles.coachName, { color: colors.accent }]}>Ask the {coach.name}</Text>
-            <Text style={[styles.coachFocus, { color: colors.textMuted }]}>{coach.focus}</Text>
-          </Pressable>
-        )}
-
         {state.observation !== undefined && (
           <Text style={[styles.observation, { color: colors.text }]}>{state.observation}</Text>
         )}
@@ -224,6 +240,27 @@ export function HubScreen({
           </>
         )}
       </ScrollView>
+
+      {selecting && (
+        <CoachSelector
+          onClose={() => setSelecting(false)}
+          onToggle={(coachId) => setSelected((current) => toggleCoach(current, coachId))}
+          selected={selected}
+        />
+      )}
+
+      <View style={styles.barSlot}>
+        <ChatBar
+          attachmentsNote={ATTACHMENTS_NOTE}
+          coachNames={atTable.map((entry) => entry.name)}
+          onOpenSelector={() => setSelecting((open) => !open)}
+          onSend={(text) => void send(text)}
+          // Names the SUBJECT, not the coach — the chip beside it already names the coach, and
+          // "Sleep Coach · Ask the Sleep Coach…" said it twice in one bar. Caught on the rendered
+          // screen; it reads fine in a mockup and badly at actual size.
+          placeholder={coach === undefined ? 'Message' : `Ask about ${hub.label.toLowerCase()}…`}
+        />
+      </View>
     </View>
   );
 }
@@ -345,21 +382,10 @@ const styles = StyleSheet.create({
     fontFamily: fontFamily.medium,
     fontSize: typography.caption,
   },
-  coach: {
-    borderRadius: radius.lg,
-    borderWidth: 1,
-    marginBottom: spacing.lg,
+  barSlot: {
+    paddingBottom: spacing.lg,
     paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.md,
-  },
-  coachFocus: {
-    fontFamily: fontFamily.body,
-    fontSize: typography.caption,
-    marginTop: 2,
-  },
-  coachName: {
-    fontFamily: fontFamily.semi,
-    fontSize: typography.body,
+    paddingTop: spacing.sm,
   },
   contribute: {
     alignItems: 'center',
