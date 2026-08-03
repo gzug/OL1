@@ -53,6 +53,7 @@ export function HubScreen({
   const router = useRouter();
   const [contributeNoted, setContributeNoted] = useState(false);
   const inside = childHubs(hub.id);
+  const contributeHref = state.contribute?.href;
 
   return (
     <View style={[styles.screen, { backgroundColor: colors.background }]}>
@@ -177,22 +178,38 @@ export function HubScreen({
         {state.contribute !== undefined && (
           <>
             <SectionLabel colors={colors} label="Add to this hub" />
+            {/* A way in that leads somewhere navigates; one that does not says so rather than
+                swallowing the tap. Most are still placeholders and should look like it. */}
             <Pressable
               accessibilityRole="button"
-              onPress={() => setContributeNoted(true)}
+              onPress={() =>
+                contributeHref === undefined
+                  ? setContributeNoted(true)
+                  : router.push(contributeHref)
+              }
               style={({ pressed }) => [
                 styles.contribute,
-                { borderColor: colors.hairline },
+                contributeHref === undefined
+                  ? { borderColor: colors.hairline }
+                  : { backgroundColor: colors.accentSoft, borderColor: colors.accentBorder },
                 pressed && styles.pressed,
               ]}>
-              <Text style={[styles.contributeText, { color: colors.text }]}>
+              <Text
+                style={[
+                  styles.contributeText,
+                  { color: contributeHref === undefined ? colors.text : colors.accent },
+                ]}>
                 {state.contribute.primary}
               </Text>
             </Pressable>
             {state.contribute.secondary !== undefined && (
               <Pressable
                 accessibilityRole="button"
-                onPress={() => setContributeNoted(true)}
+                onPress={() =>
+                  contributeHref === undefined
+                    ? setContributeNoted(true)
+                    : router.push(contributeHref)
+                }
                 style={({ pressed }) => [styles.secondary, pressed && styles.pressed]}>
                 <Text style={[styles.secondaryText, { color: colors.textMuted }]}>
                   {state.contribute.secondary}

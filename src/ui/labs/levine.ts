@@ -1,0 +1,120 @@
+/**
+ * The nine Levine markers, and the two gates around them.
+ *
+ * PORTED verbatim from Legacy `data/health/labSchema.ts` — keys, labels, target units and
+ * physiological sanity ranges. Legacy calls this the **Clinical Safety Gate**, and the ranges are
+ * not reference ranges: they are the limits outside which a number is almost certainly a
+ * misread unit or a typo rather than a person. Nothing here says whether a value is healthy, and
+ * nothing here may ever start to.
+ *
+ * The second gate is the **Verification Gate**: an extracted panel is stored `isApproved = false`
+ * and reaches nothing until the user has reviewed every marker. That is the part of Legacy worth
+ * copying most carefully — OCR output is never trusted, and neither is a vision model's.
+ *
+ * These are marker DEFINITIONS, not anybody's results. The repository is public and no value is
+ * shipped: the flow starts every marker empty, which is exactly what Legacy's
+ * `createManualPendingResult` does.
+ */
+
+export type LevineMarkerKey =
+  | 'albumin'
+  | 'alp'
+  | 'creatinine'
+  | 'crp'
+  | 'glucose'
+  | 'lymph_pct'
+  | 'mcv'
+  | 'rdw'
+  | 'wbc';
+
+export type MarkerDefinition = {
+  readonly key: LevineMarkerKey;
+  readonly label: string;
+  /** Outside this a number is a misread unit or a typo, not a person. Not a reference range. */
+  readonly sane: { readonly max: number; readonly min: number };
+  readonly unit: string;
+};
+
+/** Order is Legacy's own, and it is the order a panel is reviewed in. */
+export const LEVINE_MARKERS: readonly MarkerDefinition[] = [
+  { key: 'albumin', label: 'Albumin', sane: { max: 7, min: 1 }, unit: 'g/dL' },
+  { key: 'creatinine', label: 'Creatinine', sane: { max: 15, min: 0.1 }, unit: 'mg/dL' },
+  { key: 'glucose', label: 'Glucose', sane: { max: 600, min: 20 }, unit: 'mg/dL' },
+  { key: 'crp', label: 'C-reactive Protein', sane: { max: 500, min: 0.01 }, unit: 'mg/L' },
+  { key: 'lymph_pct', label: 'Lymphocyte Percentage', sane: { max: 99, min: 1 }, unit: '%' },
+  { key: 'mcv', label: 'Mean Cell Volume', sane: { max: 150, min: 50 }, unit: 'fL' },
+  { key: 'rdw', label: 'Red Cell Distribution Width', sane: { max: 30, min: 5 }, unit: '%' },
+  { key: 'alp', label: 'Alkaline Phosphatase', sane: { max: 1000, min: 10 }, unit: 'U/L' },
+  { key: 'wbc', label: 'White Blood Cell Count', sane: { max: 100, min: 0.1 }, unit: '10³/µL' },
+];
+
+/** How a panel got here. Legacy keeps manual drafts distinguishable from imports; so does this. */
+export type LabSource = 'file' | 'manual' | 'photo';
+
+export type MarkerEntry = {
+  readonly key: LevineMarkerKey;
+  /** What the user typed, kept as text so a half-typed number is not silently a different one. */
+  readonly text: string;
+};
+
+export type MarkerProblem = 'notANumber' | 'outsideSane';
+
+/**
+ * What is wrong with one entry, or null. An empty field is NOT a problem — Legacy allows a marker to
+ * be skipped, because a panel that does not include a marker is ordinary and forcing a number would
+ * invite an invented one.
+ */
+export function markerProblem(
+  marker: MarkerDefinition,
+  text: string,
+): MarkerProblem | null {
+  const trimmed = text.trim();
+  if (trimmed.length === 0) return null;
+
+  const value = Number(trimmed);
+  if (!Number.isFinite(value)) return 'notANumber';
+  if (value < marker.sane.min || value > marker.sane.max) return 'outsideSane';
+
+  return null;
+}
+
+export function problemMessage(marker: MarkerDefinition, problem: MarkerProblem): string {
+  switch (problem) {
+    case 'notANumber':
+      return 'That is not a number.';
+    case 'outsideSane':
+      return `Outside ${marker.sane.min}–${marker.sane.max} ${marker.unit}. Check the unit on your report.`;
+  }
+}
+
+/** A panel cannot have been drawn in the future. Legacy's `isValidLabTestDate`, same rule. */
+export function isValidTestDate(value: string, today: string): boolean {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) return false;
+  if (value > today) return false;
+
+  const [year, month, day] = value.split('-').map(Number);
+  const date = new Date(Date.UTC(year, month - 1, day));
+  return (
+    date.getUTCFullYear() === year &&
+    date.getUTCMonth() === month - 1 &&
+    date.getUTCDate() === day
+  );
+}
+
+/** Markers with something in them. What "review" is counted against. */
+export function filledCount(entries: readonly MarkerEntry[]): number {
+  return entries.filter((entry) => entry.text.trim().length > 0).length;
+}
+
+/** Every problem in the panel, so approval can be blocked on all of them rather than the first. */
+export function panelProblems(
+  entries: readonly MarkerEntry[],
+  markers: readonly MarkerDefinition[] = LEVINE_MARKERS,
+): readonly LevineMarkerKey[] {
+  return markers
+    .filter((marker) => {
+      const entry = entries.find((candidate) => candidate.key === marker.key);
+      return entry !== undefined && markerProblem(marker, entry.text) !== null;
+    })
+    .map((marker) => marker.key);
+}

@@ -32,9 +32,10 @@ export const labs: HubState = {
     ],
   },
   contribute: {
-    note: 'Neither way in is built yet.',
-    primary: 'Upload a lab report',
-    secondary: 'Enter results by hand',
+    href: '/add-panel',
+    note: 'Reading a report is not built yet — the review gate behind this is.',
+    primary: 'Add a panel',
+    secondary: 'Photo, file, or by hand',
   },
   facets: [
     { detail: '34 markers from the 12 Mar panel', label: 'Blood panel', state: 'reading' },
