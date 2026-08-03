@@ -68,7 +68,7 @@ export type HubState = {
      * Where the primary way in leads, when it leads anywhere yet. Absent means the button is still
      * a placeholder and says so on press — which is most of them, and saying so beats a dead tap.
      */
-    readonly href?: '/add-panel';
+    readonly href?: '/add-panel' | '/log-meal';
     readonly note: string;
     readonly primary: string;
     readonly secondary?: string;

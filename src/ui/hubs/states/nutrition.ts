@@ -35,9 +35,10 @@ export const nutrition: HubState = {
     },
   },
   contribute: {
-    note: 'Neither way in is built yet.',
-    primary: 'Log a meal with a photo',
-    secondary: 'Enter it by hand',
+    href: '/log-meal',
+    note: 'Reading the photo is not built yet — the review step behind it is.',
+    primary: 'Log a meal',
+    secondary: 'Photo, camera roll, or described',
   },
   facets: [
     { detail: '9 logged across 4 of the last 7 days', label: 'Meals', state: 'reading' },
