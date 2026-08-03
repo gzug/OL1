@@ -1,6 +1,10 @@
 # Product specification
 
-## Bestätigt
+Section headings were `Bestätigt` / `Offen` / `Verworfen` until 2026-08-03. They are English now
+because the owner asked for English, and because this is the document he reads to check that the
+product being built is the product he asked for.
+
+## Confirmed — platform
 
 - OL1 is initially an Android-first application.
 - The first reference and physical test device is a OnePlus 13R.
@@ -12,36 +16,78 @@
 - The existing application, data, identifiers, signing, builds, and infrastructure remain unchanged.
 - `com.onel1fe.mobile` is reserved only as a possible later Android production upgrade path.
 
-## Bestätigt — structure
+## Confirmed — structure
 
-Settled 2026-07-31. The first build is a visual overview of both screens; nothing behind them works yet.
+Settled 2026-07-31, revised 2026-08-03 where the owner's answers replaced an earlier one. The
+reversals are argued in `docs/decisions/0005-the-hub-model.md`.
 
 - Two primary screens: Home (an orbit) and Digital Twin (a scroll).
-- Home: six hubs in an orbit around a center holding BioAge/PhenoAge, Weekly Insight, and Daily Focus.
+- Home: hubs in an orbit around a centre.
 - BioAge/PhenoAge is a slow drift number that moves when new bloodwork arrives. Not a daily score.
-- Tapping a hub opens that hub's own state. Chat is one step further in, never the front door.
 - Running and completed tests live in the Digital Twin with the ledger, not on Home. A test is
-  visually dead for most of its length; the center cannot carry a static element.
+  visually dead for most of its length; the centre cannot carry a static element.
 - Daily Focus never competes with a running test. It either carries that test's ask for today, or
   it is disqualified and the next candidate takes its place.
 - Daily Focus may repeat inside the Digital Twin alongside the insights.
-- The Open Table opens from the center, highlights the hubs for selection, and opens one chat
-  carrying every hub the user selected. The name is provisional.
-- The user selects domains, never models. Model choice stays automatic and invisible.
+- The user selects domains and coaches, never models. Model choice stays automatic and invisible.
 
-## Offen
+## Confirmed — hubs
 
-- What a hub's own state shows, and what each hub does beyond opening chat.
+Settled 2026-08-03. **Reverses** the earlier line "tapping a hub opens that hub's own state; chat is
+one step further in, never the front door" — a hub now opens two things, and one of them is chat.
+
+- **A hub opens two doors: its coach, and its cockpit.** Neither is the front door to the other.
+- **The cockpit is that hub's overview** — the domain's own data across yesterday, the week, and
+  further back. Every hub has one. Sleep's cockpit shows sleep; Nutrition's shows meals.
+- **Every hub has exactly one coach.** Activity is the only hub that also holds coaches per exercise
+  type — running, gym, cycling, swimming, golf.
+- **Hubs are data, not code.** The user can create a hub from Home, and an exercise type from inside
+  Activity. Both are the same act and use the same flow; an exercise type is a hub with a parent.
+- Six hubs are seeded — Activity, Nutrition, Body, Mind, Labs, Sleep — and that number is a starting
+  point, not a constraint.
+- **A new hub starts with a coach and a place to log by hand.** Connecting a data source or
+  uploading a file is always offered and never required. A hub reading nothing says so plainly.
+- The creation flow asks its questions the way creating a project in Claude does.
+- **The orbit grows and shrinks with the hub count**: circles re-space evenly and get smaller as
+  hubs are added. Placement must keep clear of the centre stack at every count.
+
+## Confirmed — the centre and the Digital Twin
+
+Settled 2026-08-03. **Reverses** "the Open Table opens from the center".
+
+- **The centre of the orbit is the Digital Twin** — the core idea of the app.
+- Tapping the centre opens the Twin: PhenoAge, and **which data feeds it** — genomics, blood work,
+  microbiome, wearable.
+
+## Confirmed — chat
+
+Settled 2026-08-03. **Reverses** "chat is one step further in, never the front door". Not built yet;
+`claude/chat-bar` holds a decision note and no code.
+
+- **A persistent chat bar sits at the bottom of Home**, under the orbit. It is the quick way into
+  general chat.
+- **A selector inside the bar opens the coaches.** The user taps coaches to include or exclude them,
+  then sends. That act is what builds an Open Table.
+- **The Open Table leads to the same bar.** One chat surface, reached two ways — never two chats.
+- The bar is wired to a real model from the first version, and shows a plainly-worded
+  not-configured state until its key exists.
+- Fixture numbers come from the same sources Legacy used, and Legacy's own synthetic demo data is
+  the source for the preview. Nothing is invented freehand and nothing comes from a real person.
+
+## Open
+
 - Whether hub selection weights the answer or restricts what the coach may use.
 - Whether domain selection is per-conversation or a longer-running context ("marathon block").
-- Whether the center number shows its own uncertainty, and the final name for the Open Table.
+- Whether the centre number shows its own uncertainty, and the final name for the Open Table.
+- What a user-created hub may connect to, beyond manual entry and file upload.
+- How many hubs the orbit tolerates before the ring stops being the right shape.
 - Final health metrics and permissions beyond the bootstrap steps smoke test.
 - iOS HealthKit implementation and test distribution.
 - Legacy data migration or a deliberate clean start.
 - Production cutover, signing, store distribution, and EAS Update.
-- AI, file import, background work, telemetry, and external integrations.
+- File import, background work, telemetry, and external integrations.
 
-## Verworfen
+## Rejected
 
 - Treating Legacy code or documentation as current product truth.
 - Forking, importing, or copying Legacy history into OL1.
@@ -49,4 +95,7 @@ Settled 2026-07-31. The first build is a visual overview of both screens; nothin
 - Native data access directly from screens or routes.
 - Using web preview as native or device evidence.
 - A user-facing model picker anywhere in the app, including settings.
-- A hub overview that is a score page, and a hub whose front door is an empty chat.
+- A hub overview that is a score page. A cockpit shows the domain's data; it never grades it.
+- A chat that opens as an empty box. The bar carries a coach selection, and a hub's coach door
+  carries the hub.
+- A fixed set of hubs that only the developers can extend.

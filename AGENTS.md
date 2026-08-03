@@ -43,7 +43,7 @@ npm run prebuild:ios
 
 - Both owners are non-developers. Short, structured, plain — bullets over paragraphs. Lead with
   the decision or the result, and cut what they cannot act on.
-- German in chat with the owner. English on every product surface: app UI, copy, previews.
+- English everywhere: in chat with the owners, and on every product surface — UI, copy, previews.
 - Answer from the repo before asking — `git log`, the code, the spec. Ask only what those cannot
   answer, say what you checked, and give every recommendation its strongest objection.
 - Reversible and in scope: do it, show it, correct afterwards. Ask first only for what is hard to
@@ -73,5 +73,7 @@ npm run prebuild:ios
   list of open pull requests is the only answer to "who is on what" that cannot go stale.
 - Two open pull requests never touch the same file. If they have to, the second one waits and
   rebases; parallel merges into one file is how work gets silently undone.
-- Merge your own work when its checks are green. The exception is shared ground — design tokens,
-  navigation, the instruction files, the guards — where the other person clicks merge, not you.
+- Merge your own work when its checks are green, then say plainly what landed. Waiting on someone
+  else's click cost more than the second pair of eyes was worth, and merges are reversible.
+- Show a screen rather than ask a question. Both owners judge a rendered screen well and an
+  abstraction badly; reserve questions for what a screen cannot answer.
