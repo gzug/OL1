@@ -101,9 +101,13 @@ export function ChatBar({
           accessibilityRole="button"
           onPress={showNote}
           style={({ pressed }) => [styles.glyphButton, pressed && styles.pressed]}>
+          {/* A hollow capsule over a bar reads as a zero with an underline — caught on the
+              rendered screen, which is the only place it was ever going to show. Filled head,
+              thin stem, narrow base: three parts, and it reads as a microphone at 18px. */}
           <View style={styles.mic}>
-            <View style={[styles.micCapsule, { borderColor: colors.textMuted }]} />
+            <View style={[styles.micHead, { backgroundColor: colors.textMuted }]} />
             <View style={[styles.micStem, { backgroundColor: colors.textMuted }]} />
+            <View style={[styles.micBase, { backgroundColor: colors.textMuted }]} />
           </View>
         </Pressable>
 
@@ -155,7 +159,8 @@ const styles = StyleSheet.create({
     paddingVertical: 5,
   },
   chip: {
-    maxWidth: 108,
+    /** Wide enough for the longest single coach name in the catalog, and no wider. */
+    maxWidth: 124,
     paddingVertical: spacing.sm,
   },
   chipText: {
@@ -185,20 +190,24 @@ const styles = StyleSheet.create({
   },
   mic: {
     alignItems: 'center',
-    height: 18,
-    justifyContent: 'space-between',
+    height: 17,
     width: 12,
   },
-  micCapsule: {
-    borderRadius: 3.5,
-    borderWidth: 1.5,
-    height: 11,
-    width: 7,
+  micBase: {
+    borderRadius: 1,
+    height: 1.5,
+    marginTop: 1,
+    width: 9,
+  },
+  micHead: {
+    borderRadius: 3,
+    height: 10,
+    width: 6,
   },
   micStem: {
-    borderRadius: 1,
-    height: 4,
-    width: 9,
+    height: 3,
+    marginTop: 1,
+    width: 1.5,
   },
   note: {
     fontFamily: fontFamily.body,

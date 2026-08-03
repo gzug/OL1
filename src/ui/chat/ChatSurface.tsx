@@ -197,6 +197,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     borderBottomWidth: StyleSheet.hairlineWidth,
     flexDirection: 'row',
+    /**
+     * A gap, not padding on the link. `Link asChild` puts the anchor between this row and the
+     * Pressable, and the Pressable's own `paddingRight` did not survive that trip — the back link
+     * and the title rendered flush against each other as "← HomeActivity Coach".
+     */
+    gap: spacing.md,
     paddingBottom: spacing.sm,
     paddingHorizontal: spacing.lg,
     paddingTop: spacing.sm,

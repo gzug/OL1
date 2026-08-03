@@ -44,11 +44,19 @@ test('a full table still lets a coach be swapped out', () => {
   assert.equal(toggleCoach(withoutBody, 'sleep').length, 5);
 });
 
-test('the chip names a small table and counts a large one, so the bar never changes height', () => {
+test('the chip shows one name or a count, and never a string the chip cannot hold', () => {
   assert.equal(selectionLabel([]), 'Ask anything');
   assert.equal(selectionLabel(['Sleep Coach']), 'Sleep Coach');
-  assert.equal(selectionLabel(['Sleep Coach', 'Activity Coach']), 'Sleep Coach, Activity Coach');
+  assert.equal(selectionLabel(['Sleep Coach', 'Activity Coach']), '2 coaches');
   assert.equal(selectionLabel(['a', 'b', 'c']), '3 coaches');
+
+  // The chip is a fixed width, so the label has a length ceiling. The longest single coach name in
+  // the catalog is what that ceiling has to clear; two joined names never did.
+  const longest = Math.max(...COACHES.map((coach) => coach.name.length));
+  for (let count = 0; count <= COACHES.length; count += 1) {
+    const label = selectionLabel(COACHES.slice(0, count).map((coach) => coach.name));
+    assert.ok(label.length <= longest, `"${label}" is too long for the chip`);
+  }
 });
 
 test('the selector offers only coaches the catalog can resolve', () => {

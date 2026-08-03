@@ -192,7 +192,16 @@ const styles = StyleSheet.create({
   sheet: {
     borderTopLeftRadius: radius.lg,
     borderTopRightRadius: radius.lg,
-    maxHeight: '68%',
+    /**
+     * A number, not a percentage. The sheet's parent is absolutely positioned with no height of its
+     * own, and a percentage maxHeight against an auto-height parent resolves to nothing — the sheet
+     * grew to its full content and pushed the bar off the bottom of the frame.
+     *
+     * The value is chosen so INSIDE ACTIVITY peeks over the fold. At 430 the sheet ended cleanly
+     * after Sleep Coach and read as the whole list, which hid Activity's coaches per sport
+     * completely — a scroll nobody can see is a scroll nobody makes.
+     */
+    maxHeight: 470,
     paddingBottom: spacing.md,
     paddingHorizontal: spacing.lg,
     paddingTop: spacing.md,

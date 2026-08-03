@@ -48,9 +48,15 @@ export function toggleCoach(
   return [...selected, coachId];
 }
 
-/** What the selector chip says. Names them while they fit, counts them once they do not. */
+/**
+ * What the selector chip says.
+ *
+ * One name, or a count. Two names were tried first and did not survive the rendered screen:
+ * "Activity Coach, Sleep Coach" is 27 characters in a chip that fits about 16, so it truncated to
+ * "Activity Coach, Sl…" — which reads as a layout fault rather than as a selection.
+ */
 export function selectionLabel(names: readonly string[]): string {
   if (names.length === 0) return 'Ask anything';
-  if (names.length <= 2) return names.join(', ');
+  if (names.length === 1) return names[0];
   return `${names.length} coaches`;
 }

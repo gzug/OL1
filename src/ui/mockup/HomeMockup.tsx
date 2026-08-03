@@ -160,7 +160,16 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.lg,
     paddingTop: spacing.sm,
   },
+  /**
+   * Pinned, not laid out. As a flex child the coach sheet pushed the orbit up and out of the frame:
+   * the stage is a fixed 404, so once the sheet claimed its share there was nowhere for the ring to
+   * go and `space-between` shoved it under the banner. A sheet belongs OVER the screen anyway.
+   */
   bottom: {
+    bottom: 0,
+    left: 0,
+    position: 'absolute',
+    right: 0,
     zIndex: 3,
   },
   centreBox: {
@@ -208,6 +217,8 @@ const styles = StyleSheet.create({
   screen: {
     flex: 1,
     justifyContent: 'space-between',
+    /** Room for the pinned bar, so the ring centres against what is left rather than under it. */
+    paddingBottom: 74,
   },
   scrim: {
     bottom: 0,
