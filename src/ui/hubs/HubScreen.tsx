@@ -134,6 +134,19 @@ export function HubScreen({
                   <Text style={[styles.chipText, { color: colors.text }]}>{child.label}</Text>
                 </Pressable>
               ))}
+              {/* Adding an exercise type is the same act as adding a hub, so it is the same flow
+                  with a parent set. It sits with the types rather than in a menu, because this is
+                  where someone notices theirs is missing. */}
+              <Pressable
+                accessibilityRole="button"
+                onPress={() => router.push({ params: { parent: hub.id }, pathname: '/new-hub' })}
+                style={({ pressed }) => [
+                  styles.chip,
+                  { borderColor: colors.accentBorder },
+                  pressed && styles.pressed,
+                ]}>
+                <Text style={[styles.chipText, { color: colors.accent }]}>+ Add</Text>
+              </Pressable>
             </View>
           </>
         )}
