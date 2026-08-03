@@ -10,7 +10,7 @@ import {
   toggleCoach,
 } from '../src/application/chat/threads';
 import { activityCoaches, coachesAtTable, hubCoaches } from '../src/ui/chat/coachList';
-import { COACHES, SEED_HUBS, findCoach, orbitHubs } from '../src/ui/hubs/catalog';
+import { COACHES, SEED_HUBS, findCoach, isDomainHub, orbitHubs } from '../src/ui/hubs/catalog';
 
 /** Which conversation a selection lands in, who may be in it, and where the list comes from. */
 
@@ -66,12 +66,15 @@ test('the selector offers only coaches the catalog can resolve', () => {
 });
 
 test('the coach list is the catalog, not a copy of it', () => {
-  // If someone writes a second list here, this is what catches it: every hub on the ring must
-  // contribute exactly one coach, and no coach may appear that no hub opens.
-  assert.equal(hubCoaches().length, orbitHubs().length);
+  // If someone writes a second list here, this is what catches it: every DOMAIN hub on the ring
+  // must contribute exactly one coach, and no coach may appear that no hub opens. The Open Table
+  // sits on the ring and contributes none, because it is the way to reach all of them.
+  assert.equal(hubCoaches().length, orbitHubs().filter(isDomainHub).length);
 
   const offered = new Set([...hubCoaches(), ...activityCoaches()].map((coach) => coach.id));
-  const fromHubs = new Set(SEED_HUBS.map((hub) => hub.coachId));
+  const fromHubs = new Set(
+    SEED_HUBS.map((hub) => hub.coachId).filter((id): id is string => id !== undefined),
+  );
   assert.deepEqual([...offered].sort(), [...fromHubs].sort());
 });
 

@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 
-import { orbitHubs } from '../src/ui/hubs/catalog';
+import { isDomainHub, orbitHubs } from '../src/ui/hubs/catalog';
 import { HUB_STATES, hubStateFor } from '../src/ui/hubs/states';
 
 /**
@@ -11,8 +11,13 @@ import { HUB_STATES, hubStateFor } from '../src/ui/hubs/states';
  * naming a lab marker on a public preview.
  */
 
-test('every hub in the orbit has a cockpit written for it', () => {
-  for (const hub of orbitHubs()) {
+/**
+ * Every DOMAIN hub, not every place on the ring. The Open Table sits there too and deliberately has
+ * no cockpit — it holds no data of its own, it is the way to reach every coach. `hub-catalog.test`
+ * asserts that absence from the other side, so neither can drift alone.
+ */
+test('every domain hub in the orbit has a cockpit written for it', () => {
+  for (const hub of orbitHubs().filter(isDomainHub)) {
     assert.ok(hubStateFor(hub.id) !== undefined, `hub "${hub.id}" is on the ring with no state`);
   }
 });

@@ -1,6 +1,6 @@
-import { useLocalSearchParams } from 'expo-router';
+import { Redirect, useLocalSearchParams } from 'expo-router';
 
-import { coachForHub, findHub } from '@/ui/hubs/catalog';
+import { coachForHub, findHub, isDomainHub } from '@/ui/hubs/catalog';
 import { HubScreen } from '@/ui/hubs/HubScreen';
 import { hubStateFor } from '@/ui/hubs/states';
 import { MockupScreen } from '@/ui/mockup/MockupScreen';
@@ -16,6 +16,17 @@ import { StubScreen } from '@/ui/mockup/StubScreen';
 export default function HubRoute() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const hub = findHub(id);
+
+  /**
+   * The Open Table sits on the ring but is not a hub: it has no coach of its own and no cockpit,
+   * because it is the way to reach every coach. Redirecting here rather than special-casing the
+   * press handler means Home needs to know nothing about it — it taps a place on the ring like any
+   * other, and the ring's own route decides what that place is.
+   */
+  if (hub !== undefined && !isDomainHub(hub)) {
+    return <Redirect href="/table" />;
+  }
+
   const state = hub === undefined ? undefined : hubStateFor(hub.id);
 
   if (hub !== undefined && state !== undefined) {
