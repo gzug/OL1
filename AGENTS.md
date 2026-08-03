@@ -55,3 +55,13 @@ npm run prebuild:ios
   fires on something harmless, tune the guard in a visible diff.
 - Before believing a new guard, feed it a known violation and watch it go red. An empty baseline
   and a blind gate look identical.
+
+## Two people at once
+
+- Someone here for the first time reads `START-HERE.md` once, then never again. Point them there.
+- Open a draft pull request on the first commit of a piece of work, not when it is finished. The
+  list of open pull requests is the only answer to "who is on what" that cannot go stale.
+- Two open pull requests never touch the same file. If they have to, the second one waits and
+  rebases; parallel merges into one file is how work gets silently undone.
+- Merge your own work when its checks are green. The exception is shared ground — design tokens,
+  navigation, the instruction files, the guards — where the other person clicks merge, not you.
