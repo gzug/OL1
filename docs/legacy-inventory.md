@@ -32,18 +32,29 @@ model inventing health numbers**.
 - `factAssembler.ts`, `knowledgeBase.ts`, `synthesize.ts`, `phraseInsight.ts`, `presentInsight.ts`,
   `softNotes.ts`, `transparencyNote.ts`, `buildInsightFeed.ts`, `chatInsightsBridge.ts`.
 
-**Why this is urgent rather than nice.** OL1's chat is wired to a real model and has **no numeric
-grounding at all**. A coach can state a number that was never in the data, and nothing catches it.
-Legacy solved this and we did not port it.
+**Correction, 2026-08-03.** An earlier version of this file called the grounding guard urgent
+because "the chat is live and has no guard". That was wrong on inspection.
+
+`numericGrounding` checks that every number in a generated text appears in the **facts that text was
+built from**. It is built for statements ABOUT the user's data — briefs, anomaly notes, weekly
+letters, insight phrasing. **OL1 generates none of those yet**; its hub sentences are hand-written
+fixtures.
+
+Pointed at open conversation it would be actively wrong: a coach saying "most adults need seven to
+nine hours" is general knowledge, not a claim about this person, and the guard would reject it. The
+chat's real protection today is in `src/application/chat/prompt.ts`, which tells the model it has no
+access to the person's data and must not invent numbers or measurements.
+
+**So: port this the day the first generated insight exists, and not before.** It has no surface to
+guard until then.
 
 ## 2. Labs — 24 files, against a five-row cockpit
 
 The largest gap between what Legacy had and what OL1 shows.
 
-- **`services/phenoAgeService.ts`** — the actual Levine PhenoAge calculator, with the paper cited
-  (Levine et al. 2018) and every unit conversion written out. **OL1's lab flow already collects
-  exactly the nine markers it takes**, so the drift number on Home could be computed rather than
-  fixed at `41.6`.
+- ~~`services/phenoAgeService.ts`~~ — **TAKEN**, as `src/application/labs/phenoAge.ts`. The Levine
+  calculator, coefficients and unit conversions intact, plus its two refusals: null rather than a
+  number it cannot stand behind, and a RANGE rather than a point when the panel is partial.
 - **`data/insights/bioAgeDrivers.ts`** — which markers drive that number, and a structural honesty
   guard worth copying on its own: the `DriverItem` type **deliberately omits** the numeric impact,
   making it *impossible* to render a year figure from that path. Design by type, not by discipline.
