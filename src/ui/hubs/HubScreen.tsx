@@ -137,6 +137,58 @@ export function HubScreen({
           </>
         )}
 
+        {state.contribute !== undefined && (
+          <>
+            {/* Above coverage, not below it. On Labs the whole point of the hub is putting a
+                panel in, and this sat last on a long scroll — the owner reported the button as
+                missing, which is what "below the fold" looks like from outside. */}
+            <SectionLabel colors={colors} label="Add to this hub" />
+            {/* A way in that leads somewhere navigates; one that does not says so rather than
+                swallowing the tap. Most are still placeholders and should look like it. */}
+            <Pressable
+              accessibilityRole="button"
+              onPress={() =>
+                contributeHref === undefined
+                  ? setContributeNoted(true)
+                  : router.push(contributeHref)
+              }
+              style={({ pressed }) => [
+                styles.contribute,
+                contributeHref === undefined
+                  ? { borderColor: colors.hairline }
+                  : { backgroundColor: colors.accentSoft, borderColor: colors.accentBorder },
+                pressed && styles.pressed,
+              ]}>
+              <Text
+                style={[
+                  styles.contributeText,
+                  { color: contributeHref === undefined ? colors.text : colors.accent },
+                ]}>
+                {state.contribute.primary}
+              </Text>
+            </Pressable>
+            {state.contribute.secondary !== undefined && (
+              <Pressable
+                accessibilityRole="button"
+                onPress={() =>
+                  contributeHref === undefined
+                    ? setContributeNoted(true)
+                    : router.push(contributeHref)
+                }
+                style={({ pressed }) => [styles.secondary, pressed && styles.pressed]}>
+                <Text style={[styles.secondaryText, { color: colors.textMuted }]}>
+                  {state.contribute.secondary}
+                </Text>
+              </Pressable>
+            )}
+            {contributeNoted && (
+              <Text style={[styles.caption, { color: colors.textSubtle }]}>
+                {state.contribute.note}
+              </Text>
+            )}
+          </>
+        )}
+
         {inside.length > 0 && (
           <>
             <SectionLabel colors={colors} label="Inside this hub" />
@@ -194,54 +246,6 @@ export function HubScreen({
           ))}
         </View>
 
-        {state.contribute !== undefined && (
-          <>
-            <SectionLabel colors={colors} label="Add to this hub" />
-            {/* A way in that leads somewhere navigates; one that does not says so rather than
-                swallowing the tap. Most are still placeholders and should look like it. */}
-            <Pressable
-              accessibilityRole="button"
-              onPress={() =>
-                contributeHref === undefined
-                  ? setContributeNoted(true)
-                  : router.push(contributeHref)
-              }
-              style={({ pressed }) => [
-                styles.contribute,
-                contributeHref === undefined
-                  ? { borderColor: colors.hairline }
-                  : { backgroundColor: colors.accentSoft, borderColor: colors.accentBorder },
-                pressed && styles.pressed,
-              ]}>
-              <Text
-                style={[
-                  styles.contributeText,
-                  { color: contributeHref === undefined ? colors.text : colors.accent },
-                ]}>
-                {state.contribute.primary}
-              </Text>
-            </Pressable>
-            {state.contribute.secondary !== undefined && (
-              <Pressable
-                accessibilityRole="button"
-                onPress={() =>
-                  contributeHref === undefined
-                    ? setContributeNoted(true)
-                    : router.push(contributeHref)
-                }
-                style={({ pressed }) => [styles.secondary, pressed && styles.pressed]}>
-                <Text style={[styles.secondaryText, { color: colors.textMuted }]}>
-                  {state.contribute.secondary}
-                </Text>
-              </Pressable>
-            )}
-            {contributeNoted && (
-              <Text style={[styles.caption, { color: colors.textSubtle }]}>
-                {state.contribute.note}
-              </Text>
-            )}
-          </>
-        )}
       </ScrollView>
 
       {selecting && (
