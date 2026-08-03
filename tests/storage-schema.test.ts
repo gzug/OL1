@@ -7,17 +7,31 @@ import {
   MIGRATIONS,
 } from '../src/infrastructure/storage/schema';
 
-test('bootstrap schema is versioned and contains no legacy health tables', () => {
-  assert.equal(CURRENT_SCHEMA_VERSION, 1);
+test('the schema is versioned and contains no legacy health tables', () => {
+  assert.equal(CURRENT_SCHEMA_VERSION, 2);
   assert.deepEqual(
     MIGRATIONS.map((migration) => migration.version),
-    [1],
+    [1, 2],
   );
 
   const sql = `${CREATE_MIGRATION_TABLE_SQL}\n${MIGRATIONS.map((item) => item.sql).join('\n')}`;
   assert.match(sql, /schema_migrations/);
   assert.match(sql, /bootstrap_probe/);
+  assert.match(sql, /chat_thread/);
+  assert.match(sql, /chat_turn/);
+  // Chat is the first thing here that holds what a person typed, so the table names are the first
+  // real test of this rule rather than a formality: no domain table arrives by the back door.
   assert.doesNotMatch(sql, /(heart_rate|sleep|nutrition|blood|garmin)/i);
+});
+
+/**
+ * A thread's turns are the only rows here that are worth deleting, and deleting a thread must take
+ * them with it. Legacy had no foreign key and left orphaned messages behind forever — rows nothing
+ * could reach and nothing would ever clean up.
+ */
+test('deleting a thread takes its turns with it', () => {
+  const sql = MIGRATIONS.map((item) => item.sql).join('\n');
+  assert.match(sql, /REFERENCES\s+chat_thread\s*\(\s*id\s*\)\s*ON\s+DELETE\s+CASCADE/i);
 });
 
 /**

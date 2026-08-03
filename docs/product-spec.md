@@ -43,8 +43,9 @@ one step further in, never the front door" — a hub now opens two things, and o
   type — running, gym, cycling, swimming, golf.
 - **Hubs are data, not code.** The user can create a hub from Home, and an exercise type from inside
   Activity. Both are the same act and use the same flow; an exercise type is a hub with a parent.
-- Six hubs are seeded — Activity, Nutrition, Body, Mind, Labs, Sleep — and that number is a starting
-  point, not a constraint.
+- Six hubs are seeded — Activity, Nutrition, Body, Resilience, Labs, Sleep. (Mind was renamed to
+  Resilience on 2026-08-03; this line still said Mind.)
+- **Seven hubs at most**, each with one coach. Activity's coaches per sport sit outside that count.
 - **A new hub starts with a coach and a place to log by hand.** Connecting a data source or
   uploading a file is always offered and never required. A hub reading nothing says so plainly.
 - The creation flow asks its questions the way creating a project in Claude does.
@@ -61,14 +62,24 @@ Settled 2026-08-03. **Reverses** "the Open Table opens from the center".
 
 ## Confirmed — chat
 
-Settled 2026-08-03. **Reverses** "chat is one step further in, never the front door". Not built yet;
-`claude/chat-bar` holds a decision note and no code.
+Settled 2026-08-03. **Reverses** "chat is one step further in, never the front door". Widened the
+same day by the owner's answers, argued in `docs/decisions/0006-one-chat-surface.md`.
 
 - **A persistent chat bar sits at the bottom of Home**, under the orbit. It is the quick way into
-  general chat.
+  general chat, and the bottom of Home carries the bar and nothing else.
+- **Chat opens with no coach at all** — a general assistant that answers anything. A coach is
+  something the user adds, not a gate they pass through first.
 - **A selector inside the bar opens the coaches.** The user taps coaches to include or exclude them,
-  then sends. That act is what builds an Open Table.
-- **The Open Table leads to the same bar.** One chat surface, reached two ways — never two chats.
+  then sends. That act is what builds an Open Table, and it works mid-conversation as well as before
+  one starts.
+- **At most five coaches sit at one table.** More voices in one answer stop being a conversation.
+- **The Open Table is an option on the ring, among the hubs**, and it leads to the same bar. One
+  chat surface, reached two ways — never two chats.
+- **A conversation is kept.** It survives closing the app, and earlier conversations can be reopened.
+- **The chat is a way to put data into a hub**, not only a way to ask about one: a photo stored as a
+  meal, a sentence stored as an activity. Anything it captures is shown back and confirmed before it
+  is written.
+- Photos, videos, files and voice notes can be sent into the chat.
 - The bar is wired to a real model from the first version, and shows a plainly-worded
   not-configured state until its key exists.
 - Fixture numbers come from the same sources Legacy used, and Legacy's own synthetic demo data is
@@ -77,10 +88,8 @@ Settled 2026-08-03. **Reverses** "chat is one step further in, never the front d
 ## Open
 
 - Whether hub selection weights the answer or restricts what the coach may use.
-- Whether domain selection is per-conversation or a longer-running context ("marathon block").
 - Whether the centre number shows its own uncertainty, and the final name for the Open Table.
 - What a user-created hub may connect to, beyond manual entry and file upload.
-- How many hubs the orbit tolerates before the ring stops being the right shape.
 - Final health metrics and permissions beyond the bootstrap steps smoke test.
 - iOS HealthKit implementation and test distribution.
 - Legacy data migration or a deliberate clean start.
@@ -96,6 +105,8 @@ Settled 2026-08-03. **Reverses** "chat is one step further in, never the front d
 - Using web preview as native or device evidence.
 - A user-facing model picker anywhere in the app, including settings.
 - A hub overview that is a score page. A cockpit shows the domain's data; it never grades it.
-- A chat that opens as an empty box. The bar carries a coach selection, and a hub's coach door
-  carries the hub.
+- **A hub whose front door is an empty chat.** A hub opens its coach and its cockpit, and the coach
+  door carries the hub. Narrowed on 2026-08-03: this never meant chat itself must arrive
+  pre-addressed. Home's bar opens with no coach on purpose — a general assistant you can ask
+  anything is the owner's answer, and it is not the empty box this line rejects.
 - A fixed set of hubs that only the developers can extend.
