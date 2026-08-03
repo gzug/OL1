@@ -8,10 +8,10 @@ import {
 } from '../src/infrastructure/storage/schema';
 
 test('the schema is versioned and contains no legacy health tables', () => {
-  assert.equal(CURRENT_SCHEMA_VERSION, 2);
+  assert.equal(CURRENT_SCHEMA_VERSION, 3);
   assert.deepEqual(
     MIGRATIONS.map((migration) => migration.version),
-    [1, 2],
+    [1, 2, 3],
   );
 
   const sql = `${CREATE_MIGRATION_TABLE_SQL}\n${MIGRATIONS.map((item) => item.sql).join('\n')}`;
@@ -19,6 +19,7 @@ test('the schema is versioned and contains no legacy health tables', () => {
   assert.match(sql, /bootstrap_probe/);
   assert.match(sql, /chat_thread/);
   assert.match(sql, /chat_turn/);
+  assert.match(sql, /attachment_json/);
   // Chat is the first thing here that holds what a person typed, so the table names are the first
   // real test of this rule rather than a formality: no domain table arrives by the back door.
   assert.doesNotMatch(sql, /(heart_rate|sleep|nutrition|blood|garmin)/i);
@@ -29,6 +30,18 @@ test('the schema is versioned and contains no legacy health tables', () => {
  * them with it. Legacy had no foreign key and left orphaned messages behind forever — rows nothing
  * could reach and nothing would ever clean up.
  */
+/**
+ * An attachment column that ever held bytes would put a photo of someone's meal in the only copy of
+ * their data, in a place nobody chose. The column takes a reference — kind, name, size — and this is
+ * the part of that rule a machine can hold.
+ */
+test('the attachment column is metadata, and the migration that adds it destroys nothing', () => {
+  const migration = MIGRATIONS.find((item) => item.version === 3);
+  assert.ok(migration !== undefined);
+  assert.match(migration.sql, /ALTER TABLE chat_turn ADD COLUMN/i);
+  assert.doesNotMatch(migration.sql, /BLOB/i, 'bytes must never get a column');
+});
+
 test('deleting a thread takes its turns with it', () => {
   const sql = MIGRATIONS.map((item) => item.sql).join('\n');
   assert.match(sql, /REFERENCES\s+chat_thread\s*\(\s*id\s*\)\s*ON\s+DELETE\s+CASCADE/i);

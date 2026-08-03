@@ -1,4 +1,4 @@
-export const CURRENT_SCHEMA_VERSION = 2;
+export const CURRENT_SCHEMA_VERSION = 3;
 
 export const CREATE_MIGRATION_TABLE_SQL = `
   CREATE TABLE IF NOT EXISTS schema_migrations (
@@ -49,5 +49,15 @@ export const MIGRATIONS = [
       CREATE INDEX IF NOT EXISTS chat_turn_thread_idx
         ON chat_turn (thread_id, created_at);
     `,
+  },
+  {
+    /**
+     * What was attached to a turn — kind, name and size, never the bytes. A photo of a meal is
+     * health data, and a column holding it would outlive the question it answered in a place nobody
+     * chose. `ADD COLUMN` rather than a rebuild: the additive-only rule is what keeps a migration
+     * from being the thing that destroys the only copy of someone's data.
+     */
+    version: 3,
+    sql: `ALTER TABLE chat_turn ADD COLUMN attachment_json TEXT;`,
   },
 ] as const;

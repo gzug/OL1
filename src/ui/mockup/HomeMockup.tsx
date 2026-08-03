@@ -2,13 +2,14 @@ import { Link, useRouter } from 'expo-router';
 import { useMemo, useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
+import { holdForHandoff, toRef } from '@/application/chat/attachments';
 import { coachChat } from '@/application/chat/coachChat';
 import { toggleCoach } from '@/application/chat/threads';
 import { ChatBar } from '@/ui/chat/ChatBar';
 import { CoachSelector } from '@/ui/chat/CoachSelector';
 import { ThreadList } from '@/ui/chat/ThreadList';
 import { coachesAtTable } from '@/ui/chat/coachList';
-import { ATTACHMENTS_NOTE } from '@/ui/chat/messages';
+import type { Attachment } from '@/core/attachments';
 import { coachForHub, orbitHubs, type HubId } from '@/ui/hubs/catalog';
 import {
   fontFamily,
@@ -79,10 +80,13 @@ export function HomeMockup() {
     if (coach !== undefined) setSelected((current) => toggleCoach(current, coach.id));
   }
 
-  async function send(text: string) {
+  async function send(text: string, attachment?: Attachment) {
     // Persist first, then navigate. What was typed reaches the conversation through the store, so
-    // it never becomes a URL parameter — see `src/application/chat/coachChat.ts`.
-    await coachChat.persist(selected, text);
+    // it never becomes a URL parameter — see `src/application/chat/coachChat.ts`. The attachment's
+    // bytes cannot go that way (the store keeps metadata only), so they are held in memory for the
+    // length of the navigation and taken once on the other side.
+    if (attachment !== undefined) holdForHandoff(attachment);
+    await coachChat.persist(selected, text, attachment === undefined ? undefined : toRef(attachment));
     setSheet(null);
     router.push(`/table?coaches=${selected.join(',')}`);
   }
@@ -171,10 +175,9 @@ export function HomeMockup() {
         )}
         <View style={styles.barSlot}>
           <ChatBar
-            attachmentsNote={ATTACHMENTS_NOTE}
             coachNames={coaches.map((coach) => coach.name)}
             onOpenSelector={() => setSheet((open) => (open === 'coaches' ? null : 'coaches'))}
-            onSend={(text) => void send(text)}
+            onSend={(text, attachment) => void send(text, attachment)}
           />
         </View>
       </View>

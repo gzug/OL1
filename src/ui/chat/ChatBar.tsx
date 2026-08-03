@@ -1,7 +1,9 @@
 import { useState } from 'react';
 import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 
+import { attachments, describe, pickProblem, toRef } from '@/application/chat/attachments';
 import { selectionLabel } from '@/application/chat/threads';
+import type { Attachment } from '@/core/attachments';
 import { fontFamily, radius, spacing, typography, useTheme } from '@/ui/theme';
 
 /**
@@ -21,7 +23,6 @@ import { fontFamily, radius, spacing, typography, useTheme } from '@/ui/theme';
  */
 
 export function ChatBar({
-  attachmentsNote,
   coachNames,
   disabled = false,
   generating = false,
@@ -30,13 +31,11 @@ export function ChatBar({
   onStop,
   placeholder = 'Message',
 }: {
-  /** Shown when `+` or the microphone is tapped, until part C wires them. */
-  attachmentsNote?: string;
   coachNames: readonly string[];
   disabled?: boolean;
   generating?: boolean;
   onOpenSelector: () => void;
-  onSend: (text: string) => void;
+  onSend: (text: string, attachment?: Attachment) => void;
   onStop?: () => void;
   /**
    * The invitation, not the label. On Home "Message" is right, because the bar is already the
@@ -49,23 +48,84 @@ export function ChatBar({
   const { colors } = useTheme();
   const [text, setText] = useState('');
   const [note, setNote] = useState<string | null>(null);
-  const ready = text.trim().length > 0 && !disabled;
+  const [attached, setAttached] = useState<Attachment | null>(null);
+  const [recording, setRecording] = useState(false);
+  const [busy, setBusy] = useState(false);
+
+  // An attachment on its own is a message: "look at this" with a photo needs no sentence.
+  const ready = (text.trim().length > 0 || attached !== null) && !disabled;
 
   function send() {
     if (!ready) return;
-    onSend(text);
+    onSend(text, attached ?? undefined);
     setText('');
+    setAttached(null);
+    setNote(null);
   }
 
-  function showNote() {
-    if (attachmentsNote !== undefined) setNote(attachmentsNote);
+  async function attach(pick: () => Promise<Awaited<ReturnType<typeof attachments.pickMedia>>>) {
+    if (busy) return;
+    setBusy(true);
+    const result = await pick();
+    setBusy(false);
+
+    if (result.status === 'ok') {
+      setAttached(result.attachment);
+      setNote(null);
+      return;
+    }
+    setNote(pickProblem(result));
+  }
+
+  async function toggleRecording() {
+    if (busy) return;
+    setBusy(true);
+
+    if (recording) {
+      const result = await attachments.stopRecording();
+      setRecording(false);
+      setBusy(false);
+      if (result.status === 'ok') setAttached(result.attachment);
+      else setNote(pickProblem(result));
+      return;
+    }
+
+    const started = await attachments.startRecording();
+    setBusy(false);
+    if (started.status === 'ok') {
+      setRecording(true);
+      setNote(null);
+    } else {
+      setNote(pickProblem({ reason: started.reason, status: 'failed' }));
+    }
   }
 
   return (
     <View style={styles.wrapper}>
       {note !== null && (
-        <Text style={[styles.note, { color: colors.textSubtle }]} onPress={() => setNote(null)}>
+        <Text style={[styles.note, { color: colors.textMuted }]} onPress={() => setNote(null)}>
           {note}
+        </Text>
+      )}
+
+      {attached !== null && (
+        <View style={[styles.attached, { borderColor: colors.hairline }]}>
+          <Text numberOfLines={1} style={[styles.attachedText, { color: colors.text }]}>
+            {describe(toRef(attached))}
+          </Text>
+          <Pressable
+            accessibilityLabel="Remove attachment"
+            accessibilityRole="button"
+            onPress={() => setAttached(null)}
+            style={({ pressed }) => [styles.remove, pressed && styles.pressed]}>
+            <Text style={[styles.removeText, { color: colors.textMuted }]}>✕</Text>
+          </Pressable>
+        </View>
+      )}
+
+      {recording && (
+        <Text style={[styles.note, { color: colors.danger }]}>
+          Recording. Tap the microphone again to stop.
         </Text>
       )}
 
@@ -97,23 +157,29 @@ export function ChatBar({
         />
 
         <Pressable
-          accessibilityLabel="Attach a photo, video or file"
+          accessibilityLabel="Attach a photo or video"
           accessibilityRole="button"
-          onPress={showNote}
+          onLongPress={() => void attach(attachments.pickDocument)}
+          onPress={() => void attach(attachments.pickMedia)}
           style={({ pressed }) => [styles.glyphButton, pressed && styles.pressed]}>
           <Text style={[styles.glyph, { color: colors.textMuted }]}>+</Text>
         </Pressable>
 
         <Pressable
-          accessibilityLabel="Record a voice note"
+          accessibilityLabel={recording ? 'Stop recording' : 'Record a voice note'}
           accessibilityRole="button"
-          onPress={showNote}
+          onPress={() => void toggleRecording()}
           style={({ pressed }) => [styles.glyphButton, pressed && styles.pressed]}>
           {/* A hollow capsule over a bar reads as a zero with an underline — caught on the
               rendered screen, which is the only place it was ever going to show. Filled head,
               thin stem, narrow base: three parts, and it reads as a microphone at 18px. */}
           <View style={styles.mic}>
-            <View style={[styles.micHead, { backgroundColor: colors.textMuted }]} />
+            <View
+              style={[
+                styles.micHead,
+                { backgroundColor: recording ? colors.danger : colors.textMuted },
+              ]}
+            />
             <View style={[styles.micStem, { backgroundColor: colors.textMuted }]} />
             <View style={[styles.micBase, { backgroundColor: colors.textMuted }]} />
           </View>
@@ -149,6 +215,28 @@ export function ChatBar({
 }
 
 const styles = StyleSheet.create({
+  attached: {
+    alignItems: 'center',
+    borderRadius: radius.md,
+    borderWidth: 1,
+    flexDirection: 'row',
+    marginBottom: spacing.sm,
+    paddingLeft: spacing.md,
+    paddingRight: spacing.sm,
+    paddingVertical: spacing.sm,
+  },
+  attachedText: {
+    flex: 1,
+    fontFamily: fontFamily.body,
+    fontSize: typography.micro,
+  },
+  remove: {
+    paddingHorizontal: spacing.sm,
+  },
+  removeText: {
+    fontFamily: fontFamily.body,
+    fontSize: typography.micro,
+  },
   action: {
     alignItems: 'center',
     borderRadius: 15,

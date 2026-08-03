@@ -18,6 +18,7 @@
 
 import * as SQLite from 'expo-sqlite';
 
+import type { AttachmentRef } from '@/core/attachments';
 import type { ChatStore, ChatThreadSummary } from '@/core/chat';
 import { storageAdapter } from '@/infrastructure/storage/storageAdapter';
 
@@ -44,7 +45,7 @@ type ThreadRow = {
   preview: string | null;
   updated_at: string;
 };
-type TurnRow = { id: string; role: string; text: string };
+type TurnRow = { attachment_json: string | null; id: string; role: string; text: string };
 
 function toSummary(row: ThreadRow): ChatThreadSummary {
   return {
@@ -56,17 +57,28 @@ function toSummary(row: ThreadRow): ChatThreadSummary {
   };
 }
 
+/** A hand-edited or half-written column must not take a whole conversation down with it. */
+function readAttachment(json: string | null): { attachment?: AttachmentRef } {
+  if (json === null) return {};
+  try {
+    return { attachment: JSON.parse(json) as AttachmentRef };
+  } catch {
+    return {};
+  }
+}
+
 export const chatStore: ChatStore = {
   async appendTurn(threadId, turn) {
     const db = await database();
     const now = new Date().toISOString();
     await db.runAsync(
-      'INSERT INTO chat_turn (id, thread_id, role, text, created_at) VALUES (?, ?, ?, ?, ?);',
+      'INSERT INTO chat_turn (id, thread_id, role, text, created_at, attachment_json) VALUES (?, ?, ?, ?, ?, ?);',
       turn.id,
       threadId,
       turn.role,
       turn.text,
       now,
+      turn.attachment === undefined ? null : JSON.stringify(turn.attachment),
     );
     await db.runAsync('UPDATE chat_thread SET updated_at = ? WHERE id = ?;', now, threadId);
   },
@@ -100,8 +112,8 @@ export const chatStore: ChatStore = {
   async readTurns(threadId) {
     const db = await database();
     const rows = await db.getAllAsync<TurnRow>(
-      `SELECT id, role, text FROM (
-         SELECT id, role, text, created_at
+      `SELECT id, role, text, attachment_json FROM (
+         SELECT id, role, text, attachment_json, created_at
          FROM chat_turn
          WHERE thread_id = ?
          ORDER BY created_at DESC
@@ -110,6 +122,7 @@ export const chatStore: ChatStore = {
       threadId,
     );
     return rows.map((row) => ({
+      ...readAttachment(row.attachment_json),
       id: row.id,
       role: row.role === 'assistant' ? ('assistant' as const) : ('user' as const),
       text: row.text,
