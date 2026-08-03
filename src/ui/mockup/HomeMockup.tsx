@@ -2,7 +2,7 @@ import { Link, useRouter } from 'expo-router';
 import { useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
-import { findHub, type HubId } from '@/ui/hubs/catalog';
+import { findHub, orbitHubs, type HubId } from '@/ui/hubs/catalog';
 import {
   fontFamily,
   lineHeights,
@@ -14,15 +14,14 @@ import {
 } from '@/ui/theme';
 
 import { centre } from './fixtures';
-import { CENTRE, DISC_RADIUS, STAGE } from './geometry';
+import { CENTRE, DISC_RADIUS, STAGE, stackBox } from './geometry';
 import { Orbit } from './Orbit';
 
 /**
- * Sized against the free circle inside the ring, not by eye: the widest row (the insight) sits near
- * the vertical middle where the most room is, and the narrow rows are the ones near the top and
- * bottom edges where the circle closes in. `tests/orbit-geometry.test.ts` pins the ring it depends on.
+ * The centre box is sized against the free space inside the ring, and that space depends on how many
+ * hubs there are: `stackBox` returns the full 240×160 while the ring can be rotated clear of it, and
+ * shrinks it once it cannot. `tests/orbit-geometry.test.ts` pins both halves of that.
  */
-const CENTRE_BOX = { height: 160, width: 240 };
 
 function labelFor(id: HubId): string {
   return findHub(id)?.label ?? id;
@@ -46,6 +45,7 @@ export function HomeMockup() {
   const router = useRouter();
   const [selecting, setSelecting] = useState(false);
   const [selected, setSelected] = useState<readonly HubId[]>([]);
+  const centreBox = stackBox(orbitHubs().length);
 
   function handleHubPress(id: HubId) {
     if (!selecting) {
@@ -85,7 +85,17 @@ export function HomeMockup() {
         <View style={styles.stage}>
           <Orbit onHubPress={handleHubPress} selected={selected} selecting={selecting} />
 
-          <View pointerEvents="none" style={styles.centreBox}>
+          <View
+            pointerEvents="none"
+            style={[
+              styles.centreBox,
+              {
+                height: centreBox.height,
+                left: CENTRE - centreBox.width / 2,
+                top: CENTRE - centreBox.height / 2,
+                width: centreBox.width,
+              },
+            ]}>
             {selecting ? (
               <View
                 style={[
@@ -210,12 +220,8 @@ const styles = StyleSheet.create({
   },
   centreBox: {
     alignItems: 'center',
-    height: CENTRE_BOX.height,
     justifyContent: 'center',
-    left: CENTRE - CENTRE_BOX.width / 2,
     position: 'absolute',
-    top: CENTRE - CENTRE_BOX.height / 2,
-    width: CENTRE_BOX.width,
   },
   confirm: {
     borderRadius: radius.xl,
