@@ -8,7 +8,7 @@ import { CENTRE, ORBIT_RADIUS, STAGE, hubCentre, hubRadius, spoke } from './geom
 
 type OrbitProps = {
   onHubPress: (id: HubId) => void;
-  /** Selecting mode draws the spokes and dims whatever is not chosen. */
+  /** Selecting mode dims whatever is not chosen. The spokes are drawn either way. */
   selecting: boolean;
   selected: readonly HubId[];
 };
@@ -25,8 +25,11 @@ export function Orbit({ onHubPress, selecting, selected }: OrbitProps) {
 
   return (
     <View style={styles.stage}>
-      {selecting &&
-        hubs.map((hub, index) => {
+      {/* Always drawn, not only while selecting. The owner asked for every hub to be visibly
+          connected to the Digital Twin at the centre, and that IS the claim the orbit makes: one
+          twin, fed by every domain. Hiding the lines until a selection made the relationship
+          something the screen only admitted to when asked. */}
+      {hubs.map((hub, index) => {
           const line = spoke(index, hubs.length);
           return (
             <View
@@ -40,13 +43,13 @@ export function Orbit({ onHubPress, selecting, selected }: OrbitProps) {
                   transform: [{ rotate: line.rotate }],
                   width: line.length,
                 },
-                selected.includes(hub.id)
+                selecting && selected.includes(hub.id)
                   ? { backgroundColor: colors.accent, opacity: 0.8 }
-                  : { backgroundColor: colors.border },
+                  : { backgroundColor: colors.borderSubtle },
               ]}
             />
-          );
-        })}
+        );
+      })}
 
       {hubs.map((hub, index) => {
         const position = hubCentre(index, hubs.length);

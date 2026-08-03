@@ -67,12 +67,20 @@ const styles = StyleSheet.create({
   /**
    * Fixed height, and deliberately NOT `flex: 1` — the two together collapse the frame, because
    * `flex: 1` also sets a zero flex-basis that the height then loses to.
+   *
+   * `flexShrink: 0` was the other half of that defence and it was wrong. A phone frame is 892 tall
+   * and a laptop browser is often shorter, so the frame simply overflowed the window: the owner
+   * could not see the chat bar at all, even full screen, because it had fallen off the bottom of a
+   * page that does not scroll. `maxHeight` with shrink allowed lets a short window clamp it, and
+   * `maxHeight` does not zero the flex basis the way `flex: 1` does — which is what the warning
+   * above is actually about.
    */
   frameWeb: {
     borderRadius: radius.xl,
     borderWidth: 1,
-    flexShrink: 0,
+    flexShrink: 1,
     height: frame.height,
+    maxHeight: '100%',
     maxWidth: frame.width,
   },
   page: {
@@ -81,6 +89,8 @@ const styles = StyleSheet.create({
   pageWeb: {
     alignItems: 'center',
     justifyContent: 'flex-start',
-    paddingVertical: spacing.xl,
+    // Was `spacing.xl` top and bottom. On a short window that padding is 48px the frame does not
+    // get, and the frame is the thing being reviewed.
+    paddingVertical: spacing.sm,
   },
 });

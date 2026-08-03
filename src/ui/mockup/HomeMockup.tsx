@@ -130,9 +130,17 @@ export function HomeMockup() {
             selecting={sheet === 'coaches'}
           />
 
-          <View
-            pointerEvents="none"
-            style={[
+          {/* The centre IS the Digital Twin. It used to be the drift number, and the owner
+              replaced it: "it should just say digital twin, and all the bubbles should be
+              connected with the digital twin". The number was never the point of the middle — the
+              twin is, and the number is one of the things it is made of, which is why it now leads
+              the Twin screen instead.
+
+              Tappable, unlike the old centre, which was `pointerEvents="none"` text. */}
+          <Pressable
+            accessibilityRole="link"
+            onPress={() => router.push('/twin')}
+            style={({ pressed }) => [
               styles.centreBox,
               {
                 height: centreBox.height,
@@ -140,22 +148,24 @@ export function HomeMockup() {
                 top: CENTRE - centreBox.height / 2,
                 width: centreBox.width,
               },
+              pressed && styles.pressed,
             ]}>
-            <Text style={[styles.driftNumber, { color: colors.textMuted }]}>
-              {centre.driftNumber}
-            </Text>
-            <Text style={[styles.driftCaption, { color: colors.textSubtle }]}>
-              {centre.driftCaption}
-            </Text>
-            <Text numberOfLines={2} style={[styles.insight, { color: colors.text }]}>
-              {centre.insight}
-            </Text>
-            <View style={[styles.focusPill, { backgroundColor: colors.accentSoft }]}>
-              <Text numberOfLines={1} style={[styles.focusText, { color: colors.accent }]}>
-                {centre.focus}
-              </Text>
-            </View>
-          </View>
+            {/* Just the name. The caption under it used to read "biological age · bloodwork 12
+                Mar", which belonged to the number and became a label for nothing once the number
+                moved. Everything the twin is made of is on the Twin screen, one tap away. */}
+            <Text style={[styles.twinName, { color: colors.text }]}>Digital Twin</Text>
+          </Pressable>
+        </View>
+      </View>
+
+      <View style={styles.readout}>
+        <Text numberOfLines={2} style={[styles.insight, { color: colors.text }]}>
+          {centre.insight}
+        </Text>
+        <View style={[styles.focusPill, { backgroundColor: colors.accentSoft }]}>
+          <Text numberOfLines={1} style={[styles.focusText, { color: colors.accent }]}>
+            {centre.focus}
+          </Text>
         </View>
       </View>
 
@@ -207,6 +217,17 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     position: 'absolute',
+  },
+  readout: {
+    alignItems: 'center',
+    paddingHorizontal: spacing.xl,
+    zIndex: 2,
+  },
+  twinName: {
+    fontFamily: fontFamily.display,
+    fontSize: 26,
+    lineHeight: 32,
+    textAlign: 'center',
   },
   driftCaption: {
     fontFamily: fontFamily.body,

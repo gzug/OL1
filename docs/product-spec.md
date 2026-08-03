@@ -56,9 +56,16 @@ one step further in, never the front door" — a hub now opens two things, and o
 
 Settled 2026-08-03. **Reverses** "the Open Table opens from the center".
 
-- **The centre of the orbit is the Digital Twin** — the core idea of the app.
+- **The centre of the orbit is the Digital Twin** — the core idea of the app. It says so: the centre
+  carries the words "Digital Twin" and nothing else.
+- **Every hub is drawn connected to it**, always, not only while choosing coaches. One twin, fed by
+  every domain, is the claim the orbit exists to make.
 - Tapping the centre opens the Twin: PhenoAge, and **which data feeds it** — genomics, blood work,
   microbiome, wearable.
+- **The drift number is not on Home.** It leads the Twin instead, where the sources that produce it
+  are named directly underneath. A number in the middle of the ring made the centre a readout; the
+  twin is not a readout.
+- The weekly insight and the daily focus stay on Home, between the ring and the chat bar.
 
 ## Confirmed — chat
 
