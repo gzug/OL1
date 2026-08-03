@@ -32,7 +32,8 @@ npm run prebuild:ios
 
 - Keep changes small; add no speculative abstractions or dependencies without a current need.
 - Read what exists — here first, then Legacy — before writing something new. Say what you reused,
-  and when you deliberately did not reuse something, say why.
+  and when you deliberately did not reuse something, say why. `docs/legacy-inventory.md` lists what
+  Legacy still holds; search its CONTENTS, not filenames — Legacy's words are not ours.
 - Derive no product, screen, navigation, or data-model assumption from Legacy.
 - Never commit secrets, PHI, keystores, signed builds, or real device data.
 - Screens and routes never import SQLite, Health Connect, provider SDKs, or native infrastructure.
