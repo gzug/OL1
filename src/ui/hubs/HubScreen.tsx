@@ -8,6 +8,7 @@ import { holdForHandoff, toRef } from '@/application/chat/attachments';
 import type { Attachment } from '@/core/attachments';
 import { ChatBar } from '@/ui/chat/ChatBar';
 import { RecentThreads } from '@/ui/chat/RecentThreads';
+import { Heatmap } from '@/ui/exercise/Heatmap';
 import { LoggedWeek } from '@/ui/hubs/LoggedWeek';
 import { StoredEntries } from '@/ui/hubs/StoredEntries';
 import { CoachSelector } from '@/ui/chat/CoachSelector';
@@ -144,6 +145,11 @@ export function HubScreen({
         {/* The hub's own week, from what is stored. Renders nothing until something is logged, so a
             hub nobody has used is exactly as short as it was before. */}
         <LoggedWeek hubId={hub.id} kind={ENTRY_KIND[hub.id] ?? 'note'} />
+
+        {/* Exercise only. Twelve weeks of squares answers "am I being consistent", which is a
+            question about training and not about meals or blood panels — a panel arrives every few
+            months and would draw eleven and a half empty weeks. */}
+        {hub.id === 'exercise' && <Heatmap hubId={hub.id} />}
 
         {state.observation !== undefined && (
           <Text style={[styles.observation, { color: colors.text }]}>{state.observation}</Text>
