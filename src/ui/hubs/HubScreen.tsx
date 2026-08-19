@@ -8,6 +8,7 @@ import { holdForHandoff, toRef } from '@/application/chat/attachments';
 import type { Attachment } from '@/core/attachments';
 import { ChatBar } from '@/ui/chat/ChatBar';
 import { RecentThreads } from '@/ui/chat/RecentThreads';
+import { StoredEntries } from '@/ui/hubs/StoredEntries';
 import { CoachSelector } from '@/ui/chat/CoachSelector';
 import { coachesAtTable } from '@/ui/chat/coachList';
 import type { Coach, HubDefinition } from '@/ui/hubs/catalog';
@@ -123,6 +124,10 @@ export function HubScreen({
       </View>
 
       <ScrollView contentContainerStyle={styles.body} showsVerticalScrollIndicator={false}>
+        {/* Above the fixtures, deliberately. Everything from here down is invented for layout
+            review; this block is not, and it says so where the two meet. */}
+        <StoredEntries hubId={hub.id} />
+
         {state.observation !== undefined && (
           <Text style={[styles.observation, { color: colors.text }]}>{state.observation}</Text>
         )}

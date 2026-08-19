@@ -118,3 +118,32 @@ export function panelProblems(
     })
     .map((marker) => marker.key);
 }
+
+/**
+ * What is stored when a panel is approved.
+ *
+ * **A marker left blank is absent, not zero** — the same rule `mealPayload` follows, and it matters
+ * more here: a zero albumin is not a missing reading, it is an impossible one, and the PhenoAge
+ * calculator would take it. Absent is what lets that calculator return a RANGE rather than a number
+ * it cannot stand behind.
+ *
+ * `approvedAt` is recorded because the Verification Gate is the point of this screen. A panel that
+ * reached storage without a person confirming it would be indistinguishable from one that did, and
+ * this field is what tells them apart later.
+ */
+export function panelPayload(
+  entries: readonly MarkerEntry[],
+  source: LabSource,
+  approvedAt: string,
+): Readonly<Record<string, unknown>> {
+  const markers: Record<string, number> = {};
+
+  for (const marker of LEVINE_MARKERS) {
+    const text = entries.find((entry) => entry.key === marker.key)?.text.trim() ?? '';
+    if (text.length === 0) continue;
+    if (markerProblem(marker, text) !== null) continue;
+    markers[marker.key] = Number(text);
+  }
+
+  return { approvedAt, markers, readBy: source };
+}

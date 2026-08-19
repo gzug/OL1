@@ -2,12 +2,14 @@ import { Link } from 'expo-router';
 import { useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 
+import { hubs } from '@/application/hubs/hubs';
 import {
   MACROS,
   filledCount,
   macroProblem,
   macroProblems,
   macrosAgree,
+  mealPayload,
   problemMessage,
   type MacroDefinition,
   type MacroEntry,
@@ -39,24 +41,47 @@ import {
  * - **Fibre may stay unknown.** Legacy refuses to fabricate it. Leaving it blank here is a first
  *   class answer, not an incomplete form.
  *
- * Nothing reads the photo yet, so the numbers start empty and the screen says so.
+ * Nothing reads the photo yet, so the numbers start empty and the screen says so. **What the user
+ * confirms IS stored**, as of 2026-08-19 — the review step was built before there was anywhere to
+ * put its result, and this is that half arriving.
  */
 
 type Step = 'note' | 'review' | 'way';
+
+/**
+ * How the meal was described, carried through to the stored entry's `source`.
+ *
+ * Recorded rather than assumed: a cockpit that says "9 meals logged" is a different claim from
+ * "9 meals, 6 of them from a photo", and the second one is only available if nobody guessed.
+ */
+type MealWay = 'camera' | 'described' | 'library';
 
 export function LogMealFlow() {
   const { colors } = useTheme();
   const [step, setStep] = useState<Step>('way');
   const [note, setNote] = useState('');
+  const [way, setWay] = useState<MealWay>('described');
   const [entries, setEntries] = useState<readonly MacroEntry[]>(
     MACROS.map((macro) => ({ key: macro.key, text: '' })),
   );
-  const [saved, setSaved] = useState(false);
+  const [state, setState] = useState<'failed' | 'idle' | 'saved' | 'saving'>('idle');
 
   const problems = macroProblems(entries);
   const filled = filledCount(entries);
   const agree = macrosAgree(entries);
   const canSave = filled > 0 && problems.length === 0;
+
+  async function save() {
+    setState('saving');
+    try {
+      await hubs.add('nutrition', 'meal', mealPayload(entries, note), { source: way });
+      setState('saved');
+    } catch {
+      // Everything typed is still on screen and the button can be pressed again. Navigating away
+      // or clearing the form would lose the one thing here that cannot be reproduced.
+      setState('failed');
+    }
+  }
 
   function setEntry(key: string, text: string) {
     setEntries((current) =>
@@ -92,19 +117,28 @@ export function LogMealFlow() {
               colors={colors}
               detail="Point it at the plate."
               label="Take a photo"
-              onPress={() => setStep('note')}
+              onPress={() => {
+                setWay('camera');
+                setStep('note');
+              }}
             />
             <Way
               colors={colors}
               detail="One already in your camera roll."
               label="Choose a photo"
-              onPress={() => setStep('note')}
+              onPress={() => {
+                setWay('library');
+                setStep('note');
+              }}
             />
             <Way
               colors={colors}
               detail="No photo — just say what it was."
               label="Describe it"
-              onPress={() => setStep('note')}
+              onPress={() => {
+                setWay('described');
+                setStep('note');
+              }}
             />
           </>
         )}
@@ -180,8 +214,8 @@ export function LogMealFlow() {
 
             <Pressable
               accessibilityRole="button"
-              disabled={!canSave}
-              onPress={() => setSaved(true)}
+              disabled={!canSave || state === 'saving'}
+              onPress={() => void save()}
               style={({ pressed }) => [
                 styles.next,
                 canSave
@@ -200,13 +234,25 @@ export function LogMealFlow() {
                   ? `${problems.length} to fix`
                   : filled === 0
                     ? 'Fill at least one'
-                    : 'Save this meal'}
+                    : state === 'saving'
+                      ? 'Saving…'
+                      : state === 'saved'
+                        ? 'Saved'
+                        : 'Save this meal'}
               </Text>
             </Pressable>
 
-            {saved && (
+            {/* What is stored, and what is not. The macros left blank are ABSENT rather than zero
+                — `mealPayload` enforces that — and saying so here is what stops someone filling
+                them with guesses to make the screen look complete. */}
+            {state === 'saved' && (
               <Text style={[styles.note, { color: colors.textSubtle }]}>
-                Nothing is saved yet — logging is not wired up. This is the flow, not the feature.
+                Kept in Nutrition. Anything you left blank stays unknown rather than becoming a zero.
+              </Text>
+            )}
+            {state === 'failed' && (
+              <Text style={[styles.note, { color: colors.warning }]}>
+                That could not be saved. Nothing was lost — the numbers are still here, try again.
               </Text>
             )}
 

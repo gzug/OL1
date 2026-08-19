@@ -2,11 +2,13 @@ import { Link } from 'expo-router';
 import { useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 
+import { hubs } from '@/application/hubs/hubs';
 import {
   LEVINE_MARKERS,
   filledCount,
   isValidTestDate,
   markerProblem,
+  panelPayload,
   panelProblems,
   problemMessage,
   type LabSource,
@@ -51,12 +53,34 @@ export function LabUploadFlow() {
   const [entries, setEntries] = useState<readonly MarkerEntry[]>(
     LEVINE_MARKERS.map((marker) => ({ key: marker.key, text: '' })),
   );
-  const [approved, setApproved] = useState(false);
+  const [state, setState] = useState<'approved' | 'failed' | 'idle' | 'saving'>('idle');
 
   const problems = panelProblems(entries);
   const filled = filledCount(entries);
   const dateOk = testDate.trim().length === 0 || isValidTestDate(testDate.trim(), TODAY);
   const canApprove = filled > 0 && problems.length === 0 && dateOk;
+
+  async function approve() {
+    if (source === null) return;
+    setState('saving');
+    try {
+      /**
+       * The panel is dated by when the blood was DRAWN, not by when it was typed in. A panel
+       * entered months later belongs to the day it was taken — the drift number and every "since
+       * your last panel" line read this field, and both would be wrong the other way round.
+       */
+      const drawn = testDate.trim().length > 0 ? `${testDate.trim()}T00:00:00.000Z` : undefined;
+      await hubs.add('labs', 'panel', panelPayload(entries, source, new Date().toISOString()), {
+        ...(drawn === undefined ? {} : { recordedAt: drawn }),
+        source,
+      });
+      setState('approved');
+    } catch {
+      // Every value is still on screen. Losing a hand-typed panel to a failed write would be the
+      // worst thing this screen could do.
+      setState('failed');
+    }
+  }
 
   function setEntry(key: string, text: string) {
     setEntries((current) =>
@@ -149,8 +173,8 @@ export function LabUploadFlow() {
                 this is pressed — the reviewer is the feature, not the extractor. */}
             <Pressable
               accessibilityRole="button"
-              disabled={!canApprove}
-              onPress={() => setApproved(true)}
+              disabled={!canApprove || state === 'saving'}
+              onPress={() => void approve()}
               style={({ pressed }) => [
                 styles.approve,
                 canApprove
@@ -169,14 +193,24 @@ export function LabUploadFlow() {
                   ? `${problems.length} value${problems.length === 1 ? '' : 's'} to fix`
                   : filled === 0
                     ? 'Fill at least one marker'
-                    : `Approve ${filled} marker${filled === 1 ? '' : 's'}`}
+                    : state === 'saving'
+                      ? 'Saving…'
+                      : state === 'approved'
+                        ? 'Approved'
+                        : `Approve ${filled} marker${filled === 1 ? '' : 's'}`}
               </Text>
             </Pressable>
 
-            {approved && (
+            {state === 'approved' && (
               <Text style={[styles.note, { color: colors.textSubtle }]}>
-                Nothing is saved yet — storing panels is not wired up. This is the gate, not the
-                feature.
+                Kept in Labs, inside Medical condition. Markers you left blank stay unknown — which
+                is what lets the age calculation give a range instead of a number it cannot stand
+                behind.
+              </Text>
+            )}
+            {state === 'failed' && (
+              <Text style={[styles.note, { color: colors.warning }]}>
+                That could not be saved. Nothing was lost — every value is still here, try again.
               </Text>
             )}
 
