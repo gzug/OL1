@@ -8,6 +8,7 @@ import { holdForHandoff, toRef } from '@/application/chat/attachments';
 import type { Attachment } from '@/core/attachments';
 import { ChatBar } from '@/ui/chat/ChatBar';
 import { RecentThreads } from '@/ui/chat/RecentThreads';
+import { LoggedWeek } from '@/ui/hubs/LoggedWeek';
 import { StoredEntries } from '@/ui/hubs/StoredEntries';
 import { CoachSelector } from '@/ui/chat/CoachSelector';
 import { coachesAtTable } from '@/ui/chat/coachList';
@@ -59,6 +60,18 @@ import {
  * `TextStyle` wants a mutable array. Spread once here rather than reaching into the token file.
  */
 const tabularNums: TextStyle = { fontVariant: [...numerals.tabular.fontVariant] };
+
+/**
+ * What a hub's week is counted in.
+ *
+ * Per hub rather than per screen, because "4 of 7 days" means meals in Nutrition and sessions in
+ * Exercise, and a hub with no kind listed has nothing weekly to say yet.
+ */
+const ENTRY_KIND: Readonly<Record<string, string>> = {
+  exercise: 'session',
+  labs: 'panel',
+  nutrition: 'meal',
+};
 
 export function HubScreen({
   coach,
@@ -127,6 +140,10 @@ export function HubScreen({
         {/* Above the fixtures, deliberately. Everything from here down is invented for layout
             review; this block is not, and it says so where the two meet. */}
         <StoredEntries hubId={hub.id} />
+
+        {/* The hub's own week, from what is stored. Renders nothing until something is logged, so a
+            hub nobody has used is exactly as short as it was before. */}
+        <LoggedWeek hubId={hub.id} kind={ENTRY_KIND[hub.id] ?? 'note'} />
 
         {state.observation !== undefined && (
           <Text style={[styles.observation, { color: colors.text }]}>{state.observation}</Text>
