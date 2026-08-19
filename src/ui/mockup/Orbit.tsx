@@ -2,11 +2,17 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { fontFamily, useTheme } from '@/ui/theme';
 
-import { orbitHubs, ringPlaceCount, type HubId } from '@/ui/hubs/catalog';
+import { orbitHubs, ringPlaceCount, type HubDefinition, type HubId } from '@/ui/hubs/catalog';
 
 import { CENTRE, ORBIT_RADIUS, STAGE, hubCentre, hubRadius, spoke } from './geometry';
 
 type OrbitProps = {
+  /**
+   * Every hub that exists, seeded and user-made. Passed in rather than read here, because the
+   * user's hubs arrive from a store asynchronously and a component that reads the catalog directly
+   * can only ever draw the six that ship.
+   */
+  hubs: readonly HubDefinition[];
   /** The `+` at the end of the ring. Absent while selecting coaches, when it is not offered. */
   onAddPress: () => void;
   onHubPress: (id: HubId) => void;
@@ -15,13 +21,13 @@ type OrbitProps = {
   selected: readonly HubId[];
 };
 
-export function Orbit({ onAddPress, onHubPress, selecting, selected }: OrbitProps) {
+export function Orbit({ hubs: all, onAddPress, onHubPress, selecting, selected }: OrbitProps) {
   const { colors } = useTheme();
   /**
    * Top-level hubs only. Exercise's types and Labs are hubs too, but they belong inside their
    * parent — putting them on the ring would be the orbit claiming eleven domains instead of five.
    */
-  const hubs = orbitHubs();
+  const hubs = orbitHubs(all);
   /**
    * One more place than there are hubs: the last belongs to the `+`.
    *
@@ -32,7 +38,7 @@ export function Orbit({ onAddPress, onHubPress, selecting, selected }: OrbitProp
    *
    * It sits last so that a hub the user adds lands before it and the seeded five never move.
    */
-  const places = ringPlaceCount();
+  const places = ringPlaceCount(all);
   /** Circles size themselves against how many there are. At seven this is still the full 32. */
   const radius = hubRadius(places);
 

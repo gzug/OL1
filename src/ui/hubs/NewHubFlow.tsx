@@ -9,7 +9,9 @@ import {
   View,
 } from 'react-native';
 
+import { hubs } from '@/application/hubs/hubs';
 import { findHub, type HubId } from '@/ui/hubs/catalog';
+import { useHubs } from '@/ui/hubs/useHubs';
 import {
   FOCUS_MAX,
   NAME_MAX,
@@ -36,8 +38,13 @@ import {
  * The same flow makes an exercise type: `parentId` is the only difference, and it comes from the
  * route rather than from a question the user has to understand.
  *
- * Nothing is saved. The last step shows what would be made and says so plainly. A flow that quietly
- * dropped a hub the user had just named and described would be worse than one that admits it.
+ * **The last step now writes it.** Until 2026-08-19 this flow ended by admitting that nothing was
+ * saved, because there was no store — a hub was seed data in a file. There is one now, so the
+ * button makes the hub and Home shows it when you get back there.
+ *
+ * What the ending still admits is where it is kept, because that limit is real: on the web preview
+ * a hub lives in this browser and goes when the browser's data is cleared. Saying so is the same
+ * honesty the old copy had, pointed at what is true now rather than at what was missing.
  */
 
 type Step = 'done' | 'focus' | 'name';
@@ -49,9 +56,14 @@ export function NewHubFlow({ parentId }: { parentId?: HubId }) {
   const [name, setName] = useState('');
   const [focus, setFocus] = useState('');
 
-  const parent = parentId === undefined ? undefined : findHub(parentId);
+  /**
+   * Every hub that exists, not just the seeded ones — otherwise the second hub you name "Reading"
+   * is accepted, and the ring quietly carries two of them.
+   */
+  const existing = useHubs();
+  const parent = parentId === undefined ? undefined : findHub(parentId, existing);
   const draft = { focus, name, parentId };
-  const problem = draftProblem(draft);
+  const problem = draftProblem(draft, existing);
   const thing = parent === undefined ? 'hub' : 'exercise type';
 
   return (
@@ -147,7 +159,13 @@ export function NewHubFlow({ parentId }: { parentId?: HubId }) {
           </>
         )}
 
-        {step === 'done' && <Summary colors={colors} draft={draft} onHome={() => router.push('/')} />}
+        {step === 'done' && (
+          <Summary
+            colors={colors}
+            draft={draft}
+            onCreated={() => router.push('/')}
+          />
+        )}
       </ScrollView>
     </View>
   );
@@ -156,13 +174,26 @@ export function NewHubFlow({ parentId }: { parentId?: HubId }) {
 function Summary({
   colors,
   draft,
-  onHome,
+  onCreated,
 }: {
   colors: ThemeColors;
   draft: { focus: string; name: string; parentId?: HubId };
-  onHome: () => void;
+  onCreated: () => void;
 }) {
   const preview = draftPreview(draft);
+  const [state, setState] = useState<'failed' | 'idle' | 'saving'>('idle');
+
+  async function create() {
+    setState('saving');
+    try {
+      await hubs.create(preview.hub);
+      onCreated();
+    } catch {
+      // The hub is not made, so the screen must not navigate away as if it were. Everything the
+      // person typed is still on this screen and the button can be pressed again.
+      setState('failed');
+    }
+  }
 
   return (
     <>
@@ -175,13 +206,20 @@ function Summary({
       <Row colors={colors} label="Starts with" value="A coach, and notes you write by hand" />
       <Row colors={colors} label="Data" value="Connect a source or upload a file whenever you like" />
 
-      {/* The honest ending. Hubs are seed data and a real store sits behind `src/application/`,
-          which a screen may not import — so nothing is saved, and saying so beats pretending. */}
+      {/* Where it is kept, which is the part still worth saying out loud. `hubStore.web.ts` says
+          the same thing to developers; this says it to the person making the hub. */}
       <Text style={[styles.note, { color: colors.textSubtle }]}>
-        Nothing is saved yet — making hubs is not wired up. This is the flow, not the feature.
+        {state === 'failed'
+          ? 'That could not be saved. Nothing was lost — try again.'
+          : 'Kept on this device. In the web preview that means this browser, so clearing your browser data clears it.'}
       </Text>
 
-      <Next colors={colors} disabled={false} label="Back to Home" onPress={onHome} />
+      <Next
+        colors={colors}
+        disabled={state === 'saving'}
+        label={state === 'saving' ? 'Making it…' : 'Make this hub'}
+        onPress={() => void create()}
+      />
     </>
   );
 }
