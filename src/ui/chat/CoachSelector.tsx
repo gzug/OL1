@@ -1,7 +1,8 @@
+import { Fragment } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { MAX_COACHES_PER_CONVERSATION } from '@/application/chat/threads';
-import { activityCoaches, hubCoaches } from '@/ui/chat/coachList';
+import { hubCoaches, nestedCoachGroups } from '@/ui/chat/coachList';
 import type { Coach } from '@/ui/hubs/catalog';
 import {
   fontFamily,
@@ -66,16 +67,27 @@ export function CoachSelector({
           />
         ))}
 
-        <Text style={[styles.group, { color: colors.textSubtle }]}>INSIDE ACTIVITY</Text>
-        {activityCoaches().map((coach, index) => (
-          <Row
-            coach={coach}
-            first={index === 0}
-            key={coach.id}
-            onToggle={onToggle}
-            selected={selected.includes(coach.id)}
-            unavailable={full && !selected.includes(coach.id)}
-          />
+        {/* One heading per parent hub, rather than the single "INSIDE ACTIVITY" this printed until
+            2026-08-19. Two hubs hold others now — Exercise holds the sports, Medical condition holds
+            Labs — and a user can nest a hub they create, so the headings are derived rather than
+            written. The parent's full label is used here, not its `ringLabel`: this is a list with
+            room, and "INSIDE MEDICAL" would lose the word that makes it clear. */}
+        {nestedCoachGroups().map((group) => (
+          <Fragment key={group.parent.id}>
+            <Text style={[styles.group, { color: colors.textSubtle }]}>
+              {`INSIDE ${group.parent.label.toUpperCase()}`}
+            </Text>
+            {group.coaches.map((coach, index) => (
+              <Row
+                coach={coach}
+                first={index === 0}
+                key={coach.id}
+                onToggle={onToggle}
+                selected={selected.includes(coach.id)}
+                unavailable={full && !selected.includes(coach.id)}
+              />
+            ))}
+          </Fragment>
         ))}
       </ScrollView>
     </View>
@@ -198,7 +210,7 @@ const styles = StyleSheet.create({
      * grew to its full content and pushed the bar off the bottom of the frame.
      *
      * The value is chosen so INSIDE ACTIVITY peeks over the fold. At 430 the sheet ended cleanly
-     * after Sleep Coach and read as the whole list, which hid Activity's coaches per sport
+     * after Sleep Coach and read as the whole list, which hid Exercise's coaches per sport
      * completely — a scroll nobody can see is a scroll nobody makes.
      */
     maxHeight: 470,

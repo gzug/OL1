@@ -81,7 +81,7 @@ test('a new hub gets its own coach, never a borrowed one', () => {
 });
 
 test('an exercise type is the same act with a parent set', () => {
-  const preview = draftPreview({ focus: 'Grip and technique.', name: 'Climbing', parentId: 'activity' });
-  assert.equal(preview.hub.parentId, 'activity');
+  const preview = draftPreview({ focus: 'Grip and technique.', name: 'Climbing', parentId: 'exercise' });
+  assert.equal(preview.hub.parentId, 'exercise');
   assert.match(preview.where, /inside/);
 });

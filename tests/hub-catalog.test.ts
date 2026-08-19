@@ -55,25 +55,60 @@ test('every nested hub names a parent that exists, and no parent is itself neste
 });
 
 /**
- * Ring order is load-bearing: `src/ui/mockup/geometry.ts` places hub `index` at `index * 60`
- * degrees, so this sequence is what decides where each hub sits on screen. Labs next to the drift
- * number is deliberate. If this assertion is ever updated, the orbit moved.
+ * Ring order is load-bearing: `src/ui/mockup/geometry.ts` places hub `index` at a fixed angle, so
+ * this sequence is what decides where each hub sits on screen. If this assertion is ever updated,
+ * the orbit moved — which it did on 2026-08-19, when the owner re-drew it.
  */
-test('the orbit is the seven built-in places, in ring order', () => {
+test('the orbit is the six built-in places, in ring order', () => {
   assert.deepEqual(
     orbitHubs().map((hub) => hub.id),
-    ['activity', 'nutrition', 'body', 'resilience', 'labs', 'sleep', 'open-table'],
+    ['exercise', 'nutrition', 'medical', 'resilience', 'sleep', 'open-table'],
   );
 });
 
-test('exercise types live inside Activity, not on the ring', () => {
-  const inside = childHubs('activity').map((hub) => hub.id);
+test('exercise types live inside Exercise, not on the ring', () => {
+  const inside = childHubs('exercise').map((hub) => hub.id);
   assert.deepEqual(inside, ['running', 'gym', 'cycling', 'swimming', 'golf']);
   for (const id of inside) {
     assert.ok(
       !orbitHubs().some((hub) => hub.id === id),
-      `"${id}" is on the ring; the orbit would claim eleven domains instead of six`,
+      `"${id}" is on the ring; Running and Gym were kept inside Exercise deliberately`,
     );
+  }
+});
+
+/**
+ * Labs moved inside Medical condition on 2026-08-19 and everything built for panels still routes
+ * through the hub id `labs` — `/add-panel`, the verification gate, and the PhenoAge feed. If this
+ * fails, those are reaching for a hub that is no longer where they think it is.
+ */
+test('Labs lives inside Medical condition, keeping its id and its coach', () => {
+  assert.deepEqual(childHubs('medical').map((hub) => hub.id), ['labs']);
+  assert.ok(!orbitHubs().some((hub) => hub.id === 'labs'), 'Labs is back on the ring');
+  assert.equal(coachForHub('labs')?.id, 'longevity');
+  assert.ok(hubStateFor('labs') !== undefined, 'Labs lost its cockpit in the move');
+});
+
+/**
+ * A hub circle is 64 pixels across and its label is one line, so about ten characters is the whole
+ * budget. "Medical condition" is seventeen and truncates to "Medical con…", which reads as a bug —
+ * hence `ringLabel`. This is the guard that makes the next long hub name fail here rather than on
+ * the owner's screen.
+ */
+test('no label on the ring is too long for its circle', () => {
+  for (const hub of orbitHubs()) {
+    const drawn = hub.ringLabel ?? hub.label;
+    assert.ok(
+      drawn.length <= 10,
+      `"${hub.id}" draws "${drawn}" (${drawn.length} chars) on the ring — give it a ringLabel`,
+    );
+  }
+});
+
+/** The retired hubs. Kept as an assertion so neither quietly comes back with a rebase. */
+test('Body and Activity are gone, ids included', () => {
+  for (const id of ['body', 'activity']) {
+    assert.equal(findHub(id), undefined, `"${id}" is back in the catalog`);
   }
 });
 

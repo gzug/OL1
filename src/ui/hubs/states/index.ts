@@ -12,12 +12,12 @@
 import type { HubId } from '../catalog';
 import type { HubState } from '../hubState';
 
-import { activity } from './activity';
-import { body } from './body';
 import { cycling } from './cycling';
+import { exercise } from './exercise';
 import { golf } from './golf';
 import { gym } from './gym';
 import { labs } from './labs';
+import { medical } from './medical';
 import { nutrition } from './nutrition';
 import { resilience } from './resilience';
 import { running } from './running';
@@ -25,12 +25,12 @@ import { sleep } from './sleep';
 import { swimming } from './swimming';
 
 export const HUB_STATES: Readonly<Record<HubId, HubState>> = {
-  activity,
-  body,
   cycling,
+  exercise,
   golf,
   gym,
   labs,
+  medical,
   nutrition,
   resilience,
   running,

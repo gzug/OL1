@@ -23,7 +23,7 @@ function summary(over: Partial<ChatThreadSummary> = {}): ChatThreadSummary {
 test('a thread is named by its coaches, and by "Assistant" when it has none', () => {
   assert.equal(threadTitle([], COACHES), 'Assistant');
   assert.equal(threadTitle(['sleep'], COACHES), 'Sleep Coach');
-  assert.equal(threadTitle(['sleep', 'activity'], COACHES), 'Sleep Coach, Activity Coach');
+  assert.equal(threadTitle(['sleep', 'exercise'], COACHES), 'Sleep Coach, Exercise Coach');
 });
 
 test('a coach that no longer exists does not blank out a thread’s name', () => {
@@ -69,7 +69,7 @@ test('the store’s order survives, because only the store knows when a turn lan
 
 test('reopening a row lands in the same conversation it came from', async () => {
   const store = createMemoryChatStore();
-  const coachIds = ['sleep', 'activity'];
+  const coachIds = ['sleep', 'exercise'];
   const id = threadIdFor(coachIds);
 
   await store.createThread({
@@ -81,7 +81,7 @@ test('reopening a row lands in the same conversation it came from', async () => 
   await store.appendTurn(id, { id: 't1', role: 'user', text: 'why am I tired' });
 
   const [entry] = historyEntries(await store.listThreads(), COACHES);
-  assert.equal(entry.title, 'Sleep Coach, Activity Coach');
+  assert.equal(entry.title, 'Sleep Coach, Exercise Coach');
   assert.equal(entry.preview, 'why am I tired');
   // The row hands back coach ids, and the id derived from them is the thread it came from. That is
   // what makes reopening a selection rather than a lookup.
