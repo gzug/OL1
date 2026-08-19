@@ -9,7 +9,12 @@
 # Expo's SDK expects rather than whatever is newest, and uploads the result as an artifact.
 name: lockfile
 
-on: workflow_dispatch
+# `push` rather than `workflow_dispatch`: dispatch only works for workflows that already exist on
+# the default branch, and this one is never going to be there — it is deleted before this branch
+# merges. Scoped to the single branch so it can never run anywhere else.
+on:
+  push:
+    branches: [don/body-figure]
 
 permissions:
   contents: read
