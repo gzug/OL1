@@ -1,8 +1,18 @@
 /**
- * Which conversation a coach selection belongs to, and how many coaches may be in one.
+ * Which conversation is which, and how many coaches may be in one.
  *
- * Pure on purpose: the thread id decides whether sending resumes a conversation or starts a new one,
- * and that is worth asserting without a database in the room.
+ * Pure on purpose: what decides whether sending resumes a conversation or starts a new one is worth
+ * asserting without a database in the room.
+ *
+ * **A conversation has its own identity as of 2026-08-19.** It used to be derived from the coaches
+ * in it — `threadIdFor(['sleep'])` was always `chat_sleep` — which meant the Sleep coach had exactly
+ * ONE conversation, for ever, growing without end. The owner asked for the opposite, in his words:
+ * *"you can always jump back into previous chats with the coaches... it should always show you the
+ * last three conversations. Similar to how it is here in Claude."* Three separate conversations with
+ * one coach is impossible while the coaches ARE the id, so the id had to stop being derived.
+ *
+ * Threads written under the old scheme keep their ids and become ordinary conversations. Nothing is
+ * migrated and nothing is lost: `latestFor` finds them by their coaches like any other.
  */
 
 /**
@@ -14,20 +24,67 @@
  */
 export const MAX_COACHES_PER_CONVERSATION = 5;
 
-/** Empty is the general assistant: no coach, ask anything. */
+/** The id the general assistant's conversation had while ids were derived. Still a valid thread. */
 export const GENERAL_THREAD_ID = 'chat_general';
 
+/** A new conversation's id. The same shape a turn id uses, and unique for the same reasons. */
+export function newThreadId(): string {
+  return `chat_${Date.now().toString(36)}${Math.random().toString(36).slice(2, 8)}`;
+}
+
 /**
- * The id of the thread a selection resumes.
+ * The coaches of a conversation, in the one order two selections of the same coaches both produce.
  *
- * Sorted, so picking Sleep then Activity lands in the same conversation as Activity then Sleep.
- * Ported from Legacy `screens/coach/RoundTableFlow.tsx`, whose `round_table_<sorted slot ids>_main`
- * exists for exactly that reason — without the sort, re-picking the same two coaches in the other
- * order opened an empty thread and the previous one looked lost.
+ * Sorted, so Sleep-then-Exercise and Exercise-then-Sleep are recognised as the same table. Ported
+ * from Legacy `screens/coach/RoundTableFlow.tsx`, whose `round_table_<sorted slot ids>_main` exists
+ * for exactly that reason — without the sort, re-picking the same two coaches in the other order
+ * looked like a different conversation and the previous one looked lost.
  */
-export function threadIdFor(coachIds: readonly string[]): string {
-  const unique = [...new Set(coachIds)].sort();
-  return unique.length === 0 ? GENERAL_THREAD_ID : `chat_${unique.join('_')}`;
+export function tableKey(coachIds: readonly string[]): string {
+  return [...new Set(coachIds)].sort().join(',');
+}
+
+/** Just enough of a thread to choose between them. `ChatThread` and its summary both satisfy it. */
+export type ThreadLike = {
+  readonly coachIds: readonly string[];
+  readonly id: string;
+  readonly updatedAt: string;
+};
+
+/**
+ * The conversation a table continues when nothing names one: the most recent with exactly these
+ * coaches, or none.
+ *
+ * "Exactly" is the important word. A conversation with Sleep and Exercise is not the Sleep coach's
+ * conversation — opening it because Sleep was asked for would drop someone else's coach into a
+ * conversation the person thought was one-to-one.
+ */
+export function latestFor(
+  threads: readonly ThreadLike[],
+  coachIds: readonly string[],
+): ThreadLike | undefined {
+  const key = tableKey(coachIds);
+  return [...threads]
+    .filter((thread) => tableKey(thread.coachIds) === key)
+    .sort((a, b) => b.updatedAt.localeCompare(a.updatedAt))[0];
+}
+
+/**
+ * The most recent conversations a coach was part of — the hub's "last three".
+ *
+ * Unlike `latestFor` this is deliberately loose: a conversation where the Sleep coach sat with two
+ * others still counts as one you had with Sleep, because from the hub's side it is. The two
+ * different rules are the whole reason they are separate functions rather than one with a flag.
+ */
+export function recentFor<T extends ThreadLike>(
+  threads: readonly T[],
+  coachId: string,
+  limit = 3,
+): readonly T[] {
+  return [...threads]
+    .filter((thread) => thread.coachIds.includes(coachId))
+    .sort((a, b) => b.updatedAt.localeCompare(a.updatedAt))
+    .slice(0, limit);
 }
 
 /**

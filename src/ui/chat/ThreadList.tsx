@@ -20,16 +20,21 @@ import {
  * The same sheet shape as `CoachSelector` on purpose — both answer "which conversation am I in",
  * and giving them two different presentations would make that look like two different questions.
  *
- * Reopening does not create anything. A thread id is derived from its coaches, so picking a row is
- * the same act as picking those coaches in the bar; the conversation was always going to be there.
+ * Reopening hands over the conversation's OWN id. It used to hand over the coaches, because a
+ * thread id was derived from them and the two were the same fact — since 2026-08-19 they are not,
+ * and a coach can have several conversations. Passing coaches here would reopen whichever one
+ * happened to be most recent rather than the row that was tapped.
  */
 
 export function ThreadList({
   onClose,
+  onNew,
   onOpen,
 }: {
   onClose: () => void;
-  onOpen: (coachIds: readonly string[]) => void;
+  /** Start again with the same people at the table. Absent on Home, where the bar already does. */
+  onNew?: () => void;
+  onOpen: (threadId: string, coachIds: readonly string[]) => void;
 }) {
   const { colors } = useTheme();
   const [entries, setEntries] = useState<readonly HistoryEntry[] | null>(null);
@@ -57,6 +62,19 @@ export function ThreadList({
         </Pressable>
       </View>
 
+      {/* Sits above the list rather than below it: it is the answer to "none of these", and a
+          person who has read the list and not found what they wanted is at the bottom of a scroll
+          view. It is also the only way to leave a conversation without abandoning it, now that a
+          coach can have more than one. */}
+      {onNew !== undefined && (
+        <Pressable
+          accessibilityRole="button"
+          onPress={onNew}
+          style={({ pressed }) => [styles.newRow, pressed && styles.pressed]}>
+          <Text style={[styles.newText, { color: colors.accent }]}>+  New conversation</Text>
+        </Pressable>
+      )}
+
       {/* Three states, and none of them is a blank sheet: still reading, nothing yet, or the list. */}
       {entries === null ? (
         <Text style={[styles.empty, { color: colors.textSubtle }]}>Looking…</Text>
@@ -70,7 +88,7 @@ export function ThreadList({
             <Pressable
               accessibilityRole="button"
               key={entry.id}
-              onPress={() => onOpen(entry.coachIds)}
+              onPress={() => onOpen(entry.id, entry.coachIds)}
               style={({ pressed }) => [
                 styles.row,
                 index > 0 && {
@@ -114,6 +132,14 @@ const styles = StyleSheet.create({
   },
   list: {
     marginTop: spacing.sm,
+  },
+  newRow: {
+    marginTop: spacing.sm,
+    paddingVertical: spacing.sm,
+  },
+  newText: {
+    fontFamily: fontFamily.medium,
+    fontSize: typography.bodySmall,
   },
   pressed: {
     opacity: 0.6,

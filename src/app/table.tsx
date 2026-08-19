@@ -11,13 +11,20 @@ import { MockupScreen } from '@/ui/mockup/MockupScreen';
  * on Home writes the question to the store and this screen picks it up, which keeps a health
  * question out of browser history and out of the host's access logs.
  *
- * Two parameters, on purpose. `?coaches=` is what the bar sends. `?domains=` is what a hub's coach
- * door sends — hub ids, not coach ids, and the two are not interchangeable: the Labs hub opens the
- * Longevity Guide. `coachForHub` is the catalog's own answer to that, so this route asks it rather
- * than assuming the ids match. Accepting both is also what keeps `HubScreen.tsx` working untouched.
+ * Three parameters, each answering a different question. `?thread=` names the conversation and is
+ * what the bar, the history list and a hub's recent three all send — it is the only one that can
+ * tell two conversations with the same coach apart. `?coaches=` names who is at the table without
+ * saying which conversation, which is all an older link can say; the surface then opens their most
+ * recent, or starts one. `?domains=` is what a hub's coach door sends — hub ids, not coach ids, and
+ * the two are not interchangeable: the Labs hub opens the Longevity Guide, and `coachForHub` is the
+ * catalog's own answer to that rather than an assumption that the ids match.
  */
 export default function TableRoute() {
-  const { coaches, domains } = useLocalSearchParams<{ coaches?: string; domains?: string }>();
+  const { coaches, domains, thread } = useLocalSearchParams<{
+    coaches?: string;
+    domains?: string;
+    thread?: string;
+  }>();
 
   const fromCoaches = split(coaches);
   const fromHubs = split(domains)
@@ -26,7 +33,10 @@ export default function TableRoute() {
 
   return (
     <MockupScreen>
-      <ChatSurface coachIds={[...new Set([...fromCoaches, ...fromHubs])]} />
+      <ChatSurface
+        coachIds={[...new Set([...fromCoaches, ...fromHubs])]}
+        threadId={thread ?? null}
+      />
     </MockupScreen>
   );
 }

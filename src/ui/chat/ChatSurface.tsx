@@ -3,6 +3,7 @@ import { useMemo, useRef, useState } from 'react';
 import { KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { describe } from '@/application/chat/attachments';
+import { coachChat } from '@/application/chat/coachChat';
 import { splitCoachVoices, type Voice } from '@/application/chat/prompt';
 import { toggleCoach } from '@/application/chat/threads';
 import type { ChatTurn } from '@/core/chat';
@@ -44,7 +45,14 @@ const ATTACHMENT_LABEL = {
   video: 'Video',
 } as const;
 
-export function ChatSurface({ coachIds }: { coachIds: readonly string[] }) {
+export function ChatSurface({
+  coachIds,
+  threadId,
+}: {
+  coachIds: readonly string[];
+  /** The conversation to open. `null` lets the coaches decide — see `useCoachChat`. */
+  threadId: string | null;
+}) {
   const { colors } = useTheme();
   const router = useRouter();
   const [selected, setSelected] = useState<readonly string[]>(coachIds);
@@ -53,20 +61,42 @@ export function ChatSurface({ coachIds }: { coachIds: readonly string[] }) {
   const scroller = useRef<ScrollView>(null);
 
   const coaches = useMemo(() => coachesAtTable(selected), [selected]);
-  const { problem, send, status, turns } = useCoachChat(coaches);
+  const { problem, send, status, turns } = useCoachChat(threadId, coaches);
 
+  /**
+   * Changing who is at the table moves to THAT table's conversation, rather than dragging this one
+   * along. Adding the Sleep coach to a conversation you were having with Nutrition would rewrite
+   * what that conversation was, halfway through; opening the Nutrition-and-Sleep conversation
+   * instead — the most recent, or a new one — leaves both of them intact.
+   *
+   * `thread` is cleared rather than kept, which is what lets the coaches decide again.
+   */
   function choose(coachId: string) {
     const next = toggleCoach(selected, coachId);
     setSelected(next);
-    // The route says which conversation this is, so it has to keep up. `setParams` rather than
-    // `push`: changing who is at the table is not a new screen to go back from.
-    router.setParams({ coaches: next.join(',') });
+    // `setParams` rather than `push`: changing who is at the table is not a new screen to go back
+    // from.
+    router.setParams({ coaches: next.join(','), thread: undefined });
   }
 
-  function reopen(ids: readonly string[]) {
+  /** A row from the history sheet. It names its own conversation, so nothing is inferred here. */
+  function reopen(thread: string, ids: readonly string[]) {
     setSheet(null);
     setSelected(ids);
-    router.setParams({ coaches: ids.join(',') });
+    router.setParams({ coaches: ids.join(','), thread });
+  }
+
+  /**
+   * Start again with the same people at the table — what "New conversation" means everywhere in the
+   * app. The current one is untouched and stays in the history list; this simply stops writing to
+   * it. `push` rather than `setParams`, so Back returns to the conversation you left.
+   */
+  async function startNew() {
+    setSheet(null);
+    // Made here rather than left to the next screen to infer: "resume" would find the conversation
+    // being left and reopen it, which is the opposite of what this button says.
+    const fresh = await coachChat.start(selected);
+    router.push(`/table?coaches=${selected.join(',')}&thread=${fresh}`);
   }
 
   return (
@@ -130,7 +160,13 @@ export function ChatSurface({ coachIds }: { coachIds: readonly string[] }) {
         {sheet === 'coaches' && (
           <CoachSelector onClose={() => setSheet(null)} onToggle={choose} selected={selected} />
         )}
-        {sheet === 'history' && <ThreadList onClose={() => setSheet(null)} onOpen={reopen} />}
+        {sheet === 'history' && (
+          <ThreadList
+            onClose={() => setSheet(null)}
+            onNew={() => void startNew()}
+            onOpen={reopen}
+          />
+        )}
         <View style={styles.barSlot}>
           <ChatBar
             coachNames={coaches.map((coach) => coach.name)}
