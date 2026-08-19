@@ -5,9 +5,9 @@
  * rather than a form. That shape is why this file exists at all: the questions and their validation
  * are here, apart from the screen, so the rules can be tested without rendering anything.
  *
- * Creating an exercise type inside Activity is the SAME act with a parent set. Modelling it as
- * anything else would mean writing and maintaining the flow twice, which is exactly what
- * `parentId` in the catalog was for.
+ * Creating a hub inside another — an exercise type inside Exercise, or Labs inside Medical
+ * condition — is the SAME act with a parent set. Modelling it as anything else would mean writing
+ * and maintaining the flow twice, which is exactly what `parentId` in the catalog was for.
  *
  * Nothing here persists. Hubs live in `catalog.ts` as seed data, and a real store is behind
  * `src/application/` where a screen may not reach — so the flow collects answers, shows what it
@@ -59,7 +59,17 @@ export function draftProblem(
   if (draft.name.trim().length > NAME_MAX) return 'nameTooLong';
   if (draft.focus.trim().length > FOCUS_MAX) return 'focusTooLong';
   if (RESERVED_IDS.includes(id)) return 'reserved';
-  if (hubs.some((hub) => hub.id === id)) return 'taken';
+  /**
+   * Compare against the hub's NAME as well as its id, not the id alone.
+   *
+   * Every seeded hub used to be a single word, so its id and its slugged label were the same string
+   * and comparing ids was enough. "Medical condition" broke that on 2026-08-19: its id is `medical`,
+   * its name slugs to `medical-condition`, and an id-only check let someone create a SECOND hub
+   * labelled "Medical condition" sitting on the ring beside the first. `tests/new-hub.test.ts`
+   * caught it, which is what that test was for — it asserts the rule over whatever `SEED_HUBS`
+   * happens to hold rather than over a list written beside it.
+   */
+  if (hubs.some((hub) => hub.id === id || draftId(hub.label) === id)) return 'taken';
 
   return null;
 }
