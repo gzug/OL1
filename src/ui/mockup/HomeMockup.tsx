@@ -11,6 +11,7 @@ import { ThreadList } from '@/ui/chat/ThreadList';
 import { coachesAtTable } from '@/ui/chat/coachList';
 import type { Attachment } from '@/core/attachments';
 import { coachForHub, orbitHubs, ringPlaceCount, type HubId } from '@/ui/hubs/catalog';
+import { useHubs } from '@/ui/hubs/useHubs';
 import {
   fontFamily,
   lineHeights,
@@ -56,17 +57,19 @@ export function HomeMockup() {
   /** One sheet at a time. Two booleans could both be true; this cannot. */
   const [sheet, setSheet] = useState<Sheet>(null);
   const [selected, setSelected] = useState<readonly string[]>([]);
-  const centreBox = stackBox(ringPlaceCount());
+  /** Seeded plus whatever the user has made. Re-read whenever Home comes back into focus. */
+  const hubs = useHubs();
+  const centreBox = stackBox(ringPlaceCount(hubs));
 
   const coaches = useMemo(() => coachesAtTable(selected), [selected]);
 
   /** Which hubs to light up: a hub is chosen when its own coach is at the table. */
   const chosenHubs = useMemo(
     () =>
-      orbitHubs()
+      orbitHubs(hubs)
         .filter((hub) => hub.coachId !== undefined && selected.includes(hub.coachId))
         .map((hub) => hub.id),
-    [selected],
+    [hubs, selected],
   );
 
   function handleHubPress(id: HubId) {
@@ -76,7 +79,7 @@ export function HomeMockup() {
       router.push(`/hub/${id}`);
       return;
     }
-    const coach = coachForHub(id);
+    const coach = coachForHub(id, hubs);
     if (coach !== undefined) setSelected((current) => toggleCoach(current, coach.id));
   }
 
@@ -125,6 +128,7 @@ export function HomeMockup() {
       <View style={styles.stageWrapper}>
         <View style={styles.stage}>
           <Orbit
+            hubs={hubs}
             onAddPress={() => router.push('/new-hub')}
             onHubPress={handleHubPress}
             selected={chosenHubs}

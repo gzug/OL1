@@ -2,7 +2,9 @@ import { Redirect, useLocalSearchParams } from 'expo-router';
 
 import { coachForHub, findHub, isDomainHub } from '@/ui/hubs/catalog';
 import { HubScreen } from '@/ui/hubs/HubScreen';
+import { coachFor } from '@/ui/hubs/mergeHubs';
 import { hubStateFor } from '@/ui/hubs/states';
+import { useHubs } from '@/ui/hubs/useHubs';
 import { MockupScreen } from '@/ui/mockup/MockupScreen';
 import { StubScreen } from '@/ui/mockup/StubScreen';
 
@@ -11,11 +13,16 @@ import { StubScreen } from '@/ui/mockup/StubScreen';
  *
  * `[id]` is any string, because hubs are data the user can add to. Two different misses are possible
  * and they say different things: an id that names no hub at all, and a hub that exists but has no
- * state written for it yet — which will be the normal case for every hub a user creates.
+ * state written for it yet — which is the normal case for every hub a user creates.
+ *
+ * The lookup goes through `useHubs`, not the catalog alone: a hub the user made has no row in
+ * `SEED_HUBS`, so a catalog-only `findHub` would answer "no hub by that name" for the one hub they
+ * definitely know exists.
  */
 export default function HubRoute() {
   const { id } = useLocalSearchParams<{ id: string }>();
-  const hub = findHub(id);
+  const hubs = useHubs();
+  const hub = findHub(id, hubs);
 
   /**
    * The Open Table sits on the ring but is not a hub: it has no coach of its own and no cockpit,
@@ -32,7 +39,7 @@ export default function HubRoute() {
   if (hub !== undefined && state !== undefined) {
     return (
       <MockupScreen>
-        <HubScreen coach={coachForHub(hub.id)} hub={hub} state={state} />
+        <HubScreen coach={coachForHub(hub.id, hubs)} hub={hub} state={state} />
       </MockupScreen>
     );
   }
@@ -43,7 +50,9 @@ export default function HubRoute() {
         detail={
           hub === undefined
             ? 'No hub by that name.'
-            : 'This hub has no cockpit yet. Its coach and its own state go here.'
+            : /* A hub the user made has a coach from the moment it exists, and nothing else yet.
+                 Naming the coach is what makes the difference between "not built" and "empty". */
+              `${coachFor(hub)?.name ?? 'Its coach'} is here. Nothing has been recorded in this hub yet.`
         }
         title={hub?.label ?? 'Hub'}
       />

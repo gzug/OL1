@@ -8,10 +8,10 @@ import {
 } from '../src/infrastructure/storage/schema';
 
 test('the schema is versioned and contains no legacy health tables', () => {
-  assert.equal(CURRENT_SCHEMA_VERSION, 3);
+  assert.equal(CURRENT_SCHEMA_VERSION, 4);
   assert.deepEqual(
     MIGRATIONS.map((migration) => migration.version),
-    [1, 2, 3],
+    [1, 2, 3, 4],
   );
 
   const sql = `${CREATE_MIGRATION_TABLE_SQL}\n${MIGRATIONS.map((item) => item.sql).join('\n')}`;
@@ -20,6 +20,7 @@ test('the schema is versioned and contains no legacy health tables', () => {
   assert.match(sql, /chat_thread/);
   assert.match(sql, /chat_turn/);
   assert.match(sql, /attachment_json/);
+  assert.match(sql, /hub_entry/);
   // Chat is the first thing here that holds what a person typed, so the table names are the first
   // real test of this rule rather than a formality: no domain table arrives by the back door.
   assert.doesNotMatch(sql, /(heart_rate|sleep|nutrition|blood|garmin)/i);
@@ -68,4 +69,34 @@ test('migrations are additive and append-only', () => {
       `migration ${migration.version} drops data`,
     );
   }
+});
+
+/**
+ * One entry table for every kind of thing, rather than one table per domain.
+ *
+ * Legacy kept `nutrition_log`, `blood_panel` and `health_observation` apart, which works while a
+ * developer writes every domain and stops working the moment the user can make one. A table per
+ * kind here would mean a migration each time a hub learns to hold something — including for hubs
+ * nobody has thought of, where there is no developer present to write it.
+ */
+test('a hub entry is one table with a payload, not a table per domain', () => {
+  const migration = MIGRATIONS.find((item) => item.version === 4);
+  assert.ok(migration !== undefined);
+
+  assert.match(migration.sql, /CREATE TABLE IF NOT EXISTS hub\b/);
+  assert.match(migration.sql, /CREATE TABLE IF NOT EXISTS hub_entry\b/);
+  assert.match(migration.sql, /payload_json TEXT NOT NULL/);
+  assert.doesNotMatch(migration.sql, /BLOB/i, 'bytes must never get a column');
+});
+
+/**
+ * `hub_entry.hub_id` deliberately has NO foreign key: the seeded hubs live in `catalog.ts` as code
+ * and have no row in `hub`, so a reference would reject the common case. This asserts the absence
+ * on purpose — the chat tables one migration earlier set the opposite precedent, and someone
+ * "fixing the inconsistency" would break every entry on a seeded hub.
+ */
+test('an entry may point at a hub that ships in code rather than in the table', () => {
+  const migration = MIGRATIONS.find((item) => item.version === 4);
+  assert.ok(migration !== undefined);
+  assert.doesNotMatch(migration.sql, /REFERENCES\s+hub\s*\(/i);
 });
