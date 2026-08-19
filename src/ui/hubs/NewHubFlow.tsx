@@ -186,7 +186,19 @@ function Summary({
   async function create() {
     setState('saving');
     try {
-      await hubs.create(preview.hub);
+      /**
+       * Named field by field rather than passing `preview.hub` whole. That object is a
+       * `HubDefinition` and carries `origin` (and could carry `ringLabel`), which `StoredHub` does
+       * not declare — TypeScript allows the assignment because it is a variable rather than a
+       * literal, so the extra fields travelled silently. The web store kept them and SQLite dropped
+       * them, which is two stores holding different things for no reason anyone chose.
+       */
+      await hubs.create({
+        ...(preview.hub.coachId === undefined ? {} : { coachId: preview.hub.coachId }),
+        id: preview.hub.id,
+        label: preview.hub.label,
+        ...(preview.hub.parentId === undefined ? {} : { parentId: preview.hub.parentId }),
+      });
       onCreated();
     } catch {
       // The hub is not made, so the screen must not navigate away as if it were. Everything the

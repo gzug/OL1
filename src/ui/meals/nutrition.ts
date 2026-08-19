@@ -115,3 +115,31 @@ export function macrosAgree(entries: readonly MacroEntry[]): boolean | null {
 export function filledCount(entries: readonly MacroEntry[]): number {
   return entries.filter((entry) => entry.text.trim().length > 0).length;
 }
+
+/**
+ * What is stored when a meal is logged.
+ *
+ * **An unfilled macro is absent, not zero**, and that is the structural version of Legacy's fibre
+ * rule: "fiber stays null when absent or invalid - honesty rule, never fabricate". A zero would be
+ * a claim that the meal contained none, and a week of averages built on those zeros would be quietly
+ * wrong in the direction that flatters. Absent stays absent all the way through.
+ *
+ * Pure, and here rather than in the screen, so what gets written can be asserted without rendering
+ * anything — the same reason every rule in this file is a function.
+ */
+export function mealPayload(
+  entries: readonly MacroEntry[],
+  note: string,
+): Readonly<Record<string, unknown>> {
+  const macros: Record<string, number> = {};
+
+  for (const macro of MACROS) {
+    const text = entries.find((entry) => entry.key === macro.key)?.text.trim() ?? '';
+    if (text.length === 0) continue;
+    if (macroProblem(macro, text) !== null) continue;
+    macros[macro.key] = Number(text);
+  }
+
+  const trimmed = note.trim();
+  return { macros, ...(trimmed.length === 0 ? {} : { note: trimmed }) };
+}
