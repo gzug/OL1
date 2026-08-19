@@ -68,3 +68,20 @@ It is a reference, not product truth: the product comes from `docs/product-spec.
 `src/ui/theme/` holds the design system, ported from Legacy: brand green `#31796D`, a light and a
 dark set, Manrope for the interface and Fraunces for hero moments. Components read colours through
 `useTheme()` and everything else from the token exports — nothing hardcodes a colour.
+
+## Third-party artwork
+
+The Digital Twin's body figure is drawn by
+[`react-native-body-highlighter`](https://github.com/HichamELBSI/react-native-body-highlighter)
+(MIT, © Hicham El Boussaoui) — a male and a female figure, front and back, one named region per
+muscle group.
+
+It is a dependency rather than copied artwork, so its licence travels with it in `node_modules`.
+Credited here because MIT asks for the notice to be kept and because the anatomy is the part of that
+screen we did not make.
+
+**What is ours** is everything the drawing does not decide: `src/application/twin/muscleLoad.ts`
+works out which muscles a logged session reached and how recently, and `src/ui/twin/BodyFigure.tsx`
+decides what a colour means — load, on a scale relative to the busiest muscle of the week, that
+stops at amber. It never says a muscle needs rest. That is advice, and advice belongs to a coach who
+can explain itself.

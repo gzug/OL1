@@ -67,10 +67,26 @@ export type ThemeColors = {
   accentBorder: string;
   accentSoft: string;
   background: string;
+  /** The body figure's outline. A hairline, so the silhouette is an object rather than a shadow. */
+  bodyOutline: string;
+  /** A muscle with nothing behind it. Must read as "no reading", never as "nothing happened". */
+  bodyRest: string;
   border: string;
   borderSubtle: string;
   danger: string;
   hairline: string;
+  /**
+   * The three steps of the load scale on the body figure, coolest to warmest.
+   *
+   * **Amber, and it stops there.** Red is a warning and nothing on that figure is entitled to make
+   * one — the colour reports what was worked, and the coach says what to do about it in words. The
+   * owner settled that on 2026-08-19. Three steps rather than a gradient because the scale is
+   * relative to the busiest muscle of the week, and a smooth ramp would imply a precision the
+   * underlying sessions cannot support.
+   */
+  loadMedium: string;
+  loadSoft: string;
+  loadStrong: string;
   onAccent: string;
   /**
    * Text and outlines that sit ON the scrim. Light in BOTH themes, because the scrim is dark in
@@ -96,10 +112,15 @@ export const lightColors: ThemeColors = {
   accentBorder: l.brandGreen,
   accentSoft: l.brandGreenSoft,
   background: l.background,
+  bodyOutline: l.hairline,
+  bodyRest: l.surfaceSoft,
   border: l.border,
   borderSubtle: l.borderSubtle,
   danger: l.critical,
   hairline: l.hairline,
+  loadMedium: '#D98A34',
+  loadSoft: '#EBCBA3',
+  loadStrong: '#B9631B',
   onAccent: l.onBrand,
   onScrim: '#F4F4EF',
   onScrimMuted: 'rgba(244, 244, 239, 0.72)',
@@ -120,10 +141,15 @@ export const darkColors: ThemeColors = {
   accentBorder: d.brandGreen,
   accentSoft: d.brandGreenSoft,
   background: d.background,
+  bodyOutline: d.border,
+  bodyRest: d.surfaceSoft,
   border: d.border,
   borderSubtle: d.borderSubtle,
   danger: d.critical,
   hairline: d.hairline,
+  loadMedium: '#E8912F',
+  loadSoft: '#6B4A22',
+  loadStrong: '#F5A94A',
   onAccent: d.onBrand,
   onScrim: '#F0F3EE',
   onScrimMuted: 'rgba(240, 243, 238, 0.72)',
