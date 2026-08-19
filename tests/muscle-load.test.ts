@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 
-import { WINDOW_DAYS, freshness, muscleLoad } from '../src/application/twin/muscleLoad';
+import { WINDOW_DAYS, freshness, isMuscle, muscleLoad } from '../src/application/twin/muscleLoad';
 
 const NOW = '2026-08-19T12:00:00.000Z';
 const daysAgo = (days: number) =>
@@ -93,4 +93,16 @@ test('the scale never goes past its third step, however much is logged', () => {
     NOW,
   );
   for (const value of Object.values(loads)) assert.ok(value <= 3);
+});
+
+/**
+ * The figure draws more than muscles — head, hair, neck, hands, feet, ankles, knees. Tapping one of
+ * those must record nothing: "I worked my hair" is not a reading anybody wants back.
+ */
+test('a body part that is not a muscle cannot be marked as worked', () => {
+  for (const muscle of ['calves', 'chest', 'upper-back']) assert.ok(isMuscle(muscle));
+  for (const part of ['head', 'hair', 'neck', 'hands', 'feet', 'ankles', 'knees']) {
+    assert.equal(isMuscle(part), false, `"${part}" is drawn on the figure but is not a muscle`);
+  }
+  assert.equal(isMuscle(undefined), false);
 });

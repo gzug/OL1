@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import Body from 'react-native-body-highlighter';
 
-import type { Intensity, MuscleSlug } from '@/application/twin/muscleLoad';
+import { isMuscle, type Intensity, type MuscleSlug } from '@/application/twin/muscleLoad';
 import { fontFamily, lineHeights, spacing, tracking, typography, useTheme } from '@/ui/theme';
 
 /**
@@ -59,7 +59,12 @@ export function BodyFigure({
         onBodyPartPress={
           onMusclePress === undefined
             ? undefined
-            : (part: { slug: string }) => onMusclePress(part.slug as MuscleSlug)
+            : (part) => {
+                // The figure also draws head, hair, neck, hands, feet, ankles and knees. They are
+                // parts of a body rather than muscles anybody trains, so tapping one records
+                // nothing — `isMuscle` is the guard, and it is where the two vocabularies meet.
+                if (isMuscle(part.slug)) onMusclePress(part.slug);
+              }
         }
         scale={scale}
         side={side}

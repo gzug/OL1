@@ -17,24 +17,41 @@
  *    A scale that keeps escalating turns a busy week into a warning nobody asked for.
  */
 
-/** The muscle names the figure knows. These are `react-native-body-highlighter`'s own slugs. */
-export type MuscleSlug =
-  | 'abs'
-  | 'adductors'
-  | 'biceps'
-  | 'calves'
-  | 'chest'
-  | 'deltoids'
-  | 'forearm'
-  | 'gluteal'
-  | 'hamstring'
-  | 'lower-back'
-  | 'obliques'
-  | 'quadriceps'
-  | 'tibialis'
-  | 'trapezius'
-  | 'triceps'
-  | 'upper-back';
+/**
+ * The muscles this understands, as a list rather than a bare type, because the check has to happen
+ * at runtime too.
+ *
+ * These are `react-native-body-highlighter`'s own slug names — deliberately, so nothing has to
+ * translate between what is drawn and what is recorded. But its list is LONGER than this one: it
+ * also draws head, hair, neck, hands, feet, ankles and knees, which are body parts rather than
+ * muscles you train. Tapping the head must not record a worked muscle, and `isMuscle` is what stops
+ * it.
+ */
+export const MUSCLE_SLUGS = [
+  'abs',
+  'adductors',
+  'biceps',
+  'calves',
+  'chest',
+  'deltoids',
+  'forearm',
+  'gluteal',
+  'hamstring',
+  'lower-back',
+  'obliques',
+  'quadriceps',
+  'tibialis',
+  'trapezius',
+  'triceps',
+  'upper-back',
+] as const;
+
+export type MuscleSlug = (typeof MUSCLE_SLUGS)[number];
+
+/** Whether a slug the figure reports back is something a person can work. */
+export function isMuscle(slug: string | undefined): slug is MuscleSlug {
+  return slug !== undefined && (MUSCLE_SLUGS as readonly string[]).includes(slug);
+}
 
 /**
  * What a kind of session reaches, and how strongly.
