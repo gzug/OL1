@@ -2,7 +2,10 @@ import { Link } from 'expo-router';
 import { Fragment } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
+import { hubs } from '@/application/hubs/hubs';
 import { fontFamily, lineHeights, radius, spacing, typography, useTheme } from '@/ui/theme';
+import { BodyFigure } from '@/ui/twin/BodyFigure';
+import { useMuscleLoad } from '@/ui/twin/useMuscleLoad';
 
 import { centre, twin, twinSources } from './fixtures';
 
@@ -23,9 +26,20 @@ import { centre, twin, twinSources } from './fixtures';
  *
  * A running test lives here rather than on Home because it shows nothing for thirteen days out of
  * fourteen, and the centre of Home cannot carry a permanently static element.
+ *
+ * **The body now leads, and the number sits under it.** The owner asked for that on 2026-08-19 —
+ * the twin is a body with the muscles you have worked lately, and PhenoAge is one of the things it
+ * is made of. The order still argues the same case the scroll order always did: a heavy claim
+ * arrives with its provenance, it just arrives second now.
  */
 export function TwinMockup() {
   const { colors } = useTheme();
+  const load = useMuscleLoad();
+
+  /** Tapping a muscle records that you worked it. You were there; nothing here knows better. */
+  async function markWorked(slug: string) {
+    await hubs.add('exercise', 'worked', { muscles: [slug] }, { source: 'manual' });
+  }
 
   return (
     <ScrollView contentContainerStyle={styles.content}>
@@ -34,6 +48,14 @@ export function TwinMockup() {
           <Text style={[styles.homeLinkText, { color: colors.textMuted }]}>⌄  Home</Text>
         </Pressable>
       </Link>
+
+      <View style={styles.bodyBlock}>
+        <BodyFigure
+          loads={load.loads}
+          onMusclePress={(slug) => void markWorked(slug)}
+          unplaced={load.unplaced}
+        />
+      </View>
 
       <View style={styles.driftBlock}>
         <Text style={[styles.driftNumber, { color: colors.text }]}>{centre.driftNumber}</Text>
@@ -187,6 +209,10 @@ const styles = StyleSheet.create({
     padding: spacing.md,
   },
   /** Matches Home's centre exactly — the same number in two places must not be two numbers. */
+  bodyBlock: {
+    alignItems: 'center',
+    paddingBottom: spacing.lg,
+  },
   driftBlock: {
     alignItems: 'center',
     paddingBottom: spacing.md,

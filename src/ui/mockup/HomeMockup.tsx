@@ -12,6 +12,8 @@ import { coachesAtTable } from '@/ui/chat/coachList';
 import type { Attachment } from '@/core/attachments';
 import { coachForHub, orbitHubs, ringPlaceCount, type HubId } from '@/ui/hubs/catalog';
 import { useHubs } from '@/ui/hubs/useHubs';
+import { BodyFigure } from '@/ui/twin/BodyFigure';
+import { useMuscleLoad } from '@/ui/twin/useMuscleLoad';
 import {
   fontFamily,
   lineHeights,
@@ -59,6 +61,8 @@ export function HomeMockup() {
   const [selected, setSelected] = useState<readonly string[]>([]);
   /** Seeded plus whatever the user has made. Re-read whenever Home comes back into focus. */
   const hubs = useHubs();
+  /** The same reading the Twin screen draws, from the same sessions. Never a second calculation. */
+  const load = useMuscleLoad();
   const centreBox = stackBox(ringPlaceCount(hubs));
 
   const coaches = useMemo(() => coachesAtTable(selected), [selected]);
@@ -167,9 +171,16 @@ export function HomeMockup() {
               },
               pressed && styles.pressed,
             ]}>
-            {/* Just the name. The caption under it used to read "biological age · bloodwork 12
-                Mar", which belonged to the number and became a label for nothing once the number
-                moved. Everything the twin is made of is on the Twin screen, one tap away. */}
+            {/* The body, small, with the name under it.
+                
+                The owner asked for the figure to be "visible in small already in the home page",
+                and for the words to stay: `docs/decisions/0008-the-centre-names-itself.md` is why a
+                picture alone is not enough — the centre has to say what it is.
+
+                No caption, no legend and no tapping at this size. A muscle here is about four
+                pixels across, so a tap could not say which one it meant, and a legend would not fit
+                under it. It is a picture that leads to the screen where all three exist. */}
+            <BodyFigure loads={load.loads} scale={centreBox.height / 620} showCaption={false} />
             <Text style={[styles.twinName, { color: colors.text }]}>Digital Twin</Text>
           </Pressable>
         </View>
