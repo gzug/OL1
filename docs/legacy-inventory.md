@@ -1,6 +1,12 @@
 # What Legacy still has that OL1 has not used
 
-`github.com/gzug/01-One-L1fe`, 393 source files under `apps/mobile/src/`. Read freely.
+`github.com/gzug/01-One-L1fe`. Read freely. Counts, settled by a full sweep on 2026-08-19:
+**824 files in the repository, 518 under `apps/mobile/src/`, 341 of those non-test, 75,314 lines.**
+The "393 source files" this line used to claim was wrong.
+
+**Read all of it at once rather than file by file.** `gh api repos/gzug/01-One-L1fe/tarball` is
+1.9 MB; a digest of every non-test file's header comment and export names is 2,448 lines, which is
+four passes. Legacy's files carry real header comments, and that is what makes it affordable.
 
 This exists because "we are not reusing enough of Legacy" has been true three times now, and each
 time it was found by the owner rather than by us. Twice the cause was searching in OL1's vocabulary
@@ -13,6 +19,35 @@ gh api -X GET search/code -f q="<term> repo:gzug/01-One-L1fe"
 
 Ordered by what is worth taking, not by size. Everything below is **unused in OL1 as of
 2026-08-03**.
+
+---
+
+## 0. What the owner decided — 2026-08-19
+
+A full capability-level review of all 341 files was put to him: 91 capabilities, grouped by the hub
+each would live in, each with a recommendation and what is lost by leaving it. His answers:
+
+**Refused, and why** — the Strava demo persona (see section 5, and read it before arguing for it),
+a single 0–100 recovery number (it grades a person, which `0004`/`0005` rejected and which
+contradicts his own 2026-08-19 rule that the body figure shows LOAD and the coach recommends in
+words), Legacy's persona swipe-ring (the orbit occupies that ground), and a second LLM provider plus
+the on-device model (he chose one provider; two would be two answers to keep honest).
+
+**Kept, against the earlier refusal** — Legacy's coach system prompts, as a starting draft rather
+than as behaviour to port.
+
+**Everything else on the list is wanted**, which is roughly 150 working days. The order he set is
+**what you can see, first**: the ring, the store, conversations that stack up, the body figure, then
+the chat writing into hubs; then the Legacy work that needs no wearable; the Health Connect pipeline
+last, because he is still deferring the phone.
+
+**Narrowed by him** — of the whole generated-message layer (briefs, weekly letter, focus proposals,
+anomaly notes, the inbox), he wants **two things**: a morning brief — how you slept, and how much
+exercise today or whether to rest — and an evening resume — stress, what you did, and a
+recommendation for sleep and recovery. Both are advice, which is consistent rather than a reversal:
+the figure shows load, the coach recommends in words. **Both need the phone to be honest**, so the
+machinery gets built and stays quiet about sleep and stress until Health Connect is real. Where they
+arrive is not decided.
 
 ---
 
@@ -49,6 +84,9 @@ access to the person's data and must not invent numbers or measurements.
 guard until then.
 
 ## 2. Labs — 24 files, against a five-row cockpit
+
+**Labs lives inside the Medical condition hub since 2026-08-19.** Its hub id is still `labs` and
+every path built for panels still routes through it.
 
 The largest gap between what Legacy had and what OL1 shows.
 
@@ -90,8 +128,11 @@ already cited in `docs/decisions/0005-the-hub-model.md`.
 **Sleep** — `data/home/sleepRingModel.ts` (its three rules are already honoured in OL1's fixture, the
 machinery is not), `sleepStageBreakdownLoader.ts`, `components/home/SleepRing.tsx`.
 
-**Activity** — `activityHeatmap.ts`, `activityHubData.ts`, `gpxParser.ts`, `routeCountryLookup.ts`,
-`exerciseTypeLabels.ts` (the Health Connect enum → label map, ~90 entries).
+**Exercise** (Legacy's *Fitness*; the hub was renamed from Activity on 2026-08-19) —
+`activityHeatmap.ts`, `activityHubData.ts`, `gpxParser.ts`, `routeCountryLookup.ts`,
+`exerciseTypeLabels.ts` (the Health Connect enum → label map, ~90 entries). `exerciseTypeLabels` is
+newly load-bearing: it is the vocabulary the body figure's muscle map needs to know that one code is
+a run and another is a gym session.
 
 **Resilience** — `data/persona/recoverySignals.ts`, `todayRecoveryScore.ts`,
 `insights/wearableTrendOverview.ts`, `wearableRadarSummary.ts`.
@@ -101,13 +142,24 @@ does yet.
 
 ## 5. Deliberately not taken
 
-- **`data/demo/stravaDemoActivities.ts`** — 258 rows with real-looking Strava ids, German
-  auto-generated titles and heart rates, under a source constant named `strava_export`. Its header
-  calls it synthetic; the data reads like a real export. Not ours to republish either way.
+- **`data/demo/stravaDemoActivities.ts`** — 258 rows with Strava ids, German auto-generated titles
+  and heart rates, under a source constant named `strava_export`. **Its header calls it synthetic
+  and that is false.** Asked directly on 2026-08-19, the owner said: *"It was a manual export that
+  we uploaded from the Strava app."* So it is a real person's training history, the generated header
+  claiming otherwise is wrong, and the Legacy repository is public. Not ported, and the owner has
+  been asked what he wants done about Legacy itself — that is his call, not this repository's.
+  Its dependants go with it: `stravaDemoSeed.ts`, `stravaActivityTags.ts`, `stravaActivityFilters.ts`.
 - **Garmin cloud** (`services/garminCloudPuller.ts`, `data/health/garminCloudIngest.ts`) — the owner
   chose Health Connect instead. Body Battery, Garmin Stress and Training Load do not survive that
   choice; HRV and SpO2 do.
-- **Coach system prompts** — they name a product and a scope this spec has not settled.
+- ~~**Coach system prompts**~~ — **un-refused 2026-08-19.** The owner wants them as a starting
+  draft. They still name a product and a scope this spec has not settled, so they are a draft to
+  rewrite from, never text to ship.
+- **A second LLM provider and the on-device model** (`openRouterAdapter.ts`, `localLlamaAdapter.ts`,
+  `localModelManager.ts`, `localLlmRuntimeProbe.ts`) — one provider was chosen; a 2GB local model is
+  a project of its own.
+- **A single 0–100 recovery number** (`data/persona/todayRecoveryScore.ts`) — it grades a person.
+- **The persona swipe-ring** (`data/persona/personaModel.ts`) — the orbit occupies that ground.
 - **`data/deviceUsage/`** (7 files) — screen time. No hub claims it.
 
 ## How to use this file
