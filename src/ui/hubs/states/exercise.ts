@@ -42,9 +42,12 @@ export const exercise: HubState = {
     },
   },
   contribute: {
-    note: 'Neither way in is built yet.',
+    href: '/log-session',
+    /* Strava is an import rather than a connection, and the phone is deferred — so the honest note
+       names what the button does and what it does not. */
+    note: 'Connecting a watch waits for the phone.',
     primary: 'Log a session by hand',
-    secondary: 'Connect Strava or Garmin',
+    secondary: 'What, how long, and how far if you measured it',
   },
   facets: [
     { detail: '5 sessions in the last 7 days', label: 'Sessions', state: 'reading' },
