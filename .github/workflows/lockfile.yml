@@ -1,0 +1,33 @@
+# Temporary, and deleted in the same pull request that uses its output.
+#
+# There is no Node on the owner's Mac (docs/decisions and AGENTS.md both assume CI does the
+# checking), so a dependency cannot be added the normal way: `npm ci` demands a lockfile that
+# matches `package.json` exactly, and only npm can write one. Hand-authoring integrity hashes for a
+# dependency subtree is exactly the kind of thing that fails three times before it passes.
+#
+# So the one machine that HAS Node generates it: this runs `expo install`, which picks the versions
+# Expo's SDK expects rather than whatever is newest, and uploads the result as an artifact.
+name: lockfile
+
+on: workflow_dispatch
+
+permissions:
+  contents: read
+
+jobs:
+  generate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .node-version
+      - run: npm install --global npm@10.9.2
+      - run: npm ci
+      - run: npx expo install react-native-svg react-native-body-highlighter
+      - uses: actions/upload-artifact@v4
+        with:
+          name: lockfile
+          path: |
+            package.json
+            package-lock.json
