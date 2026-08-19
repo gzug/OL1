@@ -88,7 +88,7 @@ export function LogSessionFlow() {
           <>
             <Text style={[styles.question, { color: colors.text }]}>What did you do?</Text>
             <Text style={[styles.hint, { color: colors.textMuted }]}>
-              The first seven show up on your body figure. "Something else" is recorded, and the
+              The first seven show up on your body figure. “Something else” is recorded, and the
               figure says plainly that it cannot place it.
             </Text>
 
