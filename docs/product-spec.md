@@ -39,13 +39,25 @@ one step further in, never the front door" — a hub now opens two things, and o
 - **A hub opens two doors: its coach, and its cockpit.** Neither is the front door to the other.
 - **The cockpit is that hub's overview** — the domain's own data across yesterday, the week, and
   further back. Every hub has one. Sleep's cockpit shows sleep; Nutrition's shows meals.
-- **Every hub has exactly one coach.** Activity is the only hub that also holds coaches per exercise
-  type — running, gym, cycling, swimming, golf.
-- **Hubs are data, not code.** The user can create a hub from Home, and an exercise type from inside
-  Activity. Both are the same act and use the same flow; an exercise type is a hub with a parent.
-- Six hubs are seeded — Activity, Nutrition, Body, Resilience, Labs, Sleep. (Mind was renamed to
-  Resilience on 2026-08-03; this line still said Mind.)
-- **Seven hubs at most**, each with one coach. Activity's coaches per sport sit outside that count.
+- **Every hub has exactly one coach.** Two hubs also hold other hubs: Exercise holds the coaches per
+  exercise type — running, gym, cycling, swimming, golf — and Medical condition holds Labs.
+- **Hubs are data, not code.** The user creates one from the `+` on the ring, or from inside a hub.
+  Both are the same act and use the same flow; a nested hub is a hub with a parent.
+- **The ring is Exercise, Nutrition, Medical condition, Resilience, Sleep, the Open Table, and a
+  `+`** — settled 2026-08-19 when the owner re-drew it. Four things changed at once:
+  - Activity became **Exercise**, its id included.
+  - **Medical condition** is new, and **Labs sits inside it** — everything built for panels still
+    routes through the hub id `labs`.
+  - **Body was retired.** Its weigh-ins moved into Nutrition; its resting heart rate belongs to
+    Resilience, which already reads it.
+  - **Running and Gym stay inside Exercise**, considered for the ring and deliberately kept out, so
+    Exercise remains the honest total of everything the user moves.
+- **Seven is what ships, not a ceiling.** This line said "seven hubs at most" until 2026-08-19; the
+  owner then asked for a `+` on the ring, which a hard cap would make a button that works once.
+  Nineteen is where the geometry stops being readable, and that is a drawing limit rather than a
+  product one. Coaches nested inside a hub sit outside the count.
+- **The `+` is a place on the ring but not a hub.** It has no coach, no cockpit and no route; it
+  opens the creation flow, and it always sits last so added hubs land before it.
 - **A new hub starts with a coach and a place to log by hand.** Connecting a data source or
   uploading a file is always offered and never required. A hub reading nothing says so plainly.
 - The creation flow asks its questions the way creating a project in Claude does.
@@ -97,6 +109,9 @@ same day by the owner's answers, argued in `docs/decisions/0006-one-chat-surface
 
 ## Open
 
+- Where the morning brief and the evening resume arrive. The owner narrowed the whole generated
+  message layer to those two on 2026-08-19 and did not say where they land; the Open Table is the
+  standing recommendation. Both need real wearable data before they can be honest.
 - Whether hub selection weights the answer or restricts what the coach may use.
 - Whether the centre number shows its own uncertainty, and the final name for the Open Table.
 - What a user-created hub may connect to, beyond manual entry and file upload.
