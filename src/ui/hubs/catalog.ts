@@ -2,7 +2,7 @@
  * The hub and coach catalog.
  *
  * Hubs used to be a fixed union of six ids. They are data now, because the owner asked for hubs the
- * user can create — from Home, and from inside Activity for exercise types. A hub that only exists
+ * user can create — from the `+` on the ring, and from inside a hub. A hub that only exists
  * once someone taps "new" cannot have a screen written for it in advance, so nothing here may be
  * keyed on a literal hub id ever again.
  *
@@ -49,9 +49,19 @@ export type HubDefinition = {
   readonly id: HubId;
   readonly label: string;
   /**
-   * Set when this hub lives inside another. Activity's exercise types are the only seeded case, and
-   * the relation is deliberately flat rather than a nested tree: a user adding a hub writes one row,
-   * and a flat list is what a store can hold without a migration when nesting goes deeper.
+   * What the circle on the ring says, when the full label does not fit inside one.
+   *
+   * A hub circle is 64 pixels across and its label is one line, so about ten characters is the
+   * whole budget — "Medical condition" truncates to "Medical con…", which reads as a bug. The hub
+   * keeps its real name everywhere it has room: the screen, the coach selector, the history list.
+   * Absent for every hub whose name already fits, which is all of the others.
+   */
+  readonly ringLabel?: string;
+  /**
+   * Set when this hub lives inside another. Two seeded parents: Exercise holds the five exercise
+   * types, and Medical condition holds Labs. The relation is deliberately flat rather than a nested
+   * tree — a user adding a hub writes one row, and a flat list is what a store can hold without a
+   * migration when nesting goes deeper.
    */
   readonly parentId?: HubId;
   readonly origin: HubOrigin;
@@ -67,11 +77,13 @@ export type HubDefinition = {
  * Legacy's own: Nutrition Expert, Running Coach, Sleep Coach, Longevity Guide, Strength Coach,
  * Cycling Coach, Swimming Coach, Golf Coach.
  *
- * NOT ported, and written here for the first time: `activity`, `body` and `resilience`. Legacy has
- * no umbrella activity coach (it went straight to marathon/gym/cycle/swim/golf) and no body coach at
- * all. Resilience was a Legacy DOMAIN but never had a coach of its own — it was folded into a
- * catch-all called `general`, and a hub whose coach is "general" would be the only one that cannot
- * say what it is for.
+ * NOT ported, and written here for the first time: `exercise`, `medical` and `resilience`. Legacy
+ * has no umbrella exercise coach (it went straight to marathon/gym/cycle/swim/golf) and nothing that
+ * answers for a diagnosed condition. Resilience was a Legacy DOMAIN but never had a coach of its own
+ * — it was folded into a catch-all called `general`, and a hub whose coach is "general" would be the
+ * only one that cannot say what it is for.
+ *
+ * The Body coach was deleted on 2026-08-19 with the Body hub. See `SEED_HUBS` for why.
  *
  * The hub is called Resilience, not Mind: the owner renamed it on 2026-08-03 to match Legacy, and
  * because the evidence under it is recovery — heart-rate variability and resting heart rate — which
@@ -81,9 +93,9 @@ export type HubDefinition = {
  * has not settled here, and a prompt is behaviour, not design — it belongs with the Gemini wiring.
  */
 export const COACHES: readonly Coach[] = [
-  { focus: 'Movement across everything you do.', id: 'activity', name: 'Activity Coach' },
-  { focus: 'Nutrition and metabolic context.', id: 'nutrition', name: 'Nutrition Expert' },
-  { focus: 'Composition and physical change over time.', id: 'body', name: 'Body Coach' },
+  { focus: 'Movement across everything you do.', id: 'exercise', name: 'Exercise Coach' },
+  { focus: 'Nutrition, weight, and metabolic context.', id: 'nutrition', name: 'Nutrition Expert' },
+  { focus: 'Conditions, medications, and symptoms over time.', id: 'medical', name: 'Medical Coach' },
   { focus: 'Recovery, and what your body has left in the tank.', id: 'resilience', name: 'Resilience Coach' },
   { focus: 'Long-term health patterns.', id: 'longevity', name: 'Longevity Guide' },
   { focus: 'Sleep rhythm and recovery habits.', id: 'sleep', name: 'Sleep Coach' },
@@ -97,24 +109,49 @@ export const COACHES: readonly Coach[] = [
 /**
  * The seeded hubs.
  *
- * The first six are the orbit, in ring order starting at the right and going clockwise — that order
- * is load-bearing for `src/ui/mockup/geometry.ts` and Labs sits next to the drift number on purpose.
+ * The first five are the orbit, in ring order starting at the right and going clockwise — that order
+ * is load-bearing for `src/ui/mockup/geometry.ts`.
  *
- * The five after them are Activity's exercise types. They are hubs like any other, not a special
- * case: the owner asked to be able to add exercise types the same way as hubs, so modelling them as
- * anything else would mean writing the creation flow twice.
+ * The rest live inside one of them: Labs inside Medical condition, and the five exercise types
+ * inside Exercise. They are hubs like any other, not a special case — the owner asked to be able to
+ * add exercise types the same way as hubs, so modelling them as anything else would mean writing the
+ * creation flow twice.
+ *
+ * **The owner re-drew this list on 2026-08-19**, naming what he wanted: sleep, nutrition, exercise,
+ * medical condition, resilience, running and gym, plus a `+` to add another. Four things followed:
+ *
+ * - **Activity is Exercise**, id included. The id moved because nothing was owed to the old one —
+ *   `Activity Coach` was written here rather than ported from Legacy.
+ * - **Medical condition is new**, and **Labs sits inside it** rather than beside it. Everything
+ *   built for panels still runs through the hub id `labs`: `/add-panel`, the verification gate, and
+ *   the PhenoAge number the Twin leads with. It is one tap further in, which is the price of the
+ *   ring saying "medical" rather than "labs" to someone who has never uploaded a panel.
+ * - **Body is gone.** He did not name it, twice. Its weigh-in row moved into Nutrition, which is
+ *   where weight sits next to what you eat; nothing real was lost, because every number in it was
+ *   invented for layout review.
+ * - **Running and Gym stay inside Exercise.** He considered putting them on the ring and decided
+ *   against it, so Exercise remains the honest total of everything you move.
+ *
+ * The `+` on the ring is NOT in this list. It is not a hub — giving it a row here would give it a
+ * coach, a cockpit and a route. `src/ui/mockup/Orbit.tsx` draws it as one more position.
  */
 export const SEED_HUBS: readonly HubDefinition[] = [
-  { coachId: 'activity', id: 'activity', label: 'Activity', origin: 'builtIn' },
+  { coachId: 'exercise', id: 'exercise', label: 'Exercise', origin: 'builtIn' },
   { coachId: 'nutrition', id: 'nutrition', label: 'Nutrition', origin: 'builtIn' },
-  { coachId: 'body', id: 'body', label: 'Body', origin: 'builtIn' },
+  {
+    coachId: 'medical',
+    id: 'medical',
+    label: 'Medical condition',
+    origin: 'builtIn',
+    ringLabel: 'Medical',
+  },
   { coachId: 'resilience', id: 'resilience', label: 'Resilience', origin: 'builtIn' },
-  { coachId: 'longevity', id: 'labs', label: 'Labs', origin: 'builtIn' },
   { coachId: 'sleep', id: 'sleep', label: 'Sleep', origin: 'builtIn' },
 
   /**
-   * The seventh place on the ring. The owner moved it here from a button under the orbit — "on the
-   * bottom should just be the chat bar" — so it is one of the seven the ring ships with.
+   * The sixth place on the ring. The owner moved it here from a button under the orbit — "on the
+   * bottom should just be the chat bar", 2026-08-03 — and kept it there when he re-drew the ring on
+   * 2026-08-19, so it survives every reshaping so far.
    *
    * It has no coach and no cockpit, and both absences are the point: it is the way to reach EVERY
    * coach, so giving it one of its own would make it a domain competing with the six. Tapping it
@@ -122,11 +159,18 @@ export const SEED_HUBS: readonly HubDefinition[] = [
    */
   { id: 'open-table', label: 'Open Table', origin: 'builtIn', role: 'table' },
 
-  { coachId: 'running', id: 'running', label: 'Running', origin: 'builtIn', parentId: 'activity' },
-  { coachId: 'strength', id: 'gym', label: 'Gym', origin: 'builtIn', parentId: 'activity' },
-  { coachId: 'cycling', id: 'cycling', label: 'Cycling', origin: 'builtIn', parentId: 'activity' },
-  { coachId: 'swimming', id: 'swimming', label: 'Swimming', origin: 'builtIn', parentId: 'activity' },
-  { coachId: 'golf', id: 'golf', label: 'Golf', origin: 'builtIn', parentId: 'activity' },
+  /**
+   * Blood panels, inside Medical condition. The nesting is the only thing that changed about Labs —
+   * its id, its coach, its cockpit and `/add-panel` are all untouched, which is what keeps the
+   * PhenoAge number on the Twin screen working through this move.
+   */
+  { coachId: 'longevity', id: 'labs', label: 'Labs', origin: 'builtIn', parentId: 'medical' },
+
+  { coachId: 'running', id: 'running', label: 'Running', origin: 'builtIn', parentId: 'exercise' },
+  { coachId: 'strength', id: 'gym', label: 'Gym', origin: 'builtIn', parentId: 'exercise' },
+  { coachId: 'cycling', id: 'cycling', label: 'Cycling', origin: 'builtIn', parentId: 'exercise' },
+  { coachId: 'swimming', id: 'swimming', label: 'Swimming', origin: 'builtIn', parentId: 'exercise' },
+  { coachId: 'golf', id: 'golf', label: 'Golf', origin: 'builtIn', parentId: 'exercise' },
 ];
 
 /** The hubs in the orbit: top level only. Exercise types live inside Activity, not on the ring. */
@@ -169,6 +213,19 @@ export function coachForHub(
   const hub = findHub(id, hubs);
   if (hub?.coachId === undefined) return undefined;
   return findCoach(hub.coachId, coaches);
+}
+
+/**
+ * How many circles the ring draws: every top-level hub, plus the `+`.
+ *
+ * The `+` is not a hub and is deliberately absent from `SEED_HUBS`, so the count of places on the
+ * ring is not the count of hubs and never will be. It lives here rather than in `Orbit.tsx` for two
+ * reasons: `HomeMockup` sizes the centre box against the same number — when the two disagreed, the
+ * box was sized for a ring that did not exist — and this file has no React Native imports, so the
+ * number can be asserted in bare Node.
+ */
+export function ringPlaceCount(hubs: readonly HubDefinition[] = SEED_HUBS): number {
+  return orbitHubs(hubs).length + 1;
 }
 
 /** Whether this place on the ring is a domain hub rather than the Open Table. */

@@ -60,7 +60,7 @@ export const resilience: HubState = {
   },
   facets: [
     { detail: '6 of the last 7 nights', label: 'Heart-rate variability', state: 'reading' },
-    { detail: 'Shared with Body', label: 'Resting heart rate', state: 'elsewhere' },
+    { detail: 'On 6 of the last 7 nights', label: 'Resting heart rate', state: 'reading' },
     { detail: 'Garmin only — not in Health Connect', label: 'Body battery', state: 'missing' },
     { detail: 'Garmin only — not in Health Connect', label: 'Stress score', state: 'missing' },
     { detail: 'Not connected yet', label: 'How the day felt', state: 'missing' },

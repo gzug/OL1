@@ -1,7 +1,14 @@
 import type { HubState } from '../hubState';
 
-/** FIXTURE — invented for layout review. See the header of `../hubState.ts`. */
-export const activity: HubState = {
+/**
+ * FIXTURE — invented for layout review. See the header of `../hubState.ts`.
+ *
+ * This hub was called Activity until 2026-08-19, when the owner re-drew the ring and named it
+ * **Exercise**. Running and Gym stay inside it — he considered putting them on the ring beside it
+ * and decided against it, so this hub remains the honest total of everything you move rather than
+ * a leftover holding whatever the named sports do not cover.
+ */
+export const exercise: HubState = {
   basis: 'From 5 sessions in the last 7 days, across running and the gym.',
   cockpit: {
     periods: [

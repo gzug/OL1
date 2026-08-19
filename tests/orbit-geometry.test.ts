@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 
+import { orbitHubs, ringPlaceCount } from '../src/ui/hubs/catalog';
 import {
   CENTRE,
   HUB_RADIUS,
@@ -189,4 +190,18 @@ test('spokes still stop short of their hubs when the hubs have shrunk', () => {
       `at ${count} hubs a spoke runs into the circle it points at`,
     );
   }
+});
+
+/**
+ * The `+` takes a place on the ring, so the ring draws one more circle than the catalog has hubs.
+ *
+ * Both assertions matter. The first is the claim that the `+` is not a hub: if it were ever added to
+ * `SEED_HUBS` to make some other code simpler, this fails. The second is what makes it free — at
+ * seven places the circles are still the full 32 pixels, so adding the `+` moved nothing and the
+ * centre box keeps its full size. The day a user's added hubs make this fail is the day the ring
+ * starts shrinking, which is designed for but has never been seen.
+ */
+test('the + takes a place on the ring without shrinking it', () => {
+  assert.equal(ringPlaceCount(), orbitHubs().length + 1);
+  assert.equal(hubRadius(ringPlaceCount()), HUB_RADIUS);
 });

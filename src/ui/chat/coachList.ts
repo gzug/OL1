@@ -6,13 +6,19 @@
  * from Home, so "somebody" is not a developer and the drift would ship silently.
  *
  * Grouping falls out of `parentId` for free: a hub inside another is a coach inside another, so an
- * exercise type a user creates inside Activity appears in the right group without this file
+ * exercise type a user creates inside Exercise appears in the right group without this file
  * learning anything new.
  *
  * Separate from `CoachSelector.tsx` so it can be asserted without rendering React Native.
  */
 
-import { childHubs, coachForHub, orbitHubs, type Coach } from '@/ui/hubs/catalog';
+import {
+  childHubs,
+  coachForHub,
+  orbitHubs,
+  type Coach,
+  type HubDefinition,
+} from '@/ui/hubs/catalog';
 
 function coachesOf(hubs: readonly { id: string }[]): readonly Coach[] {
   return hubs
@@ -25,14 +31,36 @@ export function hubCoaches(): readonly Coach[] {
   return coachesOf(orbitHubs());
 }
 
-/** Activity's coaches per sport. The only nested group the seed data has. */
-export function activityCoaches(): readonly Coach[] {
-  return coachesOf(childHubs('activity'));
+/** A hub on the ring that holds other hubs, and the coaches of the hubs it holds. */
+export type NestedCoachGroup = {
+  readonly coaches: readonly Coach[];
+  readonly parent: HubDefinition;
+};
+
+/**
+ * The coaches that live inside another hub, grouped by the hub they live in.
+ *
+ * Two parents now, not one — Exercise holds the sports, Medical condition holds Labs — and the
+ * selector needs a heading per parent rather than the single "INSIDE ACTIVITY" it used to print.
+ *
+ * Derived by sweeping the ring for hubs that have children, not by listing the two parents here. A
+ * user can create a hub inside a hub, and a hard-coded pair would drop that coach out of the
+ * selector without anything failing.
+ */
+export function nestedCoachGroups(): readonly NestedCoachGroup[] {
+  return orbitHubs()
+    .map((parent) => ({ coaches: coachesOf(childHubs(parent.id)), parent }))
+    .filter((group) => group.coaches.length > 0);
+}
+
+/** Every nested coach, flattened. The order follows the ring, then the order inside each parent. */
+export function nestedCoaches(): readonly Coach[] {
+  return nestedCoachGroups().flatMap((group) => [...group.coaches]);
 }
 
 /** Every coach that can be picked, hub coaches first. */
 export function selectableCoaches(): readonly Coach[] {
-  return [...hubCoaches(), ...activityCoaches()];
+  return [...hubCoaches(), ...nestedCoaches()];
 }
 
 /** The chosen coaches, in catalog order rather than in the order they were tapped. */

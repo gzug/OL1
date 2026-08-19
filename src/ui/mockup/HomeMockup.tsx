@@ -10,7 +10,7 @@ import { CoachSelector } from '@/ui/chat/CoachSelector';
 import { ThreadList } from '@/ui/chat/ThreadList';
 import { coachesAtTable } from '@/ui/chat/coachList';
 import type { Attachment } from '@/core/attachments';
-import { coachForHub, orbitHubs, type HubId } from '@/ui/hubs/catalog';
+import { coachForHub, orbitHubs, ringPlaceCount, type HubId } from '@/ui/hubs/catalog';
 import {
   fontFamily,
   lineHeights,
@@ -56,7 +56,7 @@ export function HomeMockup() {
   /** One sheet at a time. Two booleans could both be true; this cannot. */
   const [sheet, setSheet] = useState<Sheet>(null);
   const [selected, setSelected] = useState<readonly string[]>([]);
-  const centreBox = stackBox(orbitHubs().length);
+  const centreBox = stackBox(ringPlaceCount());
 
   const coaches = useMemo(() => coachesAtTable(selected), [selected]);
 
@@ -125,6 +125,7 @@ export function HomeMockup() {
       <View style={styles.stageWrapper}>
         <View style={styles.stage}>
           <Orbit
+            onAddPress={() => router.push('/new-hub')}
             onHubPress={handleHubPress}
             selected={chosenHubs}
             selecting={sheet === 'coaches'}

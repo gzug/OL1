@@ -62,7 +62,7 @@ export const sleep: HubState = {
   facets: [
     { detail: '6 of the last 7 nights', label: 'Time asleep', state: 'reading' },
     { detail: 'Bed and wake times, 6 nights', label: 'Rhythm', state: 'reading' },
-    { detail: 'Shared with Body', label: 'Resting heart rate', state: 'elsewhere' },
+    { detail: 'Shared with Resilience', label: 'Resting heart rate', state: 'elsewhere' },
     { detail: 'Needs a watch that names itself', label: 'Sleep stages', state: 'missing' },
   ],
   observation: 'Your shortest nights land on the days you train in the evening.',

@@ -306,7 +306,7 @@ function Period({ colors, period }: { colors: ThemeColors; period: CockpitPeriod
  *
  * A day with nothing gets a visible floor rather than an absent bar, so seven days always read as
  * seven days. It does NOT distinguish "nothing recorded" from "recorded as none" — Sleep's blank
- * Friday is an unworn watch and Activity's is a real rest day, and `fill: 0` says the same thing for
+ * Friday is an unworn watch and Exercise's is a real rest day, and `fill: 0` says the same thing for
  * both. The caption is what carries that difference, which is why every strip has one.
  */
 function WeekStrip({ colors, days }: { colors: ThemeColors; days: readonly DayBar[] }) {

@@ -9,14 +9,14 @@ import {
   threadIdFor,
   toggleCoach,
 } from '../src/application/chat/threads';
-import { activityCoaches, coachesAtTable, hubCoaches } from '../src/ui/chat/coachList';
+import { coachesAtTable, hubCoaches, nestedCoaches } from '../src/ui/chat/coachList';
 import { COACHES, SEED_HUBS, findCoach, isDomainHub, orbitHubs } from '../src/ui/hubs/catalog';
 
 /** Which conversation a selection lands in, who may be in it, and where the list comes from. */
 
 test('the same coaches resume the same conversation whatever order they were picked in', () => {
-  assert.equal(threadIdFor(['sleep', 'activity']), threadIdFor(['activity', 'sleep']));
-  assert.notEqual(threadIdFor(['sleep']), threadIdFor(['sleep', 'activity']));
+  assert.equal(threadIdFor(['sleep', 'exercise']), threadIdFor(['exercise', 'sleep']));
+  assert.notEqual(threadIdFor(['sleep']), threadIdFor(['sleep', 'exercise']));
 });
 
 test('picking nobody is the general assistant, and it is one conversation', () => {
@@ -29,7 +29,7 @@ test('a coach picked twice does not split the thread', () => {
 });
 
 test('five coaches fit at a table and a sixth does not', () => {
-  const five = ['activity', 'nutrition', 'body', 'resilience', 'longevity'];
+  const five = ['exercise', 'nutrition', 'medical', 'resilience', 'longevity'];
   assert.equal(five.length, MAX_COACHES_PER_CONVERSATION);
 
   const refused = toggleCoach(five, 'sleep');
@@ -38,16 +38,16 @@ test('five coaches fit at a table and a sixth does not', () => {
 });
 
 test('a full table still lets a coach be swapped out', () => {
-  const five = ['activity', 'nutrition', 'body', 'resilience', 'longevity'];
-  const withoutBody = toggleCoach(five, 'body');
-  assert.equal(withoutBody.length, 4);
-  assert.equal(toggleCoach(withoutBody, 'sleep').length, 5);
+  const five = ['exercise', 'nutrition', 'medical', 'resilience', 'longevity'];
+  const withoutMedical = toggleCoach(five, 'medical');
+  assert.equal(withoutMedical.length, 4);
+  assert.equal(toggleCoach(withoutMedical, 'sleep').length, 5);
 });
 
 test('the chip shows one name or a count, and never a string the chip cannot hold', () => {
   assert.equal(selectionLabel([]), 'Ask anything');
   assert.equal(selectionLabel(['Sleep Coach']), 'Sleep Coach');
-  assert.equal(selectionLabel(['Sleep Coach', 'Activity Coach']), '2 coaches');
+  assert.equal(selectionLabel(['Sleep Coach', 'Exercise Coach']), '2 coaches');
   assert.equal(selectionLabel(['a', 'b', 'c']), '3 coaches');
 
   // The chip is a fixed width, so the label has a length ceiling. The longest single coach name in
@@ -60,7 +60,7 @@ test('the chip shows one name or a count, and never a string the chip cannot hol
 });
 
 test('the selector offers only coaches the catalog can resolve', () => {
-  for (const coach of [...hubCoaches(), ...activityCoaches()]) {
+  for (const coach of [...hubCoaches(), ...nestedCoaches()]) {
     assert.ok(findCoach(coach.id) !== undefined, `"${coach.id}" is not in the catalog`);
   }
 });
@@ -71,34 +71,34 @@ test('the coach list is the catalog, not a copy of it', () => {
   // sits on the ring and contributes none, because it is the way to reach all of them.
   assert.equal(hubCoaches().length, orbitHubs().filter(isDomainHub).length);
 
-  const offered = new Set([...hubCoaches(), ...activityCoaches()].map((coach) => coach.id));
+  const offered = new Set([...hubCoaches(), ...nestedCoaches()].map((coach) => coach.id));
   const fromHubs = new Set(
     SEED_HUBS.map((hub) => hub.coachId).filter((id): id is string => id !== undefined),
   );
   assert.deepEqual([...offered].sort(), [...fromHubs].sort());
 });
 
-test('Activity’s coaches per sport are offered, and are not on the ring', () => {
-  const sports = activityCoaches().map((coach) => coach.id);
-  assert.ok(sports.length > 0, 'this guard stops checking anything if Activity loses its sports');
+test('coaches nested inside a hub are offered, and are not on the ring', () => {
+  const sports = nestedCoaches().map((coach) => coach.id);
+  assert.ok(sports.length > 0, 'this guard stops checking anything if the nesting disappears');
   for (const id of sports) {
     assert.equal(
       hubCoaches().some((coach) => coach.id === id),
       false,
-      `"${id}" is a sport coach and must not also sit on the ring`,
+      `"${id}" lives inside a hub and must not also sit on the ring`,
     );
   }
 });
 
 test('chosen coaches come back in catalog order, not in the order they were tapped', () => {
-  const tappedLast = coachesAtTable(['sleep', 'activity']).map((coach) => coach.id);
-  const tappedFirst = coachesAtTable(['activity', 'sleep']).map((coach) => coach.id);
+  const tappedLast = coachesAtTable(['sleep', 'exercise']).map((coach) => coach.id);
+  const tappedFirst = coachesAtTable(['exercise', 'sleep']).map((coach) => coach.id);
   assert.deepEqual(tappedLast, tappedFirst);
-  assert.deepEqual(tappedLast, ['activity', 'sleep']);
+  assert.deepEqual(tappedLast, ['exercise', 'sleep']);
 });
 
 test('the prompt names every coach at the table and no one else', () => {
-  const table = coachesAtTable(['sleep', 'activity']);
+  const table = coachesAtTable(['sleep', 'exercise']);
   const prompt = systemPromptFor(table);
 
   for (const coach of table) assert.ok(prompt.includes(coach.name), `${coach.name} is missing`);
@@ -109,7 +109,7 @@ test('the prompt names every coach at the table and no one else', () => {
 });
 
 test('the prompt never tells the model it can see health data', () => {
-  for (const selection of [[], ['sleep'], ['sleep', 'activity']]) {
+  for (const selection of [[], ['sleep'], ['sleep', 'exercise']]) {
     const prompt = systemPromptFor(coachesAtTable(selection));
     assert.ok(prompt.includes('no access'), 'the model must be told it has no data');
     assert.ok(prompt.includes('Never diagnose'), 'the safety floor must survive every branch');
@@ -117,15 +117,15 @@ test('the prompt never tells the model it can see health data', () => {
 });
 
 test('a round table is split back into the voices that spoke', () => {
-  const table = coachesAtTable(['sleep', 'activity']);
+  const table = coachesAtTable(['sleep', 'exercise']);
   const voices = splitCoachVoices(
-    'Sleep Coach: Three short nights in a row.\nActivity Coach: Load stepped up on Tuesday.\nTogether: Take an easy day.',
+    'Sleep Coach: Three short nights in a row.\nExercise Coach: Load stepped up on Tuesday.\nTogether: Take an easy day.',
     table,
   );
 
   assert.deepEqual(
     voices.map((voice) => voice.speaker),
-    ['Sleep Coach', 'Activity Coach', 'Together'],
+    ['Sleep Coach', 'Exercise Coach', 'Together'],
   );
   assert.equal(voices[0].text, 'Three short nights in a row.');
 });
@@ -140,7 +140,7 @@ test('a wrapped line belongs to whoever spoke last, not to a new voice', () => {
 });
 
 test('an answer that ignores the format is still readable', () => {
-  const voices = splitCoachVoices('Just a paragraph.', coachesAtTable(['sleep', 'activity']));
+  const voices = splitCoachVoices('Just a paragraph.', coachesAtTable(['sleep', 'exercise']));
   assert.equal(voices.length, 1);
   assert.equal(voices[0].speaker, undefined);
   assert.equal(voices[0].text, 'Just a paragraph.');
