@@ -20,7 +20,7 @@ test('a hub with three meals on one day may not talk about the week', () => {
   const sameDay = [
     { kind: 'meal', recordedAt: '2026-08-19T08:00:00.000Z' },
     { kind: 'meal', recordedAt: '2026-08-19T13:00:00.000Z' },
-    { kind: 'meal', recordedAt: '2026-08-19T19:00:00.000Z' },
+    { kind: 'meal', recordedAt: '2026-08-19T16:00:00.000Z' },
   ];
   const week = weekOfEntries(sameDay, 'meal', NOW);
 
@@ -69,4 +69,21 @@ test('a week with nothing in it is seven empty bars, not a divide by zero', () =
   const strip = weekStrip([], 'meal', NOW);
   assert.equal(strip.length, WEEK_DAYS);
   for (const day of strip) assert.equal(day.fill, 0);
+});
+
+/**
+ * An entry dated after "now" is not part of the last seven days, and is not counted.
+ *
+ * This was found by getting a test wrong: three meals were written at 08:00, 13:00 and 19:00 with
+ * the clock at 18:00, and the count came back 2. The behaviour is right — a meal an hour in the
+ * future has not been eaten — but it is silent, and a wrong device clock would make entries vanish
+ * without explanation. Pinned here so the silence is a decision rather than an accident, and so the
+ * day someone reports "my logs disappeared" this is the first place to look.
+ */
+test('an entry dated in the future is not part of this week', () => {
+  const ahead = [{ kind: 'meal', recordedAt: '2026-08-20T09:00:00.000Z' }];
+  const week = weekOfEntries(ahead, 'meal', NOW);
+
+  assert.equal(week.total, 0);
+  assert.equal(week.days, 0);
 });
