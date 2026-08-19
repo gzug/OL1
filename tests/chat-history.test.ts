@@ -2,7 +2,6 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 
 import { historyEntries, shortPreview, threadTitle } from '../src/application/chat/history';
-import { threadIdFor } from '../src/application/chat/threads';
 import type { ChatThreadSummary } from '../src/core/chat';
 import { createMemoryChatStore } from '../src/infrastructure/chat/chatStore';
 import { selectableCoaches } from '../src/ui/chat/coachList';
@@ -70,7 +69,7 @@ test('the store’s order survives, because only the store knows when a turn lan
 test('reopening a row lands in the same conversation it came from', async () => {
   const store = createMemoryChatStore();
   const coachIds = ['sleep', 'exercise'];
-  const id = threadIdFor(coachIds);
+  const id = 'chat_whatever_this_conversation_is';
 
   await store.createThread({
     coachIds,
@@ -83,9 +82,10 @@ test('reopening a row lands in the same conversation it came from', async () => 
   const [entry] = historyEntries(await store.listThreads(), COACHES);
   assert.equal(entry.title, 'Sleep Coach, Exercise Coach');
   assert.equal(entry.preview, 'why am I tired');
-  // The row hands back coach ids, and the id derived from them is the thread it came from. That is
-  // what makes reopening a selection rather than a lookup.
-  assert.equal(threadIdFor(entry.coachIds), entry.id);
+  // The row hands back the conversation's OWN id, whatever that id happens to be. Since 2026-08-19
+  // it is not derivable from the coaches — several conversations can share them — so a row that did
+  // not carry its own id could only ever reopen the most recent of them.
+  assert.equal(entry.id, id);
 });
 
 test('the list carries the first question, not the latest one', async () => {

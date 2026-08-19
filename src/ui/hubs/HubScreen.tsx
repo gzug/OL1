@@ -7,6 +7,7 @@ import { toggleCoach } from '@/application/chat/threads';
 import { holdForHandoff, toRef } from '@/application/chat/attachments';
 import type { Attachment } from '@/core/attachments';
 import { ChatBar } from '@/ui/chat/ChatBar';
+import { RecentThreads } from '@/ui/chat/RecentThreads';
 import { CoachSelector } from '@/ui/chat/CoachSelector';
 import { coachesAtTable } from '@/ui/chat/coachList';
 import type { Coach, HubDefinition } from '@/ui/hubs/catalog';
@@ -85,9 +86,23 @@ export function HubScreen({
     // reaches the conversation through the store rather than through a URL. An attachment's bytes
     // are not persisted at all, so they ride across the navigation in memory instead.
     if (attachment !== undefined) holdForHandoff(attachment);
-    await coachChat.persist(selected, text, attachment === undefined ? undefined : toRef(attachment));
+
+    // Typing in the bar starts a new conversation, the same as it does on Home. The ones before it
+    // are on the strip directly above, which is what makes starting a new one safe to do.
+    const thread = await coachChat.start(selected);
+    await coachChat.persist(
+      thread,
+      selected,
+      text,
+      attachment === undefined ? undefined : toRef(attachment),
+    );
     setSelecting(false);
-    router.push(`/table?coaches=${selected.join(',')}`);
+    router.push(`/table?coaches=${selected.join(',')}&thread=${thread}`);
+  }
+
+  async function startFresh() {
+    const thread = await coachChat.start(selected);
+    router.push(`/table?coaches=${selected.join(',')}&thread=${thread}`);
   }
 
   return (
@@ -253,6 +268,18 @@ export function HubScreen({
           onClose={() => setSelecting(false)}
           onToggle={(coachId) => setSelected((current) => toggleCoach(current, coachId))}
           selected={selected}
+        />
+      )}
+
+      {/* Above the bar, not inside the scroll: the coach lives in the bar, so the conversations you
+          have had with it belong beside the bar and stay visible however long the cockpit gets. */}
+      {coach !== undefined && (
+        <RecentThreads
+          coachId={coach.id}
+          onNew={() => void startFresh()}
+          onOpen={(thread, ids) =>
+            router.push(`/table?coaches=${ids.join(',')}&thread=${thread}`)
+          }
         />
       )}
 

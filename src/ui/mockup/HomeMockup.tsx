@@ -89,9 +89,21 @@ export function HomeMockup() {
     // bytes cannot go that way (the store keeps metadata only), so they are held in memory for the
     // length of the navigation and taken once on the other side.
     if (attachment !== undefined) holdForHandoff(attachment);
-    await coachChat.persist(selected, text, attachment === undefined ? undefined : toRef(attachment));
+
+    /**
+     * A send from Home starts a NEW conversation, every time — the same as typing into the box on
+     * Claude's home screen. The owner asked for exactly that comparison. Earlier conversations are
+     * not lost by it: they are one tap away under "Earlier", and on their hub.
+     */
+    const thread = await coachChat.start(selected);
+    await coachChat.persist(
+      thread,
+      selected,
+      text,
+      attachment === undefined ? undefined : toRef(attachment),
+    );
     setSheet(null);
-    router.push(`/table?coaches=${selected.join(',')}`);
+    router.push(`/table?coaches=${selected.join(',')}&thread=${thread}`);
   }
 
   return (
@@ -185,7 +197,7 @@ export function HomeMockup() {
         {sheet === 'history' && (
           <ThreadList
             onClose={() => setSheet(null)}
-            onOpen={(ids) => router.push(`/table?coaches=${ids.join(',')}`)}
+            onOpen={(thread, ids) => router.push(`/table?coaches=${ids.join(',')}&thread=${thread}`)}
           />
         )}
         <View style={styles.barSlot}>

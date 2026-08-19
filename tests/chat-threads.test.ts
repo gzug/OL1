@@ -3,10 +3,12 @@ import test from 'node:test';
 
 import { splitCoachVoices, systemPromptFor } from '../src/application/chat/prompt';
 import {
-  GENERAL_THREAD_ID,
   MAX_COACHES_PER_CONVERSATION,
+  latestFor,
+  newThreadId,
+  recentFor,
   selectionLabel,
-  threadIdFor,
+  tableKey,
   toggleCoach,
 } from '../src/application/chat/threads';
 import { coachesAtTable, hubCoaches, nestedCoaches } from '../src/ui/chat/coachList';
@@ -14,18 +16,76 @@ import { COACHES, SEED_HUBS, findCoach, isDomainHub, orbitHubs } from '../src/ui
 
 /** Which conversation a selection lands in, who may be in it, and where the list comes from. */
 
-test('the same coaches resume the same conversation whatever order they were picked in', () => {
-  assert.equal(threadIdFor(['sleep', 'exercise']), threadIdFor(['exercise', 'sleep']));
-  assert.notEqual(threadIdFor(['sleep']), threadIdFor(['sleep', 'exercise']));
+const thread = (id: string, coachIds: readonly string[], updatedAt: string) => ({
+  coachIds,
+  id,
+  updatedAt,
 });
 
-test('picking nobody is the general assistant, and it is one conversation', () => {
-  assert.equal(threadIdFor([]), GENERAL_THREAD_ID);
-  assert.equal(threadIdFor([]), threadIdFor([]));
+/**
+ * The whole point of the 2026-08-19 change: a coach can have more than one conversation. While the
+ * id was derived from the coaches this was impossible, and it is what the owner asked for.
+ */
+test('two conversations with the same coach are two conversations', () => {
+  assert.notEqual(newThreadId(), newThreadId());
 });
 
-test('a coach picked twice does not split the thread', () => {
-  assert.equal(threadIdFor(['sleep', 'sleep']), threadIdFor(['sleep']));
+test('the same coaches are the same table whatever order they were picked in', () => {
+  assert.equal(tableKey(['sleep', 'exercise']), tableKey(['exercise', 'sleep']));
+  assert.notEqual(tableKey(['sleep']), tableKey(['sleep', 'exercise']));
+});
+
+test('a coach picked twice does not make a different table', () => {
+  assert.equal(tableKey(['sleep', 'sleep']), tableKey(['sleep']));
+});
+
+test('a table with no coaches is a table — the general assistant', () => {
+  assert.equal(tableKey([]), '');
+});
+
+test('resuming a table opens its most recent conversation', () => {
+  const threads = [
+    thread('older', ['sleep'], '2026-08-01T09:00:00.000Z'),
+    thread('newer', ['sleep'], '2026-08-05T09:00:00.000Z'),
+  ];
+  assert.equal(latestFor(threads, ['sleep'])?.id, 'newer');
+});
+
+/**
+ * "Exactly these coaches" is the rule, and it is not the same rule as `recentFor` below. Opening a
+ * Sleep-and-Exercise conversation because Sleep was asked for would drop a second coach into what
+ * the person thought was a one-to-one conversation.
+ */
+test('resuming one coach never opens a conversation that had two', () => {
+  const threads = [thread('pair', ['sleep', 'exercise'], '2026-08-05T09:00:00.000Z')];
+  assert.equal(latestFor(threads, ['sleep']), undefined);
+});
+
+test('a table nobody has used yet has no conversation to resume', () => {
+  assert.equal(latestFor([], ['sleep']), undefined);
+});
+
+/**
+ * The hub's "last three" is deliberately the looser rule: a conversation where this coach sat with
+ * two others still counts as one you had with them, because from the hub's side it is.
+ */
+test('a hub counts a conversation its coach was part of, even alongside others', () => {
+  const threads = [
+    thread('a', ['sleep'], '2026-08-01T09:00:00.000Z'),
+    thread('b', ['sleep', 'exercise'], '2026-08-02T09:00:00.000Z'),
+    thread('c', ['nutrition'], '2026-08-03T09:00:00.000Z'),
+    thread('d', ['sleep'], '2026-08-04T09:00:00.000Z'),
+  ];
+
+  assert.deepEqual(recentFor(threads, 'sleep').map((item) => item.id), ['d', 'b', 'a']);
+  assert.deepEqual(recentFor(threads, 'nutrition').map((item) => item.id), ['c']);
+});
+
+test('the hub shows three, newest first, however many there are', () => {
+  const threads = ['01', '02', '03', '04', '05'].map((day) =>
+    thread(day, ['sleep'], `2026-08-${day}T09:00:00.000Z`),
+  );
+  assert.deepEqual(recentFor(threads, 'sleep').map((item) => item.id), ['05', '04', '03']);
 });
 
 test('five coaches fit at a table and a sixth does not', () => {

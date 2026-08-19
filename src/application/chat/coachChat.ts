@@ -13,6 +13,12 @@
  * after it, and answers it. **A persisted user turn with no reply is the whole handoff** — the same
  * shape Legacy documented as its crash-recovery case, doing a second job here. Nothing the person
  * typed ever travels in a URL to get between the two screens.
+ *
+ * **Every call names its thread as of 2026-08-19.** These used to take coach ids and derive the
+ * thread from them, which made one conversation per coach selection and no way to have a second.
+ * See `threads.ts` for why that changed. `resume` is the one place that still starts from coaches,
+ * for the surfaces that legitimately know who but not which — a link that names coaches, or a hub's
+ * coach door.
  */
 
 import type { Attachment, AttachmentRef } from '@/core/attachments';
@@ -28,7 +34,7 @@ import { chatStore as defaultStore } from '@/infrastructure/chat/chatStore';
 import { createChatModel } from '@/infrastructure/llm/llmRouter';
 
 import { systemPromptFor } from './prompt';
-import { threadIdFor } from './threads';
+import { latestFor, newThreadId } from './threads';
 
 const defaultModel = createChatModel();
 
@@ -39,22 +45,52 @@ function turnId(): string {
 
 export type CoachChat = {
   /** Read the last turn's question and answer it. Returns null when nothing is waiting. */
-  answer(coaches: readonly CoachDescriptor[], attachment?: Attachment): Promise<CoachReply | null>;
+  answer(
+    threadId: string,
+    coaches: readonly CoachDescriptor[],
+    attachment?: Attachment,
+  ): Promise<CoachReply | null>;
   isConfigured(): boolean;
   listThreads(): Promise<readonly ChatThreadSummary[]>;
   /** Write the question. Always completes before anything is asked of the model. */
-  persist(coachIds: readonly string[], text: string, attachment?: AttachmentRef): Promise<void>;
-  readTurns(coachIds: readonly string[]): Promise<readonly ChatTurn[]>;
+  persist(
+    threadId: string,
+    coachIds: readonly string[],
+    text: string,
+    attachment?: AttachmentRef,
+  ): Promise<void>;
+  readTurns(threadId: string): Promise<readonly ChatTurn[]>;
+  /**
+   * The conversation these coaches continue, starting a new one if there is none.
+   *
+   * For the surfaces that know WHO is at the table but not WHICH conversation: a link carrying
+   * coach ids, and a hub's coach door. Everywhere the person picked a conversation — the history
+   * list, a hub's recent three — names its thread outright and never comes through here.
+   */
+  resume(coachIds: readonly string[]): Promise<string>;
+  /** A fresh conversation with these coaches. What the bar on Home does on every send. */
+  start(coachIds: readonly string[]): Promise<string>;
 };
 
 export function createCoachChat(
   model: ChatModel = defaultModel,
   store: ChatStore = defaultStore,
 ): CoachChat {
+  /**
+   * A local function rather than `this.start` inside the object below. `this` is bound only while
+   * the method is reached through the object, and every one of these is a candidate for being
+   * destructured into a hook's dependency list — where `this` would be undefined and `resume` would
+   * throw on exactly the path that starts someone's first conversation.
+   */
+  async function start(coachIds: readonly string[]): Promise<string> {
+    const id = newThreadId();
+    const now = new Date().toISOString();
+    await store.createThread({ coachIds, createdAt: now, id, updatedAt: now });
+    return id;
+  }
+
   return {
-    async answer(coaches, attachment) {
-      const coachIds = coaches.map((coach) => coach.id);
-      const threadId = threadIdFor(coachIds);
+    async answer(threadId, coaches, attachment) {
       const turns = await store.readTurns(threadId);
       const last = turns[turns.length - 1];
 
@@ -83,8 +119,7 @@ export function createCoachChat(
 
     listThreads: () => store.listThreads(),
 
-    async persist(coachIds, text, attachment) {
-      const threadId = threadIdFor(coachIds);
+    async persist(threadId, coachIds, text, attachment) {
       const now = new Date().toISOString();
       await store.createThread({ coachIds, createdAt: now, id: threadId, updatedAt: now });
       await store.appendTurn(threadId, {
@@ -95,9 +130,16 @@ export function createCoachChat(
       });
     },
 
-    readTurns(coachIds) {
-      return store.readTurns(threadIdFor(coachIds));
+    readTurns(threadId) {
+      return store.readTurns(threadId);
     },
+
+    async resume(coachIds) {
+      const existing = latestFor(await store.listThreads(), coachIds);
+      return existing?.id ?? start(coachIds);
+    },
+
+    start,
   };
 }
 
