@@ -4,6 +4,7 @@ import { StyleSheet, Text, View } from 'react-native';
 
 import { hubs as defaultHubs } from '@/application/hubs/hubs';
 import type { HubEntry } from '@/core/hubs';
+import { day, kindWords, sourceWords } from '@/ui/hubs/entryWords';
 import { fontFamily, lineHeights, spacing, typography, useTheme } from '@/ui/theme';
 
 /**
@@ -23,46 +24,14 @@ import { fontFamily, lineHeights, spacing, typography, useTheme } from '@/ui/the
 /** How many rows the list shows. A cap on the LIST, never on the count above it. */
 const SHOWN = 5;
 
-/** How a kind of entry is written down. An unknown kind still renders, by its own name. */
-const KINDS: Readonly<Record<string, { one: string; many: string }>> = {
-  meal: { many: 'meals', one: 'meal' },
-  panel: { many: 'panels', one: 'panel' },
-  session: { many: 'sessions', one: 'session' },
-  weight: { many: 'weigh-ins', one: 'weigh-in' },
-};
-
-/** How it got here, in the words a person would use. Shown, never guessed at. */
-const SOURCES: Readonly<Record<string, string>> = {
-  camera: 'photographed',
-  chat: 'from a conversation',
-  described: 'described',
-  file: 'from a file',
-  library: 'from a photo',
-  manual: 'entered by hand',
-  photo: 'photographed',
-};
 
 function countLine(entries: readonly HubEntry[]): string {
   const byKind = new Map<string, number>();
   for (const entry of entries) byKind.set(entry.kind, (byKind.get(entry.kind) ?? 0) + 1);
 
   return [...byKind.entries()]
-    .map(([kind, count]) => {
-      const words = KINDS[kind] ?? { many: `${kind} entries`, one: `${kind} entry` };
-      return `${count} ${count === 1 ? words.one : words.many}`;
-    })
+    .map(([kind, count]) => `${count} ${kindWords(kind, count)}`)
     .join(' · ');
-}
-
-/** The date, as a person writes it. No time — an entry's hour is not the reading. */
-function day(iso: string): string {
-  const date = new Date(iso);
-  if (Number.isNaN(date.getTime())) return 'undated';
-  return `${date.getUTCDate()} ${
-    ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'][
-      date.getUTCMonth()
-    ]
-  }`;
 }
 
 export function StoredEntries({ hubId, source = defaultHubs }: { hubId: string; source?: typeof defaultHubs }) {
@@ -110,7 +79,7 @@ export function StoredEntries({ hubId, source = defaultHubs }: { hubId: string; 
         <View key={entry.id} style={styles.row}>
           <Text style={[styles.when, { color: colors.textMuted }]}>{day(entry.recordedAt)}</Text>
           <Text style={[styles.how, { color: colors.textSubtle }]}>
-            {SOURCES[entry.source] ?? entry.source}
+            {sourceWords(entry.source)}
           </Text>
         </View>
       ))}
