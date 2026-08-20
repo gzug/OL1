@@ -27,7 +27,18 @@ export const profileStore: ProfileStore = {
     if (raw === null) return null;
 
     try {
-      return JSON.parse(raw) as Profile;
+      /**
+       * Normalised rather than cast. A profile written before `heightCm` existed parses without
+       * one, and `as Profile` would hand a screen an `undefined` its type says cannot happen —
+       * the same lie in the browser that a missing column tells on a phone.
+       */
+      const parsed = JSON.parse(raw) as Partial<Profile>;
+      return {
+        birthYear: parsed.birthYear ?? null,
+        heightCm: parsed.heightCm ?? null,
+        sex: parsed.sex ?? 'preferNotToSay',
+        updatedAt: parsed.updatedAt ?? new Date(0).toISOString(),
+      };
     } catch {
       // A half-written value is not worth crashing a screen over, and a profile that will not parse
       // is the same as none: the age calculation returns null and says so.

@@ -8,10 +8,10 @@ import {
 } from '../src/infrastructure/storage/schema';
 
 test('the schema is versioned and contains no legacy health tables', () => {
-  assert.equal(CURRENT_SCHEMA_VERSION, 5);
+  assert.equal(CURRENT_SCHEMA_VERSION, 6);
   assert.deepEqual(
     MIGRATIONS.map((migration) => migration.version),
-    [1, 2, 3, 4, 5],
+    [1, 2, 3, 4, 5, 6],
   );
 
   const sql = `${CREATE_MIGRATION_TABLE_SQL}\n${MIGRATIONS.map((item) => item.sql).join('\n')}`;
@@ -121,10 +121,36 @@ test('there can only be one profile', () => {
  * diseases and supplements, which is exactly that drift. Anything of that kind belongs in the
  * Medical condition hub as an entry somebody chose to make.
  */
-test('the profile holds two answers and no medical history', () => {
-  const migration = MIGRATIONS.find((item) => item.version === 5);
+test('the profile holds no medical history and no identifier', () => {
+  // Every migration that touches the profile, not just the one that created it. Checking version 5
+  // alone would have gone on passing while version 6 added whatever it liked.
+  const profileMigrations = MIGRATIONS.filter((item) => /\bprofile\b/i.test(item.sql));
+  assert.ok(profileMigrations.length >= 2, 'this guard has stopped finding the profile migrations');
+
+  for (const migration of profileMigrations) {
+    assert.doesNotMatch(
+      migration.sql,
+      /(allerg|disease|condition|medication|supplement|diagnos)/i,
+      `migration ${migration.version} turns the profile into a medical record`,
+    );
+    assert.doesNotMatch(
+      migration.sql,
+      /(name|email|phone)/i,
+      `migration ${migration.version} gave the profile an identifier`,
+    );
+  }
+});
+
+/**
+ * Height is a fact that stops changing; weight is a measurement with a date. A `weight` column
+ * would hold whatever was typed on the day somebody signed up and never say it had gone stale —
+ * the same class of error as storing an age rather than a birth year. Weigh-ins are `hub_entry`
+ * rows, and this asserts the absence so nobody "completes" the profile by adding the pair.
+ */
+test('the profile takes a height and never a weight', () => {
+  const migration = MIGRATIONS.find((item) => item.version === 6);
   assert.ok(migration !== undefined);
 
-  assert.doesNotMatch(migration.sql, /(allerg|disease|condition|medication|supplement|diagnos)/i);
-  assert.doesNotMatch(migration.sql, /(name|email|phone)/i, 'the profile grew an identifier');
+  assert.match(migration.sql, /ALTER TABLE profile ADD COLUMN height_cm/i);
+  assert.doesNotMatch(migration.sql, /weight/i, 'a weight belongs in an entry, not on an identity');
 });

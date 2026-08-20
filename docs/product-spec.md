@@ -107,6 +107,27 @@ same day by the owner's answers, argued in `docs/decisions/0006-one-chat-surface
 - Fixture numbers come from the same sources Legacy used, and Legacy's own synthetic demo data is
   the source for the preview. Nothing is invented freehand and nothing comes from a real person.
 
+## Confirmed — first run
+
+Settled 2026-08-20, from the owner's own onboarding document and the questions it left open.
+
+- **Six beats, then Home:** a typewriter welcome, three answers about you, what you want out of it,
+  what you train, what you have had done, and the ring you just built. Everything is skippable and
+  every answer is editable afterwards.
+- **The ring is not seen until the flow is finished or skipped.** It is not built by the flow — all
+  seven places still ship — but nobody meets it before the screen that explains it.
+- **The profile holds a birth year, a sex and a height.** A weight is asked for on the same card and
+  filed as a weigh-in in Nutrition, because a weight is a measurement with a date and a profile
+  column would freeze it.
+- **Goals record themselves in the hub they belong to**; a goal or a sport the ring has no home for
+  creates a hub, with its own coach, through the same path the `+` uses.
+- **No completeness percentage.** What is missing is a named list with a subject and a true cause.
+  A weighted score across layers that do not exist is invented precision — same rule as `0009`.
+- **What the flow says about storage differs by surface, because the truth does.** On the web
+  preview the answers are in that browser and it is not durable storage for health data.
+- Deliberately absent: an account, a goal that changes nothing, a coach-style picker, logging
+  toggles, a wearable button with no phone behind it, and a loading screen over no work.
+
 ## Open
 
 - Where the morning brief and the evening resume arrive. The owner narrowed the whole generated
@@ -118,6 +139,11 @@ same day by the owner's answers, argued in `docs/decisions/0006-one-chat-surface
 - Final health metrics and permissions beyond the bootstrap steps smoke test.
 - iOS HealthKit implementation and test distribution.
 - Legacy data migration or a deliberate clean start.
+- **Accounts and a server.** The owner asked on 2026-08-20 to keep scale in mind. Nothing is built:
+  there is no server, and health data leaving the phone changes the platform line above. It is
+  cheap to reach later — `ProfileStore`, `HubStore` and `ChatStore` are ports with three
+  implementations each, so a server-backed fourth is a swap rather than a rewrite — and expensive
+  to get wrong, since it brings authentication and special-category handling with it.
 - Production cutover, signing, store distribution, and EAS Update.
 - File import, background work, telemetry, and external integrations.
 - Whether a sent photo should be viewable again later, which needs a media store rather than a

@@ -1,4 +1,4 @@
-export const CURRENT_SCHEMA_VERSION = 5;
+export const CURRENT_SCHEMA_VERSION = 6;
 
 export const CREATE_MIGRATION_TABLE_SQL = `
   CREATE TABLE IF NOT EXISTS schema_migrations (
@@ -127,5 +127,23 @@ export const MIGRATIONS = [
         updated_at TEXT NOT NULL
       );
     `,
+  },
+  {
+    /**
+     * Height, because the first-run flow asks for it.
+     *
+     * `ALTER TABLE ... ADD COLUMN`, never a rebuild — the additive-only rule migration 3 set. The
+     * profile is the one row in this database with no second copy anywhere.
+     *
+     * **Height is here and weight deliberately is not.** Height is a fact that stops changing.
+     * Weight is a measurement with a date, and a column holding one would freeze whatever number
+     * was given on the day somebody signed up and never admit it had gone stale — the same failure
+     * as storing an age instead of a birth year. A weigh-in is an entry, and it belongs where the
+     * owner moved it on 2026-08-19.
+     *
+     * Nullable, like the two columns before it: every answer the first run asks for may be skipped.
+     */
+    version: 6,
+    sql: `ALTER TABLE profile ADD COLUMN height_cm INTEGER;`,
   },
 ] as const;
