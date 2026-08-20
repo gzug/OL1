@@ -1,8 +1,13 @@
 import { useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
-import Body from 'react-native-body-highlighter';
+import Body, { type Slug } from 'react-native-body-highlighter';
 
-import { isMuscle, type Intensity, type MuscleSlug } from '@/application/twin/muscleLoad';
+import {
+  isMuscle,
+  MUSCLE_SLUGS,
+  type Intensity,
+  type MuscleSlug,
+} from '@/application/twin/muscleLoad';
 import { fontFamily, lineHeights, spacing, tracking, typography, useTheme } from '@/ui/theme';
 
 /**
@@ -26,6 +31,31 @@ import { fontFamily, lineHeights, spacing, tracking, typography, useTheme } from
 /** What the figure is showing. Front and back are the same body from two sides, not two figures. */
 type Side = 'back' | 'front';
 
+/**
+ * Every part the drawing has: the muscles, plus the head, hair, neck, hands, feet, ankles and knees
+ * that make it a body rather than a diagram.
+ *
+ * **This list is here because `defaultFill` does not work.** The library ships each part with a
+ * hard-coded `color: '#3f3f3f'` in its own asset files, and its `getColorToFill` prefers that colour
+ * over `defaultFill` — so `defaultFill` only ever reaches a part that has no colour of its own,
+ * which is none of them. That is why the figure kept rendering near-black charcoal on warm paper
+ * however `bodyRest` was set, and why reading the dependency was the only way to find it.
+ *
+ * Naming every part and handing the resting ones an explicit `styles.fill` is what takes effect:
+ * `styles.fill` sits at the TOP of that same priority list. Slugs the current side does not draw are
+ * simply not matched, so one list serves front and back.
+ */
+const DRAWN_PARTS: readonly Slug[] = [
+  ...MUSCLE_SLUGS,
+  'ankles',
+  'feet',
+  'hair',
+  'hands',
+  'head',
+  'knees',
+  'neck',
+];
+
 export function BodyFigure({
   loads,
   onMusclePress,
@@ -46,13 +76,22 @@ export function BodyFigure({
 
   const worked = Object.entries(loads) as [MuscleSlug, Intensity][];
 
+  /* One object shared by every resting part, rather than one allocated per part per render. */
+  const restStyles = { fill: colors.bodyRest };
+  const parts = DRAWN_PARTS.map((slug) => {
+    const intensity = isMuscle(slug) ? loads[slug] : undefined;
+    return intensity === undefined ? { slug, styles: restStyles } : { intensity, slug };
+  });
+
   return (
     <View style={styles.wrap}>
       <Body
         /* One hue in three steps. The scale is relative to the busiest muscle this week, which the
            caption below has to say — otherwise the darkest amber reads as an absolute claim. */
         colors={[colors.loadSoft, colors.loadMedium, colors.loadStrong]}
-        data={worked.map(([slug, intensity]) => ({ intensity, slug }))}
+        data={parts}
+        /* Kept as a backstop for anything `DRAWN_PARTS` misses in a future version of the library.
+           It is not what colours the resting body — see `DRAWN_PARTS` for why it cannot be. */
         defaultFill={colors.bodyRest}
         border={colors.bodyOutline}
         gender="male"

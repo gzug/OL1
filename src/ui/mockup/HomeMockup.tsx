@@ -33,6 +33,25 @@ import { Orbit } from './Orbit';
  * shrinks it once it cannot. `tests/orbit-geometry.test.ts` pins both halves of that.
  */
 
+/** The name's own line, and the paper above it. Below that the body and the words crowd. */
+const TWIN_NAME_LINE = 26;
+const TWIN_NAME_GAP = 10;
+
+/** Paper kept inside the box, so the figure never runs to the very edge of it. */
+const CENTRE_INSET = 6;
+
+/**
+ * How tall the body is drawn in the centre of the orbit.
+ *
+ * `react-native-body-highlighter` draws 400×200 at `scale: 1`, so the scale IS the figure's height
+ * as a fraction of 400 — which is what lets this say plainly what it wants: the box, less the name
+ * and the paper around it. The divisor it replaces was 620, a number that happened to fit and left
+ * the feet sitting directly on the D of "Digital".
+ */
+function figureScale(boxHeight: number): number {
+  return (boxHeight - TWIN_NAME_LINE - TWIN_NAME_GAP - CENTRE_INSET) / 400;
+}
+
 /**
  * Home.
  *
@@ -180,7 +199,7 @@ export function HomeMockup() {
                 No caption, no legend and no tapping at this size. A muscle here is about four
                 pixels across, so a tap could not say which one it meant, and a legend would not fit
                 under it. It is a picture that leads to the screen where all three exist. */}
-            <BodyFigure loads={load.loads} scale={centreBox.height / 620} showCaption={false} />
+            <BodyFigure loads={load.loads} scale={figureScale(centreBox.height)} showCaption={false} />
             <Text style={[styles.twinName, { color: colors.text }]}>Digital Twin</Text>
           </Pressable>
         </View>
@@ -253,8 +272,11 @@ const styles = StyleSheet.create({
   },
   twinName: {
     fontFamily: fontFamily.display,
-    fontSize: 26,
-    lineHeight: 32,
+    /* Sized against the figure above it rather than against the screen. At 26 the two words were
+       wider than the body was tall, which read as a caption with a mascot on it. */
+    fontSize: 22,
+    lineHeight: TWIN_NAME_LINE,
+    marginTop: TWIN_NAME_GAP,
     textAlign: 'center',
   },
   driftCaption: {
