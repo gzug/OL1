@@ -108,15 +108,44 @@ test('the sample-data line says which side is which, and claims nothing about ab
   assert.doesNotMatch(SAMPLE_DATA_LINE, /\byours\b/i, 'ownership belongs on the real block, not here');
 });
 
+/**
+ * Comments are not claims.
+ *
+ * The first version of this guard read the raw file and fired on the doc comment in
+ * `StoredEntries` that EXPLAINS the old sentence — so it went red on the description of the bug
+ * rather than on the bug. Tuned here in a visible diff, per `AGENTS.md`, rather than worked around:
+ * what the guard means is "no component renders a competing claim", and code is where claims live.
+ */
+function stripComments(source: string): string {
+  return source.replace(/\/\*[\s\S]*?\*\//g, ' ').replace(/(^|[^:])\/\/.*$/gm, '$1');
+}
+
 /** One copy, in the layer that owns the vocabulary of fixtures. */
 test('the sample-data line is defined once, outside the component that renders it', async () => {
   const { readFileSync } = await import('node:fs');
-  const rendered = readFileSync('src/ui/hubs/HubScreen.tsx', 'utf8');
-  const stored = readFileSync('src/ui/hubs/StoredEntries.tsx', 'utf8');
+  const read = (path: string) => stripComments(readFileSync(path, 'utf8'));
 
-  assert.ok(!rendered.includes(`'${SAMPLE_DATA_LINE}'`), 'HubScreen re-declares the sentence');
   assert.ok(
-    !/below this is sample data/i.test(stored),
+    !read('src/ui/hubs/HubScreen.tsx').includes(`'${SAMPLE_DATA_LINE}'`),
+    'HubScreen re-declares the sentence instead of importing it',
+  );
+  assert.ok(
+    !/below this is sample data/i.test(read('src/ui/hubs/StoredEntries.tsx')),
     'StoredEntries still claims what is beneath it — that is the bug this replaced',
   );
+});
+
+/**
+ * And the guard has to be able to fire, or it is an empty baseline wearing a gate's clothes —
+ * which `AGENTS.md` asks to be proven rather than assumed.
+ */
+test('the sample-data guard fires on a real claim and not on a comment about one', () => {
+  const claim = /below this is sample data/i;
+
+  assert.ok(!claim.test(stripComments('/* everything below this is sample data */ const a = 1;')));
+  assert.ok(!claim.test(stripComments('// everything below this is sample data')));
+  assert.ok(claim.test(stripComments('const note = "everything below this is sample data";')));
+
+  // The `[^:]` is what stops `https://` being read as a line comment.
+  assert.match(stripComments('const u = "https://ol1.example";'), /https:\/\/ol1\.example/);
 });
