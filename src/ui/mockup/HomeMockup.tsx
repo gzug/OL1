@@ -279,24 +279,6 @@ const styles = StyleSheet.create({
     marginTop: TWIN_NAME_GAP,
     textAlign: 'center',
   },
-  driftCaption: {
-    fontFamily: fontFamily.body,
-    fontSize: 9.5,
-    letterSpacing: 0.7,
-    marginTop: 2,
-    textAlign: 'center',
-    textTransform: 'uppercase',
-  },
-  /**
-   * Large so it anchors, and set in the lightest weight the brand has so it never reads as today's
-   * verdict. Tabular figures: this number drifts slowly, and digits that jitter imply daily motion.
-   */
-  driftNumber: {
-    ...numerals.tabular,
-    fontFamily: fontFamily.display,
-    fontSize: 40,
-    lineHeight: 46,
-  },
   focusPill: {
     borderRadius: 13,
     marginTop: spacing.md,

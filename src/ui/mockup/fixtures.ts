@@ -19,11 +19,16 @@
  * `tests/orbit-geometry.test.ts` meaningful across the move.
  */
 
+/**
+ * `driftNumber: '41.6'` and its caption used to live here and were rendered by both the Twin and
+ * Home. They are gone: `src/ui/twin/BioAgeBlock.tsx` computes the real number from the panel you
+ * added and the year you were born, and says plainly which input is missing when it cannot.
+ *
+ * Worth recording rather than quietly deleting — that fixture sat on the screen for weeks looking
+ * exactly like a result, which is the most expensive kind of placeholder, because nobody reports it
+ * as broken.
+ */
 export const centre = {
-  /** Years with a decimal, not an index out of 100. A measurement, not a grade. */
-  driftNumber: '41.6',
-  /** The strongest device on the screen: a number carrying a weeks-old date is not today's result. */
-  driftCaption: 'Biological age · bloodwork 12 Mar',
   focus: 'Today · the evening walk',
   insight: 'Your later nights landed on evening training days.',
 } as const;

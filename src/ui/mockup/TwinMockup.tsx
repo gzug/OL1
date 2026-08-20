@@ -5,6 +5,7 @@ import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { hubs } from '@/application/hubs/hubs';
 import { fontFamily, lineHeights, radius, spacing, typography, useTheme } from '@/ui/theme';
 import { AboutYou } from '@/ui/twin/AboutYou';
+import { BioAgeBlock } from '@/ui/twin/BioAgeBlock';
 import { BodyFigure } from '@/ui/twin/BodyFigure';
 import { useMuscleLoad } from '@/ui/twin/useMuscleLoad';
 
@@ -63,12 +64,10 @@ export function TwinMockup() {
         <AboutYou />
       </View>
 
-      <View style={styles.driftBlock}>
-        <Text style={[styles.driftNumber, { color: colors.text }]}>{centre.driftNumber}</Text>
-        <Text style={[styles.driftCaption, { color: colors.textSubtle }]}>
-          {centre.driftCaption}
-        </Text>
-      </View>
+      {/* Was `centre.driftNumber` — a fixture reading 41.6 that had been on this screen since the
+          first mockup, looking exactly like a result. It is your own panel now, or an honest line
+          saying what is missing. */}
+      <BioAgeBlock />
 
       <Section title="What this number is made of">
         <View style={[styles.card, { backgroundColor: colors.surface }]}>
@@ -214,28 +213,9 @@ const styles = StyleSheet.create({
     marginBottom: spacing.sm,
     padding: spacing.md,
   },
-  /** Matches Home's centre exactly — the same number in two places must not be two numbers. */
   bodyBlock: {
     alignItems: 'center',
     paddingBottom: spacing.lg,
-  },
-  driftBlock: {
-    alignItems: 'center',
-    paddingBottom: spacing.md,
-    paddingTop: spacing.sm,
-  },
-  driftCaption: {
-    fontFamily: fontFamily.body,
-    fontSize: 9.5,
-    letterSpacing: 0.7,
-    marginTop: 2,
-    textAlign: 'center',
-    textTransform: 'uppercase',
-  },
-  driftNumber: {
-    fontFamily: fontFamily.display,
-    fontSize: 40,
-    lineHeight: 46,
   },
   dot: {
     borderRadius: 4,
