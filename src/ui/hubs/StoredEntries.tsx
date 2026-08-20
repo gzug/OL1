@@ -115,10 +115,17 @@ export function StoredEntries({ hubId, source = defaultHubs }: { hubId: string; 
         </View>
       ))}
 
+      {/**
+        * This used to end "everything below this is sample data", and it stopped being true. Four
+        * blocks of real content now sit between here and the fixtures — the logged week, the panel's
+        * age, kidney function, the markers themselves — so the sentence was pointing at the wrong
+        * boundary and calling real results invented.
+        *
+        * The marker moved to `HubScreen`, immediately above the fixtures, where the boundary
+        * actually is. It stays correct as more real blocks arrive; this one could not.
+        */}
       <Text style={[styles.note, { color: colors.textSubtle }]}>
-        {entries.length > shown.length
-          ? `Showing the newest ${shown.length}. Yours — everything below this is sample data.`
-          : 'Yours. Everything below this is sample data.'}
+        {entries.length > shown.length ? `Yours. Showing the newest ${shown.length}.` : 'Yours.'}
       </Text>
     </View>
   );

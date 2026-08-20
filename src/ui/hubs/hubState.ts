@@ -17,6 +17,22 @@
  */
 
 /** Whether the hub reads this facet itself, reads it through another hub, or not at all. */
+/**
+ * The line dividing a hub screen's real content from its fixtures.
+ *
+ * Lives here rather than in `HubScreen.tsx` so a bare-Node test can reach it — the whole file it
+ * sits in is the vocabulary of what a fixture IS, which makes this the sentence's natural home.
+ *
+ * It used to be the last line of `StoredEntries` and read "everything below this is sample data".
+ * That was true when the only real block on a hub screen was the stored-entry list. It stopped
+ * being true as the logged week, the panel's age, kidney function and the marker list arrived
+ * beneath it — at which point it was labelling a person's own results as invented.
+ *
+ * **A boundary marker that is not at the boundary is worse than none**, because it teaches people
+ * to distrust the true half.
+ */
+export const SAMPLE_DATA_LINE = 'Everything below this line is sample data, invented for layout.';
+
 export type FacetState = 'elsewhere' | 'missing' | 'reading';
 
 export type HubFacet = {
