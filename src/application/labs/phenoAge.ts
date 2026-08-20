@@ -40,6 +40,38 @@ import {
 } from './units';
 
 /**
+ * The lowest CRP the Levine model has any information about, in `mg/L`.
+ *
+ * **This is not a safety clamp. It is the edge of the data the regression was fitted on.**
+ *
+ * NHANES III measured CRP by latex-enhanced nephelometry, and anything below roughly `0.21 mg/dL`
+ * — `2.1 mg/L` — was simply undetectable and recorded at the limit. Levine 2018 was fitted on that
+ * data, so the coefficient `0.0954 × ln(CRP)` was estimated from a sample in which CRP never went
+ * lower. A modern hs-CRP assay reads an order of magnitude finer than that, and feeding it in
+ * unclamped extrapolates the model far outside anything it saw.
+ *
+ * The failure is not subtle, because `ln` has no floor. Holding a real panel steady and moving CRP
+ * alone: `0.6 mg/L` gives 26.4, `0.2` gives 25.2, `0.05` gives 23.8, and `0.005` gives 21.4. The
+ * number falls without limit toward a CRP of zero. Any of those below `2.1` is the model inventing
+ * a person it was never shown.
+ *
+ * **Found by checking a real result against a commercial app.** OL1 said 26.4 where the other said
+ * 27.9, and the whole of the difference was this: they clamp and we did not. Clamping is the less
+ * flattering answer and the correct one.
+ *
+ * Published limits for NHANES III vary between `0.21` and `0.30 mg/dL` depending on the source,
+ * which is worth knowing because the choice moves a result by roughly four tenths of a year. The
+ * lowest is used here: it is the most frequently cited, and where the sources disagree the smaller
+ * clamp is the one that discards least of a real measurement.
+ */
+export const CRP_FLOOR_MGL = 2.1;
+
+/** The CRP the formula will actually read, which is not always the CRP that was measured. */
+export function crpAsModelled(crpMgL: number): number {
+  return Math.max(crpMgL, CRP_FLOOR_MGL);
+}
+
+/**
  * Reference bounds, used ONLY to bracket a partial panel. These are not a verdict on any value and
  * nothing may render them as one — a result inside them is not "good".
  */
@@ -106,7 +138,7 @@ export function computePhenoAge(input: PhenoAgeInput): number | null {
     -0.0336 * (markers.albumin as number) * ALBUMIN_GL_PER_GDL +
     0.0095 * (markers.creatinine as number) * CREATININE_UMOLL_PER_MGDL +
     0.1953 * ((markers.glucose as number) / GLUCOSE_MMOLL_TO_MGDL) +
-    0.0954 * Math.log((markers.crp as number) / CRP_MGL_PER_MGDL) +
+    0.0954 * Math.log(crpAsModelled(markers.crp as number) / CRP_MGL_PER_MGDL) +
     -0.012 * (markers.lymph_pct as number) +
     0.0268 * (markers.mcv as number) +
     0.3306 * (markers.rdw as number) +
@@ -191,6 +223,12 @@ const REFERENCE: Readonly<Record<LevineMarkerKey, number>> = {
   albumin: 4.5,
   alp: 70,
   creatinine: 0.9,
+  /**
+   * Below `CRP_FLOOR_MGL`, so both this and any panel value under the floor are compared at the
+   * floor — which means CRP cannot be ranked as a driver for anyone whose CRP is beneath it. That
+   * is the honest outcome rather than an accident: down there the model cannot tell two people
+   * apart, so it must not claim one of them is being moved by their CRP.
+   */
   crp: 1.0,
   glucose: 90,
   lymph_pct: 30,
@@ -215,7 +253,8 @@ function contribution(key: LevineMarkerKey, value: number): number {
     case 'creatinine':
       return 0.0095 * value * CREATININE_UMOLL_PER_MGDL;
     case 'crp':
-      return 0.0954 * Math.log(value / CRP_MGL_PER_MGDL);
+      // The same floor the calculation itself uses, so the drivers rank what was actually read.
+      return 0.0954 * Math.log(crpAsModelled(value) / CRP_MGL_PER_MGDL);
     case 'glucose':
       return 0.1953 * (value / GLUCOSE_MMOLL_TO_MGDL);
     case 'lymph_pct':
