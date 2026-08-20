@@ -3,6 +3,7 @@ import { Fragment } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { hubs } from '@/application/hubs/hubs';
+import { SAMPLE_DATA_LINE } from '@/ui/hubs/hubState';
 import { fontFamily, lineHeights, radius, spacing, typography, useTheme } from '@/ui/theme';
 import { AboutYou } from '@/ui/twin/AboutYou';
 import { BioAgeBlock } from '@/ui/twin/BioAgeBlock';
@@ -27,12 +28,23 @@ import { centre, twin, twinSources } from './fixtures';
  *                    that the two never compete is visible rather than merely asserted
  *   insights       — read, not acted on
  *   completed      — evidence sits under the claim it supports
- *   ledger         — longest, densest, least urgent; the only section anyone scrolls *to*
+ *   ledger         — what you have actually recorded, anywhere in the app
  *
  * A running test lives here rather than on Home because it shows nothing for thirteen days out of
  * fourteen, and the centre of Home cannot carry a permanently static element.
  *
- * **The body now leads, and the number sits under it.** The owner asked for that on 2026-08-19 —
+ * **The order above is now cut by one line that outranks all of it: real, then invented.**
+ *
+ * The scroll order was argued when every block on this screen was a fixture, and "longest, densest,
+ * least urgent last" was the right axis then. It is not any more. The body figure, the biological
+ * age, what it is made of and the ledger are the person's own; the sample person, the running test,
+ * the insights and the completed tests are invented for layout. With those interleaved — a real age,
+ * then a sample person, then a real ledger — no reading of the screen separated them, and the hub
+ * screens had drawn this line while the Twin had not. The ledger moved up above the boundary rather
+ * than the boundary moving down around it, because a marker that has to make exceptions is not a
+ * marker.
+ *
+ * **The body leads, and the number sits under it.** The owner asked for that on 2026-08-19 —
  * the twin is a body with the muscles you have worked lately, and PhenoAge is one of the things it
  * is made of. The order still argues the same case the scroll order always did: a heavy claim
  * arrives with its provenance, it just arrives second now.
@@ -105,6 +117,25 @@ export function TwinMockup() {
         </View>
       </Section>
 
+      {/* Was four invented rows under a footer reading "Showing 4 of 148", where 148 was a number
+          nobody could stand behind. `Ledger` renders nothing at all until something is logged, so a
+          person who has recorded nothing sees no section rather than somebody else's history. */}
+      <Section title="Ledger">
+        <View style={[styles.card, { backgroundColor: colors.surface }]}>
+          <Ledger />
+        </View>
+      </Section>
+
+      {/**
+        * The boundary. Everything above it is the person's own; everything below is invented for
+        * layout review.
+        *
+        * The hub screens draw this line and the Twin did not, which was the more dangerous half:
+        * here the real and the invented were interleaved — a real biological age, then a sample
+        * person, then a real ledger — so there was no reading of the screen that separated them.
+        */}
+      <Text style={[styles.sampleLine, { color: colors.textSubtle }]}>{SAMPLE_DATA_LINE}</Text>
+
       <Text style={[styles.personName, { color: colors.text }]}>{twin.person.name}</Text>
       <Text style={[styles.personFacts, { color: colors.textSubtle }]}>
         {twin.person.facts.join(' · ')}
@@ -159,14 +190,6 @@ export function TwinMockup() {
         ))}
       </Section>
 
-      {/* Was four invented rows under a footer reading "Showing 4 of 148", where 148 was a number
-          nobody could stand behind. `Ledger` renders nothing at all until something is logged, so a
-          person who has recorded nothing sees no section rather than somebody else's history. */}
-      <Section title="Ledger">
-        <View style={[styles.card, { backgroundColor: colors.surface }]}>
-          <Ledger />
-        </View>
-      </Section>
     </ScrollView>
   );
 }
@@ -292,6 +315,13 @@ const styles = StyleSheet.create({
     fontFamily: fontFamily.body,
     fontSize: typography.caption,
     marginTop: spacing.xs,
+  },
+  sampleLine: {
+    fontFamily: fontFamily.body,
+    fontSize: typography.micro,
+    lineHeight: lineHeights.caption,
+    marginBottom: spacing.md,
+    marginTop: spacing.xl,
   },
   personFacts: {
     fontFamily: fontFamily.body,
