@@ -1,7 +1,15 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 
-import { WINDOW_DAYS, freshness, isMuscle, muscleLoad } from '../src/application/twin/muscleLoad';
+import {
+  MAX_SESSION_WEIGHT,
+  REFERENCE_MINUTES,
+  WINDOW_DAYS,
+  effort,
+  freshness,
+  isMuscle,
+  muscleLoad,
+} from '../src/application/twin/muscleLoad';
 
 const NOW = '2026-08-19T12:00:00.000Z';
 const daysAgo = (days: number) =>
@@ -105,4 +113,62 @@ test('a body part that is not a muscle cannot be marked as worked', () => {
     assert.equal(isMuscle(part), false, `"${part}" is drawn on the figure but is not a muscle`);
   }
   assert.equal(isMuscle(undefined), false);
+});
+
+/**
+ * How long a session took has to reach the figure.
+ *
+ * It did not, until the owner asked what would actually change the colour if he logged a run. The
+ * minutes were on every session and thrown away here, so a three-kilometre jog and a
+ * twenty-five-kilometre run painted an identical body.
+ */
+test('a longer session marks harder than a short one', () => {
+  const now = '2026-08-20T18:00:00.000Z';
+  const short = muscleLoad([{ at: now, kind: 'running', minutes: 15 }], now);
+  const long = muscleLoad([{ at: now, kind: 'running', minutes: 90 }], now);
+
+  // Relative shading inside one session is unchanged — it is the same activity either way.
+  assert.deepEqual(Object.keys(short.loads).sort(), Object.keys(long.loads).sort());
+
+  // But against a fixed other session, the long one now wins the scale.
+  const gym = { at: now, kind: 'gym', minutes: 45 };
+  const withShort = muscleLoad([gym, { at: now, kind: 'running', minutes: 15 }], now);
+  const withLong = muscleLoad([gym, { at: now, kind: 'running', minutes: 120 }], now);
+
+  assert.ok(
+    (withShort.loads.chest as number) > (withShort.loads.calves as number),
+    'a 45-minute gym session should out-mark a 15-minute run',
+  );
+  assert.ok(
+    (withLong.loads.calves as number) > (withLong.loads.chest as number),
+    'a two-hour run should out-mark a 45-minute gym session',
+  );
+});
+
+/** The ordinary session is worth one unit, so nobody's existing figure shifts for no reason. */
+test('the reference session is worth exactly one, and the cap really caps', () => {
+  assert.equal(effort(REFERENCE_MINUTES), 1);
+  assert.equal(effort(REFERENCE_MINUTES * 2), 2);
+  assert.equal(effort(REFERENCE_MINUTES * 10), MAX_SESSION_WEIGHT, 'an ultra must not flatten a week');
+});
+
+/**
+ * A tapped muscle has no duration, and inventing one would be worse than either extreme. It counts
+ * as an ordinary session: the person was there, and how long it took is something nobody wrote down.
+ */
+test('a hand-marked muscle, and a session with no usable minutes, count as one ordinary session', () => {
+  for (const minutes of [undefined, 0, -30, Number.NaN, Number.POSITIVE_INFINITY]) {
+    assert.equal(effort(minutes as number | undefined), 1, `minutes ${String(minutes)} must fall back to 1`);
+  }
+});
+
+/** Duration scales a session; it never revives one that has aged out of the window. */
+test('a very long session still disappears after the window', () => {
+  const gone = muscleLoad(
+    [{ at: '2026-08-01T09:00:00.000Z', kind: 'running', minutes: 300 }],
+    '2026-08-20T09:00:00.000Z',
+  );
+
+  assert.deepEqual(gone.loads, {});
+  assert.equal(gone.counted, 0);
 });

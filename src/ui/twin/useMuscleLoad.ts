@@ -39,7 +39,14 @@ function toSession(entry: {
 
   if (entry.kind !== 'session') return null;
   const activity = entry.payload.activity;
-  return { at: entry.recordedAt, kind: typeof activity === 'string' ? activity : '' };
+  const minutes = entry.payload.minutes;
+  return {
+    at: entry.recordedAt,
+    kind: typeof activity === 'string' ? activity : '',
+    // A payload out of a database is a claim, not a guarantee. `effort` treats anything it cannot
+    // use as an ordinary session rather than as nothing.
+    minutes: typeof minutes === 'number' ? minutes : undefined,
+  };
 }
 
 export function useMuscleLoad(source = defaultHubs): MuscleLoad {
