@@ -3,6 +3,17 @@
 **Status:** accepted, 2026-08-20
 **Supersedes nothing. Extends `0006`.**
 
+## Confirmed by the owner, 2026-08-20
+
+This note was written before he had said it, which is worth admitting: it inferred the decision from
+the fact that nothing had changed, and an inference recorded as a decision is how a repository comes
+to believe something nobody chose. Asked directly the same day, he settled it in his own words:
+
+> *"Let's first set up the structure and everything before making the coaches and the chat usable."*
+
+So it is a decision now rather than an assumption. What follows was right about the substance; it
+was only missing the person who gets to make the call.
+
 ## What this settles
 
 `EXPO_PUBLIC_GEMINI_API_KEY` has no value, in Vercel or anywhere else. **That is deliberate and it
