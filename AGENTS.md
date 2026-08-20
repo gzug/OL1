@@ -36,6 +36,8 @@ npm run prebuild:ios
   Legacy still holds; search its CONTENTS, not filenames — Legacy's words are not ours.
 - Derive no product, screen, navigation, or data-model assumption from Legacy.
 - Never commit secrets, PHI, keystores, signed builds, or real device data.
+- The Gemini key is deliberately unset and the chat's not-configured line is intended, not a defect.
+  `docs/decisions/0010-the-coaches-stay-off.md` settles it; never raise it as outstanding work.
 - Screens and routes never import SQLite, Health Connect, provider SDKs, or native infrastructure.
 - Use CNG and reviewed config plugins; do not hand-edit generated `android/` or `ios/` files.
 - Document durable truths only. Do not add parallel checkpoint, session, memory, or skill systems.
