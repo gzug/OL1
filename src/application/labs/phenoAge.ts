@@ -151,3 +151,125 @@ export function computePhenoAgeRange(input: PhenoAgeInput): PhenoAgeRange {
     status: 'ready',
   };
 }
+
+/**
+ * Which markers are moving the number, and in which direction.
+ *
+ * **PORTED from Legacy `data/insights/bioAgeDrivers.ts`, and its design is the reason to take it.**
+ * Legacy's note: the decomposition produces a per-marker `impact` in the model's own coefficient
+ * space, "that number is model-internal and MUST NOT reach the UI face". So the type it hands out
+ * carries direction and rank and nothing else, "making it structurally impossible to render a year
+ * number from this path".
+ *
+ * **This port goes further than Legacy on purpose.** Legacy exported its `MarkerImpact` type from
+ * the service, so a determined caller could import it and do the arithmetic anyway. Here the
+ * contribution maths is module-private and the impact type is never exported — the numbers cannot
+ * leave this file at all. Design by construction rather than by discipline: nobody has to remember
+ * the rule, because there is no way to break it.
+ *
+ * Why it matters: "your CRP is costing you 3.2 years" is a sentence this app must never say. It is
+ * a clinical claim dressed as arithmetic, from a regression fitted on a population, about one
+ * person's single blood draw. Direction and order are what the data supports — this marker is
+ * pushing the number up more than that one — and that is all this hands over.
+ */
+
+/**
+ * Reference values for a healthy cohort, from Levine 2018 / NHANES. Legacy's own table.
+ *
+ * They are the baseline each marker is compared against, NOT a target and NOT a normal range. A
+ * marker "pushing up" means it sits where it raises the calculation relative to this reference —
+ * it does not mean the value is unhealthy, and nothing here may say that it is.
+ */
+const REFERENCE: Readonly<Record<LevineMarkerKey, number>> = {
+  albumin: 4.5,
+  alp: 70,
+  creatinine: 0.9,
+  crp: 1.0,
+  glucose: 90,
+  lymph_pct: 30,
+  mcv: 88,
+  rdw: 13.5,
+  wbc: 6.5,
+};
+
+/**
+ * One marker's contribution to `xb`, in the model's own space.
+ *
+ * Deliberately not exported, and neither is anything built from it. The coefficients are the same
+ * ones `computePhenoAge` uses above; if one changes, both change together because they are the
+ * same line of the same published formula.
+ */
+function contribution(key: LevineMarkerKey, value: number): number {
+  switch (key) {
+    case 'albumin':
+      return -0.0336 * value * ALBUMIN_GL_PER_GDL;
+    case 'alp':
+      return 0.0019 * value;
+    case 'creatinine':
+      return 0.0095 * value * CREATININE_UMOLL_PER_MGDL;
+    case 'crp':
+      return 0.0954 * Math.log(value / CRP_MGL_PER_MGDL);
+    case 'glucose':
+      return 0.1953 * (value / GLUCOSE_MMOLL_TO_MGDL);
+    case 'lymph_pct':
+      return -0.012 * value;
+    case 'mcv':
+      return 0.0268 * value;
+    case 'rdw':
+      return 0.3306 * value;
+    case 'wbc':
+      return 0.0554 * value;
+  }
+}
+
+/**
+ * A marker that is moving the number.
+ *
+ * **There is no numeric field here beyond `rank`, and that is the whole point.** `rank` is a
+ * position in an order — first, second — not a quantity of anything. Adding an `impact`, a
+ * percentage or a number of years to this type would undo the only thing this module is for.
+ */
+export type BioAgeDriver = {
+  readonly direction: 'down' | 'up';
+  readonly key: LevineMarkerKey;
+  /** 1-based within its own direction. An order, never a size. */
+  readonly rank: number;
+};
+
+export type BioAgeDrivers = {
+  /** Markers reading the age lower, biggest first. */
+  readonly helpingDown: readonly BioAgeDriver[];
+  /** Markers reading the age higher, biggest first. */
+  readonly pushingUp: readonly BioAgeDriver[];
+};
+
+/**
+ * The drivers, or null when the panel cannot support the calculation at all.
+ *
+ * Two up and one down, which is Legacy's choice and a good one: a list of nine is a wall, and the
+ * two things pushing hardest plus the one helping most is what a person can hold. Degrades
+ * gracefully — fewer than that is returned when fewer exist.
+ */
+export function bioAgeDrivers(input: PhenoAgeInput): BioAgeDrivers | null {
+  const { markers } = input;
+  if (!REQUIRED_MARKERS.every((key) => usable(markers[key]))) return null;
+
+  const ranked = REQUIRED_MARKERS.map((key) => ({
+    key,
+    delta: contribution(key, markers[key] as number) - contribution(key, REFERENCE[key]),
+  })).sort((a, b) => b.delta - a.delta);
+
+  const pushingUp: BioAgeDriver[] = [];
+  const helpingDown: BioAgeDriver[] = [];
+
+  for (const { delta, key } of ranked) {
+    if (delta > 0 && pushingUp.length < 2) {
+      pushingUp.push({ direction: 'up', key, rank: pushingUp.length + 1 });
+    } else if (delta < 0 && helpingDown.length < 1) {
+      helpingDown.push({ direction: 'down', key, rank: helpingDown.length + 1 });
+    }
+    if (pushingUp.length >= 2 && helpingDown.length >= 1) break;
+  }
+
+  return { helpingDown, pushingUp };
+}
