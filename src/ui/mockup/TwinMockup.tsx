@@ -6,7 +6,9 @@ import { hubs } from '@/application/hubs/hubs';
 import { fontFamily, lineHeights, radius, spacing, typography, useTheme } from '@/ui/theme';
 import { AboutYou } from '@/ui/twin/AboutYou';
 import { BioAgeBlock } from '@/ui/twin/BioAgeBlock';
+import { bloodWorkSource } from '@/ui/twin/bioAgeCopy';
 import { BodyFigure } from '@/ui/twin/BodyFigure';
+import { useBioAge } from '@/ui/twin/useBioAge';
 import { useMuscleLoad } from '@/ui/twin/useMuscleLoad';
 
 import { centre, twin, twinSources } from './fixtures';
@@ -37,6 +39,10 @@ import { centre, twin, twinSources } from './fixtures';
 export function TwinMockup() {
   const { colors } = useTheme();
   const load = useMuscleLoad();
+  /* Read once here rather than twice below: the number and the row that says what it is made of
+     must be the same answer, and two hooks would be two reads of a store that can change between
+     them. */
+  const bioAge = useBioAge();
 
   /** Tapping a muscle records that you worked it. You were there; nothing here knows better. */
   async function markWorked(slug: string) {
@@ -67,35 +73,34 @@ export function TwinMockup() {
       {/* Was `centre.driftNumber` — a fixture reading 41.6 that had been on this screen since the
           first mockup, looking exactly like a result. It is your own panel now, or an honest line
           saying what is missing. */}
-      <BioAgeBlock />
+      <BioAgeBlock bioAge={bioAge} />
 
       <Section title="What this number is made of">
         <View style={[styles.card, { backgroundColor: colors.surface }]}>
-          {twinSources
-            .filter((source) => source.feedsNumber)
-            .map((source) => (
-              <SourceRow key={source.label} source={source} />
-            ))}
-          {/* The honest caveat. Four sources listed under one number would imply the number gets
-              more certain as they connect; it does not — the others make the twin know more. */}
-          <Text style={[styles.cardNote, { color: colors.textSubtle }]}>
-            A second panel is what turns this from a reading into a direction.
-          </Text>
+          {/* The one source that feeds the number, from the number's own state. It was a fixture
+              claiming nine of nine markers, which contradicted the line above it the moment that
+              line became real. */}
+          <SourceRow source={bloodWorkSource(bioAge)} />
+          {/* Only once there IS a reading. Under an empty state it promised a second panel would
+              improve a number that did not exist yet. */}
+          {bioAge.status === 'ready' && (
+            <Text style={[styles.cardNote, { color: colors.textSubtle }]}>
+              A second panel is what turns this from a reading into a direction.
+            </Text>
+          )}
         </View>
       </Section>
 
       <Section title="What else the twin reads">
         <View style={[styles.card, { backgroundColor: colors.surface }]}>
-          {twinSources
-            .filter((source) => !source.feedsNumber)
-            .map((source, index) => (
-              <Fragment key={source.label}>
-                {index > 0 && (
-                  <View style={[styles.rowRule, { backgroundColor: colors.borderSubtle }]} />
-                )}
-                <SourceRow source={source} />
-              </Fragment>
-            ))}
+          {twinSources.map((source, index) => (
+            <Fragment key={source.label}>
+              {index > 0 && (
+                <View style={[styles.rowRule, { backgroundColor: colors.borderSubtle }]} />
+              )}
+              <SourceRow source={source} />
+            </Fragment>
+          ))}
         </View>
       </Section>
 
