@@ -19,6 +19,7 @@ import { CoachSelector } from '@/ui/chat/CoachSelector';
 import { coachesAtTable } from '@/ui/chat/coachList';
 import type { Coach, HubDefinition } from '@/ui/hubs/catalog';
 import { childHubs } from '@/ui/hubs/catalog';
+import { SAMPLE_DATA_LINE } from '@/ui/hubs/hubState';
 import type { CockpitPeriod, DayBar, FacetState, HubState } from '@/ui/hubs/hubState';
 import {
   fontFamily,
@@ -142,8 +143,7 @@ export function HubScreen({
       </View>
 
       <ScrollView contentContainerStyle={styles.body} showsVerticalScrollIndicator={false}>
-        {/* Above the fixtures, deliberately. Everything from here down is invented for layout
-            review; this block is not, and it says so where the two meet. */}
+        {/* Real content, all of it, down to the SAMPLE_DATA_LINE below. */}
         <StoredEntries hubId={hub.id} />
 
         {/* The hub's own week, from what is stored. Renders nothing until something is logged, so a
@@ -165,6 +165,17 @@ export function HubScreen({
         {hub.id === 'labs' && <PanelAge />}
         {hub.id === 'labs' && <KidneyFunction />}
         {hub.id === 'labs' && <YourMarkers />}
+
+        {/**
+          * The boundary, and it is drawn here because here is where it is. Everything above is the
+          * person's own; everything below is invented for layout review.
+          *
+          * It lived at the bottom of `StoredEntries` until real blocks started appearing beneath
+          * that — the logged week, the panel's age, kidney function, the marker list — at which
+          * point it was labelling real results as sample data. A boundary marker has to sit at the
+          * boundary or it is worse than none: it teaches people to distrust the true half.
+          */}
+        <Text style={[styles.sampleLine, { color: colors.textSubtle }]}>{SAMPLE_DATA_LINE}</Text>
 
         {state.observation !== undefined && (
           <Text style={[styles.observation, { color: colors.text }]}>{state.observation}</Text>
@@ -534,6 +545,13 @@ const styles = StyleSheet.create({
   },
   headerSide: {
     flex: 1,
+  },
+  sampleLine: {
+    fontFamily: fontFamily.body,
+    fontSize: typography.micro,
+    lineHeight: lineHeights.caption,
+    marginBottom: spacing.sm,
+    marginTop: spacing.lg,
   },
   observation: {
     fontFamily: fontFamily.display,
