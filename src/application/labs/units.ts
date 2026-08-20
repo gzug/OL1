@@ -65,6 +65,10 @@ export const ALTERNATE_UNIT: Readonly<Partial<Record<LevineMarkerKey, string>>> 
  *
  * Legacy's note: a European panel typed with `µ`, or one read by OCR, would otherwise fail to
  * convert and read as missing. Superscripts are folded for the same reason.
+ *
+ * The leading `x` goes the same way. An Australian report prints white cells as `x10 ^9 /L`, and
+ * that `x` is a multiplication sign rather than part of the unit — left in, it fails to match
+ * `10⁹/L`, and a marker the parser read perfectly well arrives with no usable value.
  */
 export function normUnit(unit: string): string {
   return unit
@@ -73,7 +77,8 @@ export function normUnit(unit: string): string {
     .replace(/µ/g, 'u')
     .replace(/³/g, '3')
     .replace(/⁹/g, '9')
-    .replace(/\s+/g, '');
+    .replace(/\s+/g, '')
+    .replace(/^[x×*]/, '');
 }
 
 /**

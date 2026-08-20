@@ -34,12 +34,25 @@ type Rule = {
  * Kept in one place rather than repeated per rule, and deliberately generous — a unit this does not
  * recognise is better reported as absent than mistaken for a different one.
  */
-const UNIT = String.raw`(?:g\s*\/\s*[dD]?[lL]|mg\s*\/\s*[dD]?[lL]|[µu]mol\s*\/\s*[lL]|mmol\s*\/\s*[lL]|[UIui]\s*\/\s*[lL]|fl|fL|%|10\s*[\^]?\s*[39]\s*\/\s*[µu]?[lL]|[GKgk]\s*\/\s*[lL])`;
+const UNIT = String.raw`(?:g\s*\/\s*[dD]?[lL]|mg\s*\/\s*[dD]?[lL]|[µu]mol\s*\/\s*[lL]|mmol\s*\/\s*[lL]|[UIui]\s*\/\s*[lL]|fl|fL|%|[xX]?\s*10\s*[\^]?\s*[39]\s*\/\s*[µu]?[lL]|[GKgk]\s*\/\s*[lL])`;
 
 const VALUE = String.raw`(\d+(?:[.,]\d+)?)`;
 
-/** Between the name and the number: colons, equals, whitespace, and the vertical bars tables leave. */
-const GAP = String.raw`[\s:=|]*`;
+/**
+ * Between the name and the number: colons, equals, whitespace, the vertical bars tables leave, and
+ * the full stop an abbreviation ends on — a real report writes `Alk. Phos. 80`, and without the dot
+ * here that marker is silently absent rather than wrong, which is the harder failure to notice.
+ *
+ * **`<` and `>` are deliberately not in this set.** A laboratory prints `CRP <3 mg/L` when the true
+ * value is below what the assay can see, and admitting the `<` here would read that as the number
+ * three — turning “we could not measure it” into a measurement. Leaving them out makes a censored
+ * result fail to match, which is the correct outcome: it is not a value.
+ *
+ * The leading group is the qualifier a laboratory puts after a marker's name — `Glucose (Fasting)`,
+ * `Creatinine (serum)`. It is bounded and cannot cross a line, so it admits the bracket a report
+ * actually prints without letting a marker name reach a number belonging to some other row.
+ */
+const GAP = String.raw`(?:\s*\([^)\n]{0,24}\))?[\s:=|.]*`;
 
 function rule(names: string, key: LevineMarkerKey): Rule {
   return {
@@ -51,19 +64,36 @@ function rule(names: string, key: LevineMarkerKey): Rule {
 /**
  * Legacy's vocabulary, plus the spellings its list missed.
  *
+ * Legacy's list was built from German reports, and it abbreviates. Run against a real Australian
+ * panel it found four of the nine markers, missed four that the laboratory had written out in full,
+ * and got one actively wrong. Every addition below is one of those five.
+ *
  * `Albumin` must not match `Mikroalbumin` — a urine marker on the same report with a value three
  * orders of magnitude different — so it is anchored to a word boundary that a prefix breaks.
  */
 const RULES: readonly Rule[] = [
-  rule(String.raw`(?<![a-zä])Albumin|\bALB\b`, 'albumin'),
+  /**
+   * **`Adjusted for Albumin` is a calcium result, not an albumin result.** It is calcium corrected
+   * for albumin, it prints in mmol/L, and on the panel that exposed this it sat two lines above the
+   * real albumin row — so the parser matched it first and read albumin as 2.32 where the truth was
+   * 44. A twentyfold error, in the single input the Levine formula is most sensitive to, arriving as
+   * a plausible number rather than as a failure. The `for` is what disqualifies it.
+   */
+  rule(String.raw`(?<!for\s)(?<![a-zä])Albumin|\bALB\b`, 'albumin'),
   rule(String.raw`Kreatinin|Creatinine|\bCrea\b|\bCRE\b`, 'creatinine'),
   rule(String.raw`Glukose|Glucose|\bGluc\b|\bGLU\b|\bBZ\b|Blutzucker`, 'glucose'),
   rule(String.raw`hs-?CRP|\bCRP\b|C-reaktives Protein|C-reactive Protein`, 'crp'),
   rule(String.raw`Lymphozyten(?:\s*rel\.?)?|Lymphocytes|\bLymph\b|\bLYM\b`, 'lymph_pct'),
-  rule(String.raw`\bMCV\b|Mittleres Zellvolumen`, 'mcv'),
-  rule(String.raw`\bRDW\b|\bEVB\b|Erythrozytenverteilungsbreite`, 'rdw'),
+  rule(String.raw`\bMCV\b|Mean (?:Cell|Corpuscular) Volume|Mittleres Zellvolumen`, 'mcv'),
+  rule(
+    String.raw`\bRDW\b|\bEVB\b|Red Cell Dist(?:ribution)?\w*\.?\s*Width|Erythrozytenverteilungsbreite`,
+    'rdw',
+  ),
   rule(String.raw`Alkalische Phosphatase|Alk\.?\s*Phos\w*|\bALP\b|\bAP\b`, 'alp'),
-  rule(String.raw`Leukozyten|Leukocytes|\bLeukos\b|\bWBC\b|\bLEU\b`, 'wbc'),
+  rule(
+    String.raw`Leukozyten|Leukocytes|White (?:Blood )?Cell Count|\bLeukos\b|\bWBC\b|\bLEU\b`,
+    'wbc',
+  ),
 ];
 
 export type Finding = {
