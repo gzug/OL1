@@ -9,6 +9,7 @@ import type { Attachment } from '@/core/attachments';
 import { ChatBar } from '@/ui/chat/ChatBar';
 import { RecentThreads } from '@/ui/chat/RecentThreads';
 import { Heatmap } from '@/ui/exercise/Heatmap';
+import { WeekScore } from '@/ui/meals/WeekScore';
 import { LoggedWeek } from '@/ui/hubs/LoggedWeek';
 import { StoredEntries } from '@/ui/hubs/StoredEntries';
 import { CoachSelector } from '@/ui/chat/CoachSelector';
@@ -150,6 +151,10 @@ export function HubScreen({
             question about training and not about meals or blood panels — a panel arrives every few
             months and would draw eleven and a half empty weeks. */}
         {hub.id === 'exercise' && <Heatmap hubId={hub.id} />}
+
+        {/* Nutrition only, and only once meals exist. The one score in the app — see
+            `docs/decisions/0009-a-score-for-the-week-not-the-person.md`. */}
+        {hub.id === 'nutrition' && <WeekScore />}
 
         {state.observation !== undefined && (
           <Text style={[styles.observation, { color: colors.text }]}>{state.observation}</Text>
