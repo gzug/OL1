@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Animated, PanResponder, Pressable, StyleSheet, Text, View } from 'react-native';
 import Body, { type Slug } from 'react-native-body-highlighter';
 
 import {
@@ -30,6 +30,12 @@ import { fontFamily, lineHeights, spacing, tracking, typography, useTheme } from
 
 /** What the figure is showing. Front and back are the same body from two sides, not two figures. */
 type Side = 'back' | 'front';
+
+/** How far you have to drag before it turns. Short enough to feel light, long enough not to misfire. */
+const TURN_DISTANCE = 40;
+
+/** Half a turn, in milliseconds. The other half runs after the side swaps. */
+const HALF_TURN = 160;
 
 /**
  * Every part the drawing has: the muscles, plus the head, hair, neck, hands, feet, ankles and knees
@@ -74,6 +80,71 @@ export function BodyFigure({
   const { colors } = useTheme();
   const [side, setSide] = useState<Side>('front');
 
+  /**
+   * Turning the figure.
+   *
+   * The owner asked for a body he could turn, "movable to the left and right". True 3D needs a
+   * rigged model and a renderer — checked on 2026-08-20, and the licensed anatomy atlases that
+   * exist are research files that still need an artist's day to become an app asset.
+   *
+   * This is the interaction without the engine: dragging horizontally squeezes the figure to
+   * nothing, swaps the side underneath, and opens it out again — the way a card turns over. It is
+   * an illusion and it is honestly one; you cannot stop it at a three-quarter angle. What it does
+   * give is the gesture, on the artwork we already have, with no model and no licence to carry.
+   */
+  /**
+   * Turning the figure.
+   *
+   * The owner asked for a body he could turn, "movable to the left and right". True 3D needs a
+   * rigged model and a renderer — checked on 2026-08-20, and the licensed anatomy atlases that
+   * exist are research files that still need an artist's day to become an app asset.
+   *
+   * This is the interaction without the engine: dragging horizontally squeezes the figure to
+   * nothing, swaps the side underneath, and opens it out again — the way a card turns over. It is
+   * an illusion and it is honestly one; you cannot stop it at a three-quarter angle.
+   *
+   * **Built once, in a closure, with no refs at all.** The obvious shapes here — `useRef().current`
+   * read during render, or a ref read inside a `useMemo` — are both what the React Compiler's
+   * ref rule exists to catch, and it caught them twice. A plain local variable inside a lazy
+   * `useState` initialiser gives the same create-once guarantee and the same mid-turn guard, with
+   * nothing for the rule to object to. `setSide` is stable, so the closure never goes stale.
+   */
+  const [motion] = useState(() => {
+    const turn = new Animated.Value(1);
+    let busy = false;
+
+    const flip = (swap: () => void) => {
+      if (busy) return;
+      busy = true;
+
+      Animated.timing(turn, { duration: HALF_TURN, toValue: 0, useNativeDriver: true }).start(() => {
+        // The swap happens at the exact midpoint, while there is no width to see through.
+        swap();
+        Animated.timing(turn, { duration: HALF_TURN, toValue: 1, useNativeDriver: true }).start(
+          () => {
+            busy = false;
+          },
+        );
+      });
+    };
+
+    return {
+      pan: PanResponder.create({
+        // Claim the gesture only once it is clearly horizontal, so a vertical drag still scrolls
+        // the screen. A figure that eats the scroll is worse than one that does not turn.
+        onMoveShouldSetPanResponder: (_event, gesture) =>
+          Math.abs(gesture.dx) > 8 && Math.abs(gesture.dx) > Math.abs(gesture.dy) * 1.5,
+        onPanResponderRelease: (_event, gesture) => {
+          if (Math.abs(gesture.dx) >= TURN_DISTANCE) {
+            flip(() => setSide((current) => (current === 'front' ? 'back' : 'front')));
+          }
+        },
+      }),
+      flip,
+      turn,
+    };
+  });
+
   const worked = Object.entries(loads) as [MuscleSlug, Intensity][];
 
   /* One object shared by every resting part, rather than one allocated per part per render. */
@@ -85,29 +156,34 @@ export function BodyFigure({
 
   return (
     <View style={styles.wrap}>
-      <Body
-        /* One hue in three steps. The scale is relative to the busiest muscle this week, which the
-           caption below has to say — otherwise the darkest amber reads as an absolute claim. */
-        colors={[colors.loadSoft, colors.loadMedium, colors.loadStrong]}
-        data={parts}
-        /* Kept as a backstop for anything `DRAWN_PARTS` misses in a future version of the library.
-           It is not what colours the resting body — see `DRAWN_PARTS` for why it cannot be. */
-        defaultFill={colors.bodyRest}
-        border={colors.bodyOutline}
-        gender="male"
-        onBodyPartPress={
-          onMusclePress === undefined
-            ? undefined
-            : (part) => {
-                // The figure also draws head, hair, neck, hands, feet, ankles and knees. They are
-                // parts of a body rather than muscles anybody trains, so tapping one records
-                // nothing — `isMuscle` is the guard, and it is where the two vocabularies meet.
-                if (isMuscle(part.slug)) onMusclePress(part.slug);
-              }
-        }
-        scale={scale}
-        side={side}
-      />
+      {/* `scaleX` rather than a rotation: a real rotateY needs perspective to read as a turn, and
+          without it a flat figure just squashes and looks broken. Squeezing to nothing and opening
+          out reads as turning at this size, and behaves identically on the web export. */}
+      <Animated.View {...motion.pan.panHandlers} style={{ transform: [{ scaleX: motion.turn }] }}>
+        <Body
+          /* One hue in three steps. The scale is relative to the busiest muscle this week, which
+             the caption below has to say — otherwise the darkest amber reads as an absolute claim. */
+          colors={[colors.loadSoft, colors.loadMedium, colors.loadStrong]}
+          data={parts}
+          /* Kept as a backstop for anything `DRAWN_PARTS` misses in a future version of the
+             library. It is not what colours the resting body — see `DRAWN_PARTS` for why. */
+          defaultFill={colors.bodyRest}
+          border={colors.bodyOutline}
+          gender="male"
+          onBodyPartPress={
+            onMusclePress === undefined
+              ? undefined
+              : (part) => {
+                  // The figure also draws head, hair, neck, hands, feet, ankles and knees. Those
+                  // are parts of a body rather than muscles anybody trains, so tapping one records
+                  // nothing — `isMuscle` is where the two vocabularies meet.
+                  if (isMuscle(part.slug)) onMusclePress(part.slug);
+                }
+          }
+          scale={scale}
+          side={side}
+        />
+      </Animated.View>
 
       {showCaption && (
         <>
@@ -117,7 +193,11 @@ export function BodyFigure({
                 accessibilityRole="button"
                 accessibilityState={{ selected: side === option }}
                 key={option}
-                onPress={() => setSide(option)}
+                onPress={() => {
+                  if (option !== side) {
+                    motion.flip(() => setSide(option));
+                  }
+                }}
                 style={({ pressed }) => [
                   styles.sideButton,
                   {
