@@ -103,13 +103,20 @@ export function weekStrip(
   const letters = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
   const end = new Date(now).getTime();
 
+  /**
+   * Drawn from the same entries the count is made of.
+   *
+   * This filtered on kind and date alone, which made it a THIRD definition of "this week" — and it
+   * drew a bar for a meal dated an hour into the future, so the strip showed four days above a
+   * sentence saying three. Its own test caught it.
+   */
+  const week = entriesThisWeek(entries, kind, now);
+
   const counts = Array.from({ length: WEEK_DAYS }, (_, index) => {
     const dayStart = new Date(end - (WEEK_DAYS - 1 - index) * 86_400_000);
     const key = dayStart.toISOString().slice(0, 10);
     return {
-      count: entries.filter(
-        (entry) => entry.kind === kind && localDay(entry.recordedAt) === key,
-      ).length,
+      count: week.filter((entry) => localDay(entry.recordedAt) === key).length,
       label: letters[dayStart.getUTCDay()] ?? '·',
     };
   });
