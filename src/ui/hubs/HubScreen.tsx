@@ -11,6 +11,7 @@ import { RecentThreads } from '@/ui/chat/RecentThreads';
 import { Heatmap } from '@/ui/exercise/Heatmap';
 import { KidneyFunction } from '@/ui/labs/KidneyFunction';
 import { PanelAge } from '@/ui/labs/PanelAge';
+import { YourMarkers } from '@/ui/labs/YourMarkers';
 import { WeekScore } from '@/ui/meals/WeekScore';
 import { LoggedWeek } from '@/ui/hubs/LoggedWeek';
 import { StoredEntries } from '@/ui/hubs/StoredEntries';
@@ -163,6 +164,7 @@ export function HubScreen({
             invites it to be read as current. */}
         {hub.id === 'labs' && <PanelAge />}
         {hub.id === 'labs' && <KidneyFunction />}
+        {hub.id === 'labs' && <YourMarkers />}
 
         {state.observation !== undefined && (
           <Text style={[styles.observation, { color: colors.text }]}>{state.observation}</Text>
