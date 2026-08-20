@@ -61,7 +61,7 @@ export function WeekScore({ source = defaultHubs }: { source?: typeof defaultHub
 
   return (
     <View style={styles.block}>
-      <Text style={[styles.label, { color: colors.textSubtle }]}>THIS WEEK'S LOGGING</Text>
+      <Text style={[styles.label, { color: colors.textSubtle }]}>THIS WEEK’S LOGGING</Text>
 
       {score.quality === null ? (
         /* The floor `0004` asked for, and it is a refusal rather than a placeholder: below three
