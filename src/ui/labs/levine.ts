@@ -16,16 +16,14 @@
  * `createManualPendingResult` does.
  */
 
-export type LevineMarkerKey =
-  | 'albumin'
-  | 'alp'
-  | 'creatinine'
-  | 'crp'
-  | 'glucose'
-  | 'lymph_pct'
-  | 'mcv'
-  | 'rdw'
-  | 'wbc';
+/**
+ * The marker vocabulary and the unit each one must be in come from `application/labs/units.ts`,
+ * which is also where the conversion factors live. One definition, so a screen and a calculation
+ * cannot disagree about what `mg/dL` means.
+ */
+import { TARGET_UNIT, toTargetUnit, type LevineMarkerKey } from '@/application/labs/units';
+
+export type { LevineMarkerKey };
 
 export type MarkerDefinition = {
   readonly key: LevineMarkerKey;
@@ -37,15 +35,15 @@ export type MarkerDefinition = {
 
 /** Order is Legacy's own, and it is the order a panel is reviewed in. */
 export const LEVINE_MARKERS: readonly MarkerDefinition[] = [
-  { key: 'albumin', label: 'Albumin', sane: { max: 7, min: 1 }, unit: 'g/dL' },
-  { key: 'creatinine', label: 'Creatinine', sane: { max: 15, min: 0.1 }, unit: 'mg/dL' },
-  { key: 'glucose', label: 'Glucose', sane: { max: 600, min: 20 }, unit: 'mg/dL' },
-  { key: 'crp', label: 'C-reactive Protein', sane: { max: 500, min: 0.01 }, unit: 'mg/L' },
-  { key: 'lymph_pct', label: 'Lymphocyte Percentage', sane: { max: 99, min: 1 }, unit: '%' },
-  { key: 'mcv', label: 'Mean Cell Volume', sane: { max: 150, min: 50 }, unit: 'fL' },
-  { key: 'rdw', label: 'Red Cell Distribution Width', sane: { max: 30, min: 5 }, unit: '%' },
-  { key: 'alp', label: 'Alkaline Phosphatase', sane: { max: 1000, min: 10 }, unit: 'U/L' },
-  { key: 'wbc', label: 'White Blood Cell Count', sane: { max: 100, min: 0.1 }, unit: '10³/µL' },
+  { key: 'albumin', label: 'Albumin', sane: { max: 7, min: 1 }, unit: TARGET_UNIT.albumin },
+  { key: 'creatinine', label: 'Creatinine', sane: { max: 15, min: 0.1 }, unit: TARGET_UNIT.creatinine },
+  { key: 'glucose', label: 'Glucose', sane: { max: 600, min: 20 }, unit: TARGET_UNIT.glucose },
+  { key: 'crp', label: 'C-reactive Protein', sane: { max: 500, min: 0.01 }, unit: TARGET_UNIT.crp },
+  { key: 'lymph_pct', label: 'Lymphocyte Percentage', sane: { max: 99, min: 1 }, unit: TARGET_UNIT.lymph_pct },
+  { key: 'mcv', label: 'Mean Cell Volume', sane: { max: 150, min: 50 }, unit: TARGET_UNIT.mcv },
+  { key: 'rdw', label: 'Red Cell Distribution Width', sane: { max: 30, min: 5 }, unit: TARGET_UNIT.rdw },
+  { key: 'alp', label: 'Alkaline Phosphatase', sane: { max: 1000, min: 10 }, unit: TARGET_UNIT.alp },
+  { key: 'wbc', label: 'White Blood Cell Count', sane: { max: 100, min: 0.1 }, unit: TARGET_UNIT.wbc },
 ];
 
 /** How a panel got here. Legacy keeps manual drafts distinguishable from imports; so does this. */
@@ -67,12 +65,23 @@ export type MarkerProblem = 'notANumber' | 'outsideSane';
 export function markerProblem(
   marker: MarkerDefinition,
   text: string,
+  unit: string = marker.unit,
 ): MarkerProblem | null {
   const trimmed = text.trim();
   if (trimmed.length === 0) return null;
 
-  const value = Number(trimmed);
-  if (!Number.isFinite(value)) return 'notANumber';
+  const typed = Number(trimmed);
+  if (!Number.isFinite(typed)) return 'notANumber';
+
+  /**
+   * Checked in the unit the FORMULA reads, not the one being typed.
+   *
+   * A European panel's albumin of 45 g/L is 4.5 g/dL and perfectly ordinary; checking 45 against
+   * the g/dL range would reject a normal result. Converting first is what lets somebody type the
+   * number exactly as their laboratory printed it.
+   */
+  const value = toTargetUnit(marker.key, typed, unit);
+  if (value === null) return 'notANumber';
   if (value < marker.sane.min || value > marker.sane.max) return 'outsideSane';
 
   return null;
@@ -109,14 +118,13 @@ export function filledCount(entries: readonly MarkerEntry[]): number {
 /** Every problem in the panel, so approval can be blocked on all of them rather than the first. */
 export function panelProblems(
   entries: readonly MarkerEntry[],
-  markers: readonly MarkerDefinition[] = LEVINE_MARKERS,
+  units: Readonly<Record<string, string>> = {},
 ): readonly LevineMarkerKey[] {
-  return markers
-    .filter((marker) => {
-      const entry = entries.find((candidate) => candidate.key === marker.key);
-      return entry !== undefined && markerProblem(marker, entry.text) !== null;
-    })
-    .map((marker) => marker.key);
+  return LEVINE_MARKERS.filter((marker) => {
+    const entry = entries.find((candidate) => candidate.key === marker.key);
+    if (entry === undefined) return false;
+    return markerProblem(marker, entry.text, units[marker.key] ?? marker.unit) !== null;
+  }).map((marker) => marker.key);
 }
 
 /**
@@ -135,15 +143,28 @@ export function panelPayload(
   entries: readonly MarkerEntry[],
   source: LabSource,
   approvedAt: string,
+  units: Readonly<Record<string, string>> = {},
 ): Readonly<Record<string, unknown>> {
   const markers: Record<string, number> = {};
 
   for (const marker of LEVINE_MARKERS) {
-    const text = entries.find((entry) => entry.key === marker.key)?.text.trim() ?? '';
+    const entry = entries.find((item) => item.key === marker.key);
+    const text = entry?.text.trim() ?? '';
     if (text.length === 0) continue;
-    if (markerProblem(marker, text) !== null) continue;
-    markers[marker.key] = Number(text);
+
+    const unit = units[marker.key] ?? marker.unit;
+    if (markerProblem(marker, text, unit) !== null) continue;
+
+    /**
+     * Stored in the unit the formula reads, always — never in the one that was typed.
+     *
+     * The alternative is storing a value and a unit together and converting on every read, which
+     * means every future reader has to remember to. One conversion, at the edge, is the same
+     * argument `metricFormat` makes about display: decide once, at the boundary.
+     */
+    const value = toTargetUnit(marker.key, Number(text), unit);
+    if (value !== null) markers[marker.key] = value;
   }
 
-  return { approvedAt, markers, readBy: source };
+  return { approvedAt, markers, readBy: source, unitsAsEntered: units };
 }
