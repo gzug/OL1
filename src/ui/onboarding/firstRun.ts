@@ -196,6 +196,7 @@ export const COPY = {
   conditionsLabel: 'ANYTHING YOU LIVE WITH',
   conditionsPlaceholder: 'In your own words. Kept exactly as you write it.',
   goalsHint: 'Pick as many as you like. Each one lands in the part of the app that covers it.',
+  goalsOther: 'SOMETHING ELSE',
   goalsTitle: 'What do you want to get out of this?',
   heightLabel: 'HEIGHT IN CM',
   heightWrong: 'Centimetres — somewhere between 50 and 250.',
@@ -203,8 +204,10 @@ export const COPY = {
   ready: 'Open OL1',
   recordsHint:
     'Anything you already have. Only the blood panel can be read today; the other two are noted so the app knows to ask later.',
+  recordsHeld: 'WHAT YOU ALREADY HAVE',
   recordsTitle: 'What have you had done?',
-  ringCentre: 'The middle is your Digital Twin — everything you feed the app, drawn as one figure.',
+  ringCentre:
+    'The middle is your Digital Twin — everything you feed the app, drawn as one figure. It is grey until you log something.',
   ringHint: 'Tap any circle to open it. The + makes one of your own.',
   ringTitle: 'This is your ring.',
   sexLabel: 'THE FIGURE DRAWN',
@@ -215,6 +218,7 @@ export const COPY = {
     'This is the web preview, so what you just gave is kept in this browser and goes when its data is cleared. It is not durable storage for health data.',
   trainingHint:
     'Tapping one records it. Anything you type makes a new one, with its own coach, inside Exercise.',
+  trainingOther: 'SOMETHING ELSE',
   trainingTitle: 'What training do you actually do?',
   weightLabel: 'WEIGHT IN KG',
   weightNote: 'Filed as a weigh-in in Nutrition, with today on it, so it can go out of date honestly.',
