@@ -11,6 +11,17 @@ import { banner, frame } from './tokens';
  *
  * The banner sits INSIDE the frame on purpose: screenshots get pasted into chat stripped of every
  * surrounding caption, and this is the only marker that survives that trip.
+ *
+ * **It used to read "nothing here works", and that stopped being true.** The ring, the hubs, logging
+ * a meal or a session or a blood panel, the body figure and the biological age all work and persist;
+ * the insights, the ledger and the running test are still fixtures. A banner that overstates how
+ * unfinished something is costs exactly as much as one that overstates how finished it is — the
+ * first person to read it at a demo is told, in the loudest type on the screen, not to believe what
+ * they are about to be shown.
+ *
+ * The half that must survive every rewrite is **"not real health data"**. That is the one this
+ * exists for: nobody may mistake a fixture for their own result. "Parts are sample data" keeps it
+ * and drops the claim that has gone stale.
  */
 export function MockupFrame({ children }: { children: ReactNode }) {
   const { colors } = useTheme();
@@ -26,7 +37,7 @@ export function MockupFrame({ children }: { children: ReactNode }) {
         ]}>
         <View style={[styles.banner, { backgroundColor: banner.background }]}>
           <Text style={[styles.bannerText, { color: banner.ink }]}>
-            Mockup · nothing here works · sample data, not real health data
+            Preview · parts are sample data · not real health data
           </Text>
         </View>
         {children}
