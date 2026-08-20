@@ -84,3 +84,28 @@ test('every marker names a target unit, and the alternates are real conversions'
     );
   }
 });
+
+/**
+ * The multiplication sign an Australian laboratory prints in front of the power.
+ *
+ * `x10 ^9 /L` is numerically the same as the `10³/µL` the formula reads, so nothing needs
+ * converting — but a lone `x` left on the front makes the lookup miss, and the marker arrives with
+ * a value the app then refuses to use. Found by running a real report through the parser.
+ */
+test('a multiplication sign in front of the power is not part of the unit', () => {
+  assert.equal(normUnit('x10 ^9 /L'), '10^9/l');
+  assert.equal(normUnit('×10⁹/L'), '109/l', 'a superscript power folds to the same shape');
+
+  assert.equal(toTargetUnit('wbc', 6.2, 'x10 ^9 /L'), 6.2);
+  assert.equal(toTargetUnit('wbc', 6.2, '10⁹/L'), 6.2);
+});
+
+/**
+ * The refusal that matters more than any conversion. `cells/µL` is a thousand times `10³/µL`, and
+ * there is no factor for it here on purpose — a value the screen declines to accept is a far better
+ * outcome than one silently mis-scaled by a thousand.
+ */
+test('white cells in a unit with no known factor are refused, not guessed', () => {
+  assert.equal(toTargetUnit('wbc', 6200, 'cells/uL'), null);
+  assert.equal(toTargetUnit('wbc', 6200, 'x cells/uL'), null, 'stripping the x must not open a door');
+});
