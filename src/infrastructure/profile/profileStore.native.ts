@@ -12,7 +12,7 @@
 
 import * as SQLite from 'expo-sqlite';
 
-import type { Profile, ProfileStore, Sex } from '@/core/profile';
+import type { ProfileStore, Sex } from '@/core/profile';
 import { storageAdapter } from '@/infrastructure/storage/storageAdapter';
 
 let opening: Promise<SQLite.SQLiteDatabase> | null = null;

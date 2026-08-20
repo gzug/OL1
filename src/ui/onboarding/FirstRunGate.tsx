@@ -63,5 +63,7 @@ export function FirstRunGate({ source = defaultProfiles }: { source?: typeof def
 }
 
 const styles = StyleSheet.create({
-  cover: { ...StyleSheet.absoluteFillObject, zIndex: 10 },
+  /** Spelled out rather than `absoluteFill`: these typings have no `absoluteFillObject`, and the
+      cover needs a `zIndex` of its own so it does not depend on where the route puts it. */
+  cover: { bottom: 0, left: 0, position: 'absolute', right: 0, top: 0, zIndex: 10 },
 });

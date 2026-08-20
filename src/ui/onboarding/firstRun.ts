@@ -120,13 +120,13 @@ export const RECORD_KINDS: readonly RecordKind[] = [
   {
     id: 'microbiome',
     label: 'Microbiome test',
-    note: 'Noted, not read. OL1 cannot make sense of one yet.',
+    note: 'Noted, not read — OL1 cannot read one of these yet.',
     readable: false,
   },
   {
     id: 'genetics',
     label: 'Genetic test',
-    note: 'Noted, not read. OL1 cannot make sense of one yet.',
+    note: 'Noted, not read — OL1 cannot read one of these yet.',
     readable: false,
   },
 ];

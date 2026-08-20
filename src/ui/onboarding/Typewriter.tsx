@@ -62,29 +62,28 @@ export function Typewriter({
     };
   }, [text]);
 
-  useEffect(() => {
-    if (complete) setCount(text.length);
-  }, [complete, text]);
+  /**
+   * Derived, never stored. Writing this from an effect would cost a render pass before a tap took
+   * effect, and `react-hooks/set-state-in-effect` refuses it for exactly that reason.
+   */
+  const shown = complete ? text.length : count;
 
   useEffect(() => {
     if (!started || complete) return undefined;
 
     const timer = setInterval(() => {
-      setCount((shown) => {
-        if (shown >= text.length) return shown;
-        return shown + 1;
-      });
+      setCount((current) => (current >= text.length ? current : current + 1));
     }, msPerLetter);
 
     return () => clearInterval(timer);
   }, [complete, msPerLetter, started, text]);
 
   useEffect(() => {
-    if (count >= text.length && !done.current) {
+    if (shown >= text.length && !done.current) {
       done.current = true;
       onDone?.();
     }
-  }, [count, onDone, text]);
+  }, [onDone, shown, text]);
 
   return (
     <View>
@@ -92,7 +91,7 @@ export function Typewriter({
         {text}
       </Text>
       <Text accessibilityLabel={text} style={[style, StyleSheet.absoluteFill]}>
-        {text.slice(0, count)}
+        {text.slice(0, shown)}
       </Text>
     </View>
   );
