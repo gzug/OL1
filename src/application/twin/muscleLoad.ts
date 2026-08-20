@@ -81,9 +81,46 @@ export type LoggedSession = {
   readonly at: string;
   /** 'running', 'gym', … or the muscles named outright when the person tapped them. */
   readonly kind: string;
+  /** How long it took. Absent for a hand-marked muscle, which has no duration to know. */
+  readonly minutes?: number;
   /** Set when the person marked muscles by hand. Overrides `kind` — they know and we do not. */
   readonly muscles?: readonly MuscleSlug[];
 };
+
+/**
+ * The session length that counts as one unit of work.
+ *
+ * **Until now, duration did not reach the figure at all.** A three-kilometre jog and a
+ * twenty-five-kilometre run painted an identical picture, which the owner noticed by asking what
+ * would actually change the colour. Minutes were being recorded on every session and thrown away
+ * here.
+ *
+ * Forty-five minutes, because that is roughly what an ordinary session is and it keeps the common
+ * case at 1 — the colours people already have do not shift underneath them for no reason.
+ */
+export const REFERENCE_MINUTES = 45;
+
+/**
+ * The most one session may be worth, however long it was.
+ *
+ * The scale is relative to the busiest muscle, so an unbounded factor would let a single very long
+ * session flatten a whole week into one warm patch and a body of grey. Three units — two and a
+ * quarter hours — is where a session stops counting for more.
+ */
+export const MAX_SESSION_WEIGHT = 3;
+
+/**
+ * How much a session counts for its length.
+ *
+ * **A hand-marked muscle has no duration and gets exactly one unit.** That is the honest default
+ * rather than a zero or a guess: the person tapped it, so it happened, and how long it took is
+ * something nobody wrote down. The same applies to a session whose minutes are missing or
+ * nonsensical — the fallback is the ordinary session, never nothing.
+ */
+export function effort(minutes: number | undefined): number {
+  if (minutes === undefined || !Number.isFinite(minutes) || minutes <= 0) return 1;
+  return Math.min(minutes / REFERENCE_MINUTES, MAX_SESSION_WEIGHT);
+}
 
 /** 1, 2 or 3 — the index of a colour on the scale. Absent from the map means untouched. */
 export type Intensity = 1 | 2 | 3;
@@ -117,7 +154,7 @@ export function muscleLoad(sessions: readonly LoggedSession[], now: string): Mus
   let counted = 0;
 
   for (const session of sessions) {
-    const weight = freshness(daysBetween(session.at, now));
+    const weight = freshness(daysBetween(session.at, now)) * effort(session.minutes);
     if (weight === 0) continue;
 
     // Hand-marked muscles win. The person tapped them; nothing here knows better.
