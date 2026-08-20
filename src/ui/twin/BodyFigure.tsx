@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { useCallback, useMemo, useRef, useState } from 'react';
 import { Animated, PanResponder, Pressable, StyleSheet, Text, View } from 'react-native';
 import Body, { type Slug } from 'react-native-body-highlighter';
 
@@ -92,10 +92,17 @@ export function BodyFigure({
    * an illusion and it is honestly one; you cannot stop it at a three-quarter angle. What it does
    * give is the gesture, on the artwork we already have, with no model and no licence to carry.
    */
-  const turn = useRef(new Animated.Value(1)).current;
+  /**
+   * Held in state rather than `useRef(...).current`, which the React Compiler rejects — reading a
+   * ref during render is exactly the pattern it exists to catch. A lazy `useState` initialiser
+   * gives the same "create once" guarantee without the render-time read.
+   */
+  const [turn] = useState(() => new Animated.Value(1));
+
+  /** Read only inside callbacks, which is what a ref is for. Guards a second flip mid-turn. */
   const turning = useRef(false);
 
-  function flip() {
+  const flip = useCallback(() => {
     if (turning.current) return;
     turning.current = true;
 
@@ -106,19 +113,21 @@ export function BodyFigure({
         turning.current = false;
       });
     });
-  }
+  }, [turn]);
 
-  const pan = useRef(
-    PanResponder.create({
-      // Claim the gesture only once it is clearly horizontal, so a vertical drag still scrolls the
-      // screen. A figure that eats the scroll is worse than a figure that does not turn.
-      onMoveShouldSetPanResponder: (_event, gesture) =>
-        Math.abs(gesture.dx) > 8 && Math.abs(gesture.dx) > Math.abs(gesture.dy) * 1.5,
-      onPanResponderRelease: (_event, gesture) => {
-        if (Math.abs(gesture.dx) >= TURN_DISTANCE) flip();
-      },
-    }),
-  ).current;
+  const pan = useMemo(
+    () =>
+      PanResponder.create({
+        // Claim the gesture only once it is clearly horizontal, so a vertical drag still scrolls
+        // the screen. A figure that eats the scroll is worse than one that does not turn.
+        onMoveShouldSetPanResponder: (_event, gesture) =>
+          Math.abs(gesture.dx) > 8 && Math.abs(gesture.dx) > Math.abs(gesture.dy) * 1.5,
+        onPanResponderRelease: (_event, gesture) => {
+          if (Math.abs(gesture.dx) >= TURN_DISTANCE) flip();
+        },
+      }),
+    [flip],
+  );
 
   const worked = Object.entries(loads) as [MuscleSlug, Intensity][];
 
