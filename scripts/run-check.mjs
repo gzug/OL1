@@ -18,6 +18,7 @@ const STAGES = [
   'lint',
   'test',
   'check:boundaries',
+  'check:durations',
   'check:sensitive',
   'export:web',
 ];

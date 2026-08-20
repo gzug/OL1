@@ -53,6 +53,7 @@
     "lint": "expo lint",
     "test": "tsx --test tests/*.test.ts",
     "check:boundaries": "node scripts/check-boundaries.mjs",
+    "check:durations": "node scripts/check-duration-formatters.mjs",
     "check:sensitive": "tsx scripts/check-sensitive-content.ts",
     "check:rationale": "tsx scripts/check-change-rationale.ts",
     "export:web": "APP_VARIANT=preview expo export --platform web --output-dir dist",
