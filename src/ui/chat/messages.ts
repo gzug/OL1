@@ -2,8 +2,9 @@
  * What the person reads when there is no answer.
  *
  * Every line says what happened and what to do about it, in that order, and none of them says
- * "error". `not-configured` is the one the preview shows today: the key is not in Vercel yet, so it
- * is the live path rather than a branch that has to be forced to see it.
+ * "error". `not-configured` is the one the preview shows today, and it is the deliberate steady
+ * state rather than an unfinished setup — `docs/decisions/0010-the-coaches-stay-off.md`. It is also
+ * the live path, so it is the one line here that cannot rot unseen.
  */
 
 import type { UnavailableReason } from '@/core/chat';
