@@ -20,6 +20,9 @@ import { fontFamily, lineHeights, spacing, typography, useTheme } from '@/ui/the
  * logged anything" — the exact confusion `FailedReadState` exists to prevent in Legacy.
  */
 
+/** How many rows the list shows. A cap on the LIST, never on the count above it. */
+const SHOWN = 5;
+
 /** How a kind of entry is written down. An unknown kind still renders, by its own name. */
 const KINDS: Readonly<Record<string, { one: string; many: string }>> = {
   meal: { many: 'meals', one: 'meal' },
@@ -72,7 +75,7 @@ export function StoredEntries({ hubId, source = defaultHubs }: { hubId: string; 
       let cancelled = false;
 
       void source
-        .entries(hubId, 5)
+        .entries(hubId)
         .then((found) => {
           if (!cancelled) setEntries(found);
         })
@@ -89,12 +92,21 @@ export function StoredEntries({ hubId, source = defaultHubs }: { hubId: string; 
 
   if (entries.length === 0) return null;
 
+  /**
+   * Count everything, show the newest few.
+   *
+   * This used to fetch five and count what came back, so a hub with six entries said "5 meals" —
+   * a wrong number, produced by a display limit leaking into a count. The limit belongs to the
+   * list, never to the arithmetic.
+   */
+  const shown = entries.slice(0, SHOWN);
+
   return (
     <View style={styles.block}>
       <Text style={[styles.label, { color: colors.textSubtle }]}>WHAT YOU HAVE LOGGED</Text>
       <Text style={[styles.count, { color: colors.text }]}>{countLine(entries)}</Text>
 
-      {entries.map((entry) => (
+      {shown.map((entry) => (
         <View key={entry.id} style={styles.row}>
           <Text style={[styles.when, { color: colors.textMuted }]}>{day(entry.recordedAt)}</Text>
           <Text style={[styles.how, { color: colors.textSubtle }]}>
@@ -104,7 +116,9 @@ export function StoredEntries({ hubId, source = defaultHubs }: { hubId: string; 
       ))}
 
       <Text style={[styles.note, { color: colors.textSubtle }]}>
-        Yours. Everything below this is sample data.
+        {entries.length > shown.length
+          ? `Showing the newest ${shown.length}. Yours — everything below this is sample data.`
+          : 'Yours. Everything below this is sample data.'}
       </Text>
     </View>
   );
