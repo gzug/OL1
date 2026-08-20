@@ -146,7 +146,15 @@ test('the unit beside the value is read, never assumed', () => {
   const albumin = findings.find((item) => item.key === 'albumin');
 
   assert.equal(albumin?.unit, 'g/L');
-  assert.equal(albumin?.converted, 4.52, '45.2 g/L is 4.52 g/dL');
+
+  /**
+   * A tolerance rather than `assert.equal`, and the reason is worth keeping: `45.2 / 10` is
+   * `4.5200000000000005` in binary floating point, not `4.52`. Every conversion in `units.ts` can
+   * land a hair off the decimal it looks like, so nothing downstream may compare a converted value
+   * for exact equality — and whatever eventually PRINTS one has to round it, or a lab screen shows
+   * `4.5200000000000005 g/dL`.
+   */
+  assert.ok(Math.abs((albumin?.converted ?? 0) - 4.52) < 1e-9, '45.2 g/L is 4.52 g/dL');
 
   const glucose = findings.find((item) => item.key === 'glucose');
   assert.equal(glucose?.unit, 'mmol/L');
