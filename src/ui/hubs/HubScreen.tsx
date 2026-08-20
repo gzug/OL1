@@ -9,6 +9,7 @@ import type { Attachment } from '@/core/attachments';
 import { ChatBar } from '@/ui/chat/ChatBar';
 import { RecentThreads } from '@/ui/chat/RecentThreads';
 import { Heatmap } from '@/ui/exercise/Heatmap';
+import { PanelAge } from '@/ui/labs/PanelAge';
 import { WeekScore } from '@/ui/meals/WeekScore';
 import { LoggedWeek } from '@/ui/hubs/LoggedWeek';
 import { StoredEntries } from '@/ui/hubs/StoredEntries';
@@ -155,6 +156,11 @@ export function HubScreen({
         {/* Nutrition only, and only once meals exist. The one score in the app — see
             `docs/decisions/0009-a-score-for-the-week-not-the-person.md`. */}
         {hub.id === 'nutrition' && <WeekScore />}
+
+        {/* Labs only. How old the panel is comes before anything it says, because a number from a
+            fourteen-month-old panel is not wrong — it is old, and a screen that omits the date
+            invites it to be read as current. */}
+        {hub.id === 'labs' && <PanelAge />}
 
         {state.observation !== undefined && (
           <Text style={[styles.observation, { color: colors.text }]}>{state.observation}</Text>

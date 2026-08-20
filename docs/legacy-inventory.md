@@ -97,7 +97,6 @@ The largest gap between what Legacy had and what OL1 shows.
   guard worth copying on its own: the `DriverItem` type **deliberately omits** the numeric impact,
   making it *impossible* to render a year figure from that path. Design by type, not by discipline.
 - `data/insights/bloodChangeRows.ts` — what changed since the last panel.
-- `data/biomarkerTiers.ts` — which markers matter most.
 - `data/insights/biomarkerRollups.ts`, `BloodGroupList.tsx` — results grouped by category.
 - `BiomarkerTrendsView.tsx`, `data/insights/sparklinePath.ts` — a marker over time.
 - `services/labMissingnessService.ts` — what a panel did *not* include.
@@ -158,6 +157,18 @@ does yet.
 - **A second LLM provider and the on-device model** (`openRouterAdapter.ts`, `localLlamaAdapter.ts`,
   `localModelManager.ts`, `localLlmRuntimeProbe.ts`) — one provider was chosen; a 2GB local model is
   a project of its own.
+- **`data/biomarkerTiers.ts`** — refused 2026-08-20 as **not applicable**, which is different from
+  not wanted. Legacy ranks markers by causal importance for longevity: ApoB and HbA1c are Tier 1,
+  hsCRP and LDL Tier 2, Lp(a) and magnesium Tier 3. **Two of its twelve markers are on our panel**,
+  and the reason is structural rather than an oversight — ours are the nine LEVINE markers, which
+  are there because one regression reads them, not because anybody judged them the nine that matter
+  most in blood.
+
+  Ranking our nine by "which matters most" would therefore mean inventing a clinical claim, which
+  is the one thing this repository refuses. There IS an honest ranking available for our panel —
+  how much each marker moves the PhenoAge number, which is arithmetic rather than opinion — and
+  that is `bioAgeDrivers.ts` in section 2, already on the list. Take that instead; it is the same
+  question asked in a way our data can answer.
 - **A single 0–100 recovery number** (`data/persona/todayRecoveryScore.ts`) — it grades a person.
 - **The persona swipe-ring** (`data/persona/personaModel.ts`) — the orbit occupies that ground.
 - **`data/deviceUsage/`** (7 files) — screen time. No hub claims it.
