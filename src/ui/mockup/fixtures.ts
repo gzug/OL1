@@ -42,30 +42,33 @@ export const centre = {
  *
  * PhenoAge is computed from a blood panel and an age. Today that is its only input, and a screen
  * that listed four sources under one number would imply the number gets richer as they connect. It
- * would not: connecting a wearable makes the twin know more, not the drift number more certain.
+ * would not: connecting a wearable makes the twin know more, not the number more certain.
+ *
+ * `feedsNumber` is gone with the blood-work row it existed to separate — a discriminator every
+ * remaining entry answers the same way is not separating anything.
+ */
+/**
+ * **Blood work is no longer here.** It is the only source that feeds the number, so it comes from
+ * the number's own state — `bloodWorkSource` in `src/ui/twin/BioAgeBlock.tsx`. A fixture saying
+ * “9 of 9 markers” directly under a line saying no panel had been added is exactly the
+ * contradiction that reaching the deployed preview made obvious.
+ *
+ * The wearable row now says what is true: nothing is connected. Health Connect is deferred until
+ * the phone, so a green dot and “Nightly, from your watch” described a device that does not exist.
  */
 export const twinSources = [
   {
-    detail: '9 of 9 markers, from the panel drawn 12 Mar',
-    feedsNumber: true,
-    label: 'Blood work',
-    state: 'reading',
-  },
-  {
-    detail: 'Nightly, from your watch',
-    feedsNumber: false,
+    detail: 'Not connected yet',
     label: 'Wearable',
-    state: 'reading',
+    state: 'missing',
   },
   {
     detail: 'Not connected yet',
-    feedsNumber: false,
     label: 'Genomics',
     state: 'missing',
   },
   {
     detail: 'Not connected yet',
-    feedsNumber: false,
     label: 'Microbiome',
     state: 'missing',
   },

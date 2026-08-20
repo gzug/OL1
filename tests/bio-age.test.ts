@@ -1,8 +1,9 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 
-import { bioAgeFrom } from '../src/application/twin/bioAge';
+import { bioAgeFrom, type BioAge } from '../src/application/twin/bioAge';
 import type { HubEntry } from '../src/core/hubs';
+import { bloodWorkSource, missingLine } from '../src/ui/twin/bioAgeCopy';
 
 /**
  * The Twin's number, and the four things that can honestly be true about it.
@@ -121,4 +122,60 @@ test('a payload that is not what it claims costs one marker, not the panel', () 
 /** A panel with no markers at all is not a panel. */
 test('a panel whose payload has no markers calibrates rather than throwing', () => {
   assert.equal(bioAgeFrom([panel('2026-08-01T00:00:00.000Z', {})], 1985, TODAY).status, 'calibrating');
+});
+
+/**
+ * The row under *What this number is made of* must agree with the number itself.
+ *
+ * It was a fixture reading “9 of 9 markers, from the panel drawn 12 Mar”, and it survived the first
+ * pass at wiring the number — so the deployed preview said it had no panel and, two centimetres
+ * below, that it had all nine markers from one. Half-fixing a dishonest screen leaves the two halves
+ * contradicting each other in public.
+ */
+test('the source row never claims markers the number does not have', () => {
+  const cases: BioAge[] = [
+    bioAgeFrom([], 1985, TODAY),
+    bioAgeFrom([panel('2026-08-01T00:00:00.000Z')], null, TODAY),
+    bioAgeFrom([panel('2026-08-01T00:00:00.000Z', { albumin: 4.4, alp: 62 })], 1985, TODAY),
+  ];
+
+  for (const state of cases) {
+    const row = bloodWorkSource(state);
+    assert.equal(row.state, 'missing', `${state.status} must not show as reading`);
+    assert.ok(!row.detail.includes('9 of 9'), `"${row.detail}" claims a full panel`);
+  }
+
+  const ready = bloodWorkSource(bioAgeFrom([panel('2026-08-01T00:00:00.000Z')], 1985, TODAY));
+  assert.equal(ready.state, 'reading');
+  assert.ok(ready.detail.startsWith('9 of 9 markers, drawn'), ready.detail);
+});
+
+/**
+ * The waiting line must name which input is missing.
+ *
+ * A blank space and a broken screen look identical, and the difference between them is the only
+ * thing a person can act on: add a panel, or give a year of birth.
+ */
+test('waiting says which of the two inputs it is waiting for', () => {
+  const noPanel = bloodWorkSource(bioAgeFrom([], 1985, TODAY));
+  const noYear = bloodWorkSource(bioAgeFrom([panel('2026-08-01T00:00:00.000Z')], null, TODAY));
+
+  assert.notEqual(noPanel.detail, noYear.detail, 'both empty states read the same');
+  assert.match(noYear.detail, /birth/i);
+});
+
+/** A range is a range. `missingLine` must never describe a partial panel as a figure. */
+test('a partial panel is described as a range, and names how much is absent', () => {
+  const { albumin, alp, creatinine, crp, glucose, lymph_pct } = MARKERS;
+  const state = bioAgeFrom(
+    [panel('2026-08-01T00:00:00.000Z', { albumin, alp, creatinine, crp, glucose, lymph_pct })],
+    1985,
+    TODAY,
+  );
+
+  assert.equal(state.status, 'ready');
+  if (state.status !== 'ready') return;
+
+  assert.match(missingLine(state.range), /range rather than a figure/);
+  assert.match(missingLine(state.range), /3 markers/);
 });

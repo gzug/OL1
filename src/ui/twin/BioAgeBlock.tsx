@@ -1,63 +1,49 @@
 import { Link } from 'expo-router';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
-import type { BioAgeDriver, BioAgeDrivers, PhenoAgeRange } from '@/application/labs/phenoAge';
-import { LEVINE_MARKERS } from '@/ui/labs/levine';
+import type { BioAgeDriver, BioAgeDrivers } from '@/application/labs/phenoAge';
+import type { BioAge } from '@/application/twin/bioAge';
 import { fontFamily, lineHeights, spacing, typography, useTheme } from '@/ui/theme';
-import { useBioAge } from '@/ui/twin/useBioAge';
+import { drawnOn, markerName, missingLine, waitingLine, years } from '@/ui/twin/bioAgeCopy';
 
 /**
  * The number under the body — your biological age, from your own panel.
  *
  * **This replaces a hard-coded 41.6 that had been on the screen since the first mockup.** The
  * calculator arrived on 3 August and the drivers on 20 August; neither had ever been connected to
- * anything, so the Twin has been showing a decorative figure to everyone who opened it. That is the
- * defect this fixes, and it is worth naming: a fixture that looks exactly like a result is the most
- * expensive kind, because nobody reports it as broken.
+ * anything, so the Twin showed a decorative figure to everyone who opened it. That is the most
+ * expensive kind of placeholder, because it looks exactly like a result and nobody reports it as
+ * broken.
  *
  * Four states, and each one says which it is:
  *
- * - **waiting** — no panel, or no birth year. Both are required inputs and neither is guessed;
- *   chronological age is an argument to the formula, not a nicety. The screen says which is
- *   missing and offers the way to supply it, because "waiting" and "broken" look identical
- *   otherwise.
- * - **calibrating** — fewer than six markers. No figure at all, not a wide one with an apology.
- * - **ready, bracketed** — a partial panel gets a RANGE, printed as a range.
- * - **ready, whole** — nine markers, one number, and the date the blood was drawn beside it.
+ * - **waiting** — no panel, or no birth year. Both are required and neither is guessed;
+ *   chronological age is an argument to the formula rather than a nicety. Saying WHICH is missing
+ *   is what separates a screen that is waiting from one that is broken.
+ * - **calibrating** — under six markers. No figure at all, not a wide one with an apology.
+ * - **ready, bracketed** — a partial panel prints as a range.
+ * - **ready, whole** — one number and the date the blood was drawn.
  *
- * The number is always years with a decimal, never an index out of 100. `docs/decisions/0009`
- * settles why: this app scores a week, not a person, and the one number that describes a body is a
- * measurement rather than a grade.
+ * The number is years with a decimal, never an index out of 100 — `docs/decisions/0009` settles
+ * why: this app scores a week, not a person, and the one number describing a body is a measurement
+ * rather than a grade.
+ *
+ * The state is a prop rather than a hook call, because `TwinMockup` renders the row that says what
+ * the number is made of and the two must be the same answer.
  */
-
-const MARKER_LABEL: Readonly<Record<string, string>> = Object.fromEntries(
-  LEVINE_MARKERS.map((marker) => [marker.key, marker.label]),
-);
-
-/** Years, one decimal. `Math.round` on tenths rather than `toFixed`, so −0.04 cannot print as “-0.0”. */
-function years(value: number): string {
-  return (Math.round(value * 10) / 10).toFixed(1);
-}
-
-function drawnOn(iso: string): string {
-  const date = new Date(iso);
-  return Number.isNaN(date.getTime())
-    ? 'an unknown date'
-    : date.toLocaleDateString(undefined, { day: 'numeric', month: 'short' });
-}
-
-export function BioAgeBlock() {
+export function BioAgeBlock({ bioAge }: { bioAge: BioAge }) {
   const { colors } = useTheme();
-  const bioAge = useBioAge();
 
+  /**
+   * **No placeholder glyph while it waits.** A `—` set at the number's own 40px reads as a
+   * horizontal rule rather than as an absent value; it went out on the deployed preview looking
+   * exactly like a divider. There is no number, so there is no number-shaped thing.
+   */
   if (bioAge.status === 'waiting') {
     return (
       <View style={styles.block}>
-        <Text style={[styles.waitingNumber, { color: colors.textSubtle }]}>—</Text>
         <Text style={[styles.caption, { color: colors.textSubtle }]}>
-          {bioAge.reason === 'noPanel'
-            ? 'Biological age needs a blood panel. Nothing has been added yet.'
-            : 'Biological age needs the year you were born. It is not stored until you give it.'}
+          {waitingLine(bioAge.reason)}
         </Text>
         {bioAge.reason === 'noPanel' && (
           <Link asChild href="/add-panel">
@@ -73,7 +59,6 @@ export function BioAgeBlock() {
   if (bioAge.status === 'calibrating') {
     return (
       <View style={styles.block}>
-        <Text style={[styles.waitingNumber, { color: colors.textSubtle }]}>—</Text>
         <Text style={[styles.caption, { color: colors.textSubtle }]}>
           {missingLine(bioAge.range)}
         </Text>
@@ -102,29 +87,17 @@ export function BioAgeBlock() {
   );
 }
 
-function missingLine(range: PhenoAgeRange): string {
-  const names = range.missing.map((key) => MARKER_LABEL[key] ?? key);
-  const count = names.length;
-  if (count === 0) return 'All nine markers are present.';
-  if (range.status === 'calibrating') {
-    return `${range.markersPresent} of 9 markers. Six are needed before this can say anything honest.`;
-  }
-  return count === 1
-    ? `A range rather than a figure: ${names[0]} was not on the panel.`
-    : `A range rather than a figure: ${count} markers were not on the panel.`;
-}
-
 /**
  * Which markers are moving it, and in which direction. **Never by how much.**
  *
  * `BioAgeDriver` carries no quantity — only a direction and a position in an order — so there is no
- * way to render "your CRP is costing you 3.2 years" from this path even by accident. That sentence
+ * way to render “your CRP is costing you 3.2 years” from this path even by accident. That sentence
  * is a clinical claim dressed as arithmetic, from a population regression, about one blood draw.
- * The type refusing to carry the number is the guard; this component just spends it correctly.
+ * The type refusing to carry the number is the guard; this only spends it correctly.
  */
 function Drivers({ drivers }: { drivers: BioAgeDrivers }) {
   const { colors } = useTheme();
-  const name = (driver: BioAgeDriver) => MARKER_LABEL[driver.key] ?? driver.key;
+  const name = (driver: BioAgeDriver) => markerName(driver.key);
 
   if (drivers.pushingUp.length === 0 && drivers.helpingDown.length === 0) return null;
 
@@ -173,8 +146,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   drivers: { gap: 2, marginTop: spacing.md },
-  // The size the Twin's number has always been. Kept as literals because that is how `TwinMockup`
-  // held it — this block replaces that markup, it does not get to change the typography with it.
+  // The size the Twin's number has always been. Literals because that is how `TwinMockup` held it —
+  // this block replaces that markup, it does not get to change the typography with it.
   number: { fontFamily: fontFamily.display, fontSize: 40, lineHeight: 46 },
-  waitingNumber: { fontFamily: fontFamily.display, fontSize: 40, lineHeight: 46 },
 });
