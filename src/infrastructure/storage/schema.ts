@@ -1,4 +1,4 @@
-export const CURRENT_SCHEMA_VERSION = 4;
+export const CURRENT_SCHEMA_VERSION = 5;
 
 export const CREATE_MIGRATION_TABLE_SQL = `
   CREATE TABLE IF NOT EXISTS schema_migrations (
@@ -100,6 +100,32 @@ export const MIGRATIONS = [
 
       CREATE INDEX IF NOT EXISTS hub_entry_hub_idx
         ON hub_entry (hub_id, recorded_at);
+    `,
+  },
+  {
+    /**
+     * Who this is: a birth year and a sex, and nothing else.
+     *
+     * **One row, enforced by the schema.** `CHECK (id = 1)` is the same trick `bootstrap_probe`
+     * uses in migration 1: this app has one person in it, and a table that can hold two would
+     * eventually hold two, with nothing to say which is current.
+     *
+     * Both columns are nullable because both answers are optional. A birth year that is absent
+     * means the biological age calculation returns null rather than a number built on a guess, and
+     * `preferNotToSay` is a real answer that the figure has to cope with rather than a gap.
+     *
+     * Deliberately NOT here: name, allergies, conditions, medications. Legacy's profile carried
+     * those and it turned an identity into a medical record. Anything of that kind belongs in the
+     * Medical condition hub as an entry somebody chose to make.
+     */
+    version: 5,
+    sql: `
+      CREATE TABLE IF NOT EXISTS profile (
+        id INTEGER PRIMARY KEY NOT NULL CHECK (id = 1),
+        birth_year INTEGER,
+        sex TEXT,
+        updated_at TEXT NOT NULL
+      );
     `,
   },
 ] as const;

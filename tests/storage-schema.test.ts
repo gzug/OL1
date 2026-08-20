@@ -8,10 +8,10 @@ import {
 } from '../src/infrastructure/storage/schema';
 
 test('the schema is versioned and contains no legacy health tables', () => {
-  assert.equal(CURRENT_SCHEMA_VERSION, 4);
+  assert.equal(CURRENT_SCHEMA_VERSION, 5);
   assert.deepEqual(
     MIGRATIONS.map((migration) => migration.version),
-    [1, 2, 3, 4],
+    [1, 2, 3, 4, 5],
   );
 
   const sql = `${CREATE_MIGRATION_TABLE_SQL}\n${MIGRATIONS.map((item) => item.sql).join('\n')}`;
@@ -99,4 +99,32 @@ test('an entry may point at a hub that ships in code rather than in the table', 
   const migration = MIGRATIONS.find((item) => item.version === 4);
   assert.ok(migration !== undefined);
   assert.doesNotMatch(migration.sql, /REFERENCES\s+hub\s*\(/i);
+});
+
+/**
+ * One person, enforced by the schema rather than by everything that writes to it.
+ *
+ * `CHECK (id = 1)` is the trick `bootstrap_probe` uses in migration 1. A table that could hold two
+ * profiles would eventually hold two, with nothing to say which was current.
+ */
+test('there can only be one profile', () => {
+  const migration = MIGRATIONS.find((item) => item.version === 5);
+  assert.ok(migration !== undefined);
+
+  assert.match(migration.sql, /CREATE TABLE IF NOT EXISTS profile\b/);
+  assert.match(migration.sql, /CHECK \(id = 1\)/);
+});
+
+/**
+ * A birth year and a sex are the two inputs a published formula takes. They are not a medical
+ * record, and this table must never become one — Legacy's profile carried allergies, chronic
+ * diseases and supplements, which is exactly that drift. Anything of that kind belongs in the
+ * Medical condition hub as an entry somebody chose to make.
+ */
+test('the profile holds two answers and no medical history', () => {
+  const migration = MIGRATIONS.find((item) => item.version === 5);
+  assert.ok(migration !== undefined);
+
+  assert.doesNotMatch(migration.sql, /(allerg|disease|condition|medication|supplement|diagnos)/i);
+  assert.doesNotMatch(migration.sql, /(name|email|phone)/i, 'the profile grew an identifier');
 });

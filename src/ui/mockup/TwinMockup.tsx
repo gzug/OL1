@@ -4,6 +4,7 @@ import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { hubs } from '@/application/hubs/hubs';
 import { fontFamily, lineHeights, radius, spacing, typography, useTheme } from '@/ui/theme';
+import { AboutYou } from '@/ui/twin/AboutYou';
 import { BodyFigure } from '@/ui/twin/BodyFigure';
 import { useMuscleLoad } from '@/ui/twin/useMuscleLoad';
 
@@ -55,6 +56,11 @@ export function TwinMockup() {
           onMusclePress={(slug) => void markWorked(slug)}
           unplaced={load.unplaced}
         />
+
+        {/* Under the figure, because both answers are about what it draws and what the number
+            beneath it is calculated against. Collapsed until tapped: a form under a body is a form
+            nobody wants, and the summary line is enough once it is answered. */}
+        <AboutYou />
       </View>
 
       <View style={styles.driftBlock}>
