@@ -9,11 +9,13 @@ import {
   profiles as defaultProfiles,
 } from '@/application/profile/profile';
 import type { Sex } from '@/core/profile';
-import type { HubDefinition } from '@/ui/hubs/catalog';
+import { ringPlaceCount, type HubDefinition } from '@/ui/hubs/catalog';
+import { mergeHubs } from '@/ui/hubs/mergeHubs';
 import { draftId, draftProblem, problemMessage } from '@/ui/hubs/newHub';
 import { useHubs } from '@/ui/hubs/useHubs';
-import { STAGE } from '@/ui/mockup/geometry';
+import { CENTRE, STAGE, stackBox } from '@/ui/mockup/geometry';
 import { Orbit } from '@/ui/mockup/Orbit';
+import { BodyFigure } from '@/ui/twin/BodyFigure';
 import {
   fontFamily,
   lineHeights,
@@ -70,7 +72,7 @@ const SEXES: readonly { id: Sex; label: string }[] = [
 export function FirstRunFlow({ source = defaultProfiles }: { source?: typeof defaultProfiles }) {
   const { colors } = useTheme();
   const router = useRouter();
-  const existing = useHubs();
+  const seeded = useHubs();
 
   const [step, setStep] = useState<Step>('welcome');
   const [typed, setTyped] = useState(false);
@@ -78,7 +80,15 @@ export function FirstRunFlow({ source = defaultProfiles }: { source?: typeof def
   const [year, setYear] = useState('');
   const [height, setHeight] = useState('');
   const [weight, setWeight] = useState('');
-  const [sex, setSex] = useState<Sex>('preferNotToSay');
+  /**
+   * Null until somebody taps, and only then a value.
+   *
+   * It used to start on `preferNotToSay`, which is the right thing to STORE for an unanswered
+   * question and the wrong thing to SHOW: a highlighted pill reads as a choice already made, on
+   * behalf of somebody who has not answered. The stored value is unchanged — this is only about
+   * not putting words in their mouth on screen.
+   */
+  const [sex, setSex] = useState<Sex | null>(null);
 
   const [goals, setGoals] = useState<readonly string[]>([]);
   const [otherGoal, setOtherGoal] = useState('');
@@ -87,6 +97,20 @@ export function FirstRunFlow({ source = defaultProfiles }: { source?: typeof def
   const [conditions, setConditions] = useState('');
   const [held, setHeld] = useState<readonly string[]>([]);
   const [writeFailed, setWriteFailed] = useState(false);
+  /**
+   * The hubs as they stand AFTER this flow has written to them.
+   *
+   * `useHubs` re-reads on focus, and the last card arrives without the screen ever losing focus —
+   * so the ring drew the seeded seven and left out the hub the person had just made two cards
+   * earlier. On a card whose whole claim is "this is what you built", that was the one thing it
+   * could not get wrong. Read once on the way in, from the same store, merged the same way.
+   */
+  const [built, setBuilt] = useState<readonly HubDefinition[] | null>(null);
+
+  /** What the ring is drawn from: the seeded hubs until the flow has written, then what it wrote. */
+  const existing = built ?? seeded;
+  /** The free space inside the ring, which shrinks as places are added. Same call Home makes. */
+  const centreBox = stackBox(ringPlaceCount(existing));
 
   const today = new Date();
   const birthYear = year.trim().length === 0 ? null : plausibleBirthYear(Number(year.trim()), today);
@@ -132,7 +156,7 @@ export function FirstRunFlow({ source = defaultProfiles }: { source?: typeof def
   }
 
   async function commitAbout() {
-    await source.save(birthYear, sex);
+    await source.save(birthYear, sex ?? SKIPPED.sex);
     if (heightCm !== null) await source.saveHeight(heightCm);
 
     /**
@@ -209,6 +233,13 @@ export function FirstRunFlow({ source = defaultProfiles }: { source?: typeof def
     }
 
     const next = nextStep(step);
+    if (next === 'ring') {
+      try {
+        setBuilt(mergeHubs(await hubs.list()));
+      } catch {
+        // The seeded ring is still true, just incomplete. Better than no ring at all.
+      }
+    }
     if (next !== null) setStep(next);
   }
 
@@ -328,7 +359,7 @@ export function FirstRunFlow({ source = defaultProfiles }: { source?: typeof def
                 colors={colors}
                 onToggle={(id) => setSex(id as Sex)}
                 options={SEXES.map((entry) => ({ id: entry.id, label: entry.label }))}
-                selected={[sex]}
+                selected={sex === null ? [] : [sex]}
               />
             </Field>
             <Text style={[styles.hint, { color: colors.textSubtle }]}>{COPY.sexOnlyMale}</Text>
@@ -347,8 +378,9 @@ export function FirstRunFlow({ source = defaultProfiles }: { source?: typeof def
             <OtherField
               colors={colors}
               existing={existing}
+              label={COPY.goalsOther}
               onChange={setOtherGoal}
-              placeholder="Something else"
+              placeholder="Learning to sleep without a phone"
               value={otherGoal}
             />
           </View>
@@ -366,6 +398,7 @@ export function FirstRunFlow({ source = defaultProfiles }: { source?: typeof def
             <OtherField
               colors={colors}
               existing={existing}
+              label={COPY.trainingOther}
               onChange={setOtherSport}
               placeholder="Padel, climbing, rowing…"
               value={otherSport}
@@ -388,6 +421,9 @@ export function FirstRunFlow({ source = defaultProfiles }: { source?: typeof def
               />
             </Field>
 
+            <Text style={[styles.fieldLabel, { color: colors.textSubtle }, styles.recordsLabel]}>
+              {COPY.recordsHeld}
+            </Text>
             <View style={styles.records}>
               {RECORD_KINDS.map((kind) => (
                 <Pressable
@@ -430,6 +466,25 @@ export function FirstRunFlow({ source = defaultProfiles }: { source?: typeof def
                   selected={[]}
                   selecting={false}
                 />
+
+                {/* The centre, drawn as Home draws it. The caption underneath calls this the
+                    Digital Twin, and pointing at an empty circle while saying so is the same
+                    species of claim-without-a-subject the first-run audit ended on. No load: a
+                    person who has logged nothing has a grey figure, which is the truth. */}
+                <View
+                  pointerEvents="none"
+                  style={[
+                    styles.centre,
+                    {
+                      height: centreBox.height,
+                      left: CENTRE - centreBox.width / 2,
+                      top: CENTRE - centreBox.height / 2,
+                      width: centreBox.width,
+                    },
+                  ]}>
+                  <BodyFigure loads={{}} scale={0.22} showCaption={false} />
+                  <Text style={[styles.centreName, { color: colors.text }]}>{'Digital Twin'}</Text>
+                </View>
               </View>
             </View>
 
@@ -564,12 +619,14 @@ function Pills({
 function OtherField({
   colors,
   existing,
+  label,
   onChange,
   placeholder,
   value,
 }: {
   colors: ThemeColors;
   existing: readonly HubDefinition[];
+  label: string;
   onChange: (value: string) => void;
   placeholder: string;
   value: string;
@@ -578,6 +635,7 @@ function OtherField({
 
   return (
     <View style={styles.field}>
+      <Text style={[styles.fieldLabel, { color: colors.textSubtle }]}>{label}</Text>
       <TextInput
         onChangeText={onChange}
         placeholder={placeholder}
@@ -594,6 +652,14 @@ const styles = StyleSheet.create({
   back: { paddingVertical: spacing.sm },
   backText: { fontFamily: fontFamily.body, fontSize: typography.caption },
   body: { paddingBottom: spacing.xl, paddingHorizontal: spacing.lg, paddingTop: spacing.md },
+  centre: { alignItems: 'center', justifyContent: 'center', position: 'absolute' },
+  centreName: {
+    fontFamily: fontFamily.display,
+    fontSize: 18,
+    lineHeight: 22,
+    marginTop: 8,
+    textAlign: 'center',
+  },
   bottom: {
     alignItems: 'center',
     gap: spacing.xs,
@@ -658,7 +724,8 @@ const styles = StyleSheet.create({
     lineHeight: lineHeights.caption,
     marginTop: 2,
   },
-  records: { gap: spacing.sm, marginTop: spacing.lg },
+  records: { gap: spacing.sm, marginTop: spacing.sm },
+  recordsLabel: { marginTop: spacing.lg },
   ringBlock: { alignItems: 'stretch' },
   screen: { flex: 1, justifyContent: 'space-between' },
   skip: { paddingHorizontal: spacing.sm, paddingVertical: spacing.xs },
