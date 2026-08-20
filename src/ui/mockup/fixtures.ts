@@ -83,13 +83,11 @@ export const twin = {
     'Your quietest weeks are the ones with two rest days, not three.',
     'Later dinners tend to land on days with an evening session.',
   ],
-  ledger: [
-    { date: '12 Mar', entry: 'Lab report added' },
-    { date: '11 Mar', entry: 'Note added' },
-    { date: '10 Mar', entry: 'Test started — Evening light' },
-    { date: '2 Feb', entry: 'Test closed — Earlier dinner' },
-  ],
-  ledgerFooter: 'Showing 4 of 148',
+  /**
+   * `ledger` and `ledgerFooter` were four invented rows and the total "148". They are gone —
+   * `src/ui/twin/Ledger.tsx` lists what has actually been recorded, across every hub, and shows no
+   * footer at all when nothing is being hidden. A footer naming a total has to stand behind it.
+   */
   person: {
     facts: ['12 lab reports', 'connected since Jan', '3 tests done'],
     name: 'Sample person — invented for layout review',

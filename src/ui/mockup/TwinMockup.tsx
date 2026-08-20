@@ -6,6 +6,7 @@ import { hubs } from '@/application/hubs/hubs';
 import { fontFamily, lineHeights, radius, spacing, typography, useTheme } from '@/ui/theme';
 import { AboutYou } from '@/ui/twin/AboutYou';
 import { BioAgeBlock } from '@/ui/twin/BioAgeBlock';
+import { Ledger } from '@/ui/twin/Ledger';
 import { bloodWorkSource } from '@/ui/twin/bioAgeCopy';
 import { BodyFigure } from '@/ui/twin/BodyFigure';
 import { useBioAge } from '@/ui/twin/useBioAge';
@@ -158,19 +159,13 @@ export function TwinMockup() {
         ))}
       </Section>
 
+      {/* Was four invented rows under a footer reading "Showing 4 of 148", where 148 was a number
+          nobody could stand behind. `Ledger` renders nothing at all until something is logged, so a
+          person who has recorded nothing sees no section rather than somebody else's history. */}
       <Section title="Ledger">
         <View style={[styles.card, { backgroundColor: colors.surface }]}>
-          {twin.ledger.map((row, index) => (
-            <Fragment key={`${row.date}-${row.entry}`}>
-              {index > 0 && <View style={[styles.rowRule, { backgroundColor: colors.borderSubtle }]} />}
-              <View style={styles.ledgerRow}>
-                <Text style={[styles.ledgerDate, { color: colors.textSubtle }]}>{row.date}</Text>
-                <Text style={[styles.ledgerEntry, { color: colors.textMuted }]}>{row.entry}</Text>
-              </View>
-            </Fragment>
-          ))}
+          <Ledger />
         </View>
-        <Text style={[styles.ledgerFooter, { color: colors.textSubtle }]}>{twin.ledgerFooter}</Text>
       </Section>
     </ScrollView>
   );
@@ -292,25 +287,6 @@ const styles = StyleSheet.create({
     fontFamily: fontFamily.body,
     fontSize: typography.bodySmall,
     lineHeight: lineHeights.body,
-  },
-  ledgerDate: {
-    fontFamily: fontFamily.body,
-    fontSize: typography.micro,
-    width: 56,
-  },
-  ledgerEntry: {
-    flex: 1,
-    fontFamily: fontFamily.body,
-    fontSize: typography.caption,
-  },
-  ledgerFooter: {
-    fontFamily: fontFamily.body,
-    fontSize: typography.micro,
-    paddingLeft: 2,
-  },
-  ledgerRow: {
-    flexDirection: 'row',
-    paddingVertical: 9,
   },
   outcome: {
     fontFamily: fontFamily.body,
