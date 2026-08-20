@@ -1,9 +1,11 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 
+import { CRP_FLOOR_MGL } from '../src/application/labs/phenoAge';
 import { bioAgeFrom, type BioAge } from '../src/application/twin/bioAge';
 import type { HubEntry } from '../src/core/hubs';
 import { bloodWorkSource, missingLine } from '../src/ui/twin/bioAgeCopy';
+import { methodRows } from '../src/ui/twin/bioAgeMethod';
 
 /**
  * The Twin's number, and the four things that can honestly be true about it.
@@ -178,4 +180,80 @@ test('a partial panel is described as a range, and names how much is absent', ()
 
   assert.match(missingLine(state.range), /range rather than a figure/);
   assert.match(missingLine(state.range), /3 markers/);
+});
+
+/**
+ * The explainer must describe the panel the number actually came from.
+ *
+ * The owner asked for it the moment two apps disagreed about his blood, which is exactly when an
+ * explanation that re-reads the store — and so can describe a different panel — is worse than none.
+ * `PanelInputs` is carried out of the calculation with the result for that reason.
+ */
+test('what went in is the panel the number came from, in the formula’s units', () => {
+  const state = bioAgeFrom([panel('2026-05-08T00:00:00.000Z')], 1985, TODAY);
+
+  assert.equal(state.status, 'ready');
+  if (state.status !== 'ready') return;
+
+  const rows = methodRows(state.used);
+  assert.equal(rows.length, 9, 'every marker that went in must be shown');
+  assert.equal(state.used.chronologicalAge, 41);
+
+  const albumin = rows.find((row) => row.key === 'albumin');
+  assert.equal(albumin?.asRead, MARKERS.albumin);
+  assert.equal(albumin?.unit, 'g/dL');
+});
+
+/**
+ * CRP is the one input the formula deliberately reads as something other than what was measured.
+ * A number silently different from the one on a person's report is precisely what an explanation
+ * exists to prevent, so the row has to say so out loud.
+ */
+test('a floored CRP says so, and says what the report actually read', () => {
+  const state = bioAgeFrom([panel('2026-05-08T00:00:00.000Z', { ...MARKERS, crp: 0.6 })], 1985, TODAY);
+
+  assert.equal(state.status, 'ready');
+  if (state.status !== 'ready') return;
+
+  const crp = methodRows(state.used).find((row) => row.key === 'crp');
+  assert.equal(crp?.asRead, CRP_FLOOR_MGL, 'the row shows what the formula read, not what was typed');
+  assert.ok(crp?.adjustment !== null, 'a silently substituted value is the thing this prevents');
+  assert.ok(crp?.adjustment?.includes('0.6'), 'the real result must still appear');
+});
+
+/** Above the floor nothing is adjusted, and no row invents a note about it. */
+test('a CRP above the floor is reported exactly as measured', () => {
+  const state = bioAgeFrom([panel('2026-05-08T00:00:00.000Z', { ...MARKERS, crp: 4 })], 1985, TODAY);
+
+  assert.equal(state.status, 'ready');
+  if (state.status !== 'ready') return;
+
+  const crp = methodRows(state.used).find((row) => row.key === 'crp');
+  assert.equal(crp?.asRead, 4);
+  assert.equal(crp?.adjustment, null);
+});
+
+/** A unit the laboratory printed differently is shown as the swap it was, not hidden. */
+test('a marker entered in another unit says which one', () => {
+  const state = bioAgeFrom(
+    [
+      {
+        hubId: 'labs',
+        id: 'p',
+        kind: 'panel',
+        payload: { markers: MARKERS, unitsAsEntered: { albumin: 'g/L' } },
+        recordedAt: '2026-05-08T00:00:00.000Z',
+        source: 'manual',
+      },
+    ],
+    1985,
+    TODAY,
+  );
+
+  assert.equal(state.status, 'ready');
+  if (state.status !== 'ready') return;
+
+  const rows = methodRows(state.used);
+  assert.equal(rows.find((row) => row.key === 'albumin')?.asEntered, 'entered in g/L');
+  assert.equal(rows.find((row) => row.key === 'mcv')?.asEntered, null, 'no swap, no note');
 });

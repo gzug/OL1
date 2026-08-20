@@ -24,6 +24,14 @@ import {
 import { ageFrom } from '@/application/profile/profile';
 import type { HubEntry } from '@/core/hubs';
 
+/** What went into the calculation, in the formula's own units, plus how it was typed. */
+export type PanelInputs = {
+  readonly chronologicalAge: number;
+  readonly markers: Readonly<Record<string, number>>;
+  /** Only where a laboratory's unit differed from the formula's, so the screen can show the swap. */
+  readonly unitsAsEntered: Readonly<Record<string, string>>;
+};
+
 export type BioAge =
   | { readonly reason: 'noPanel' | 'noYear'; readonly status: 'waiting' }
   | {
@@ -31,6 +39,13 @@ export type BioAge =
       readonly drivers: BioAgeDrivers | null;
       readonly range: Extract<PhenoAgeRange, { status: 'ready' }>;
       readonly status: 'ready';
+      /**
+       * Exactly what the formula was given. Carried on the state rather than re-read later, so the
+       * screen that explains the number cannot drift from the number — the owner asked for a way to
+       * see “how it was calculated and which values from the blood panel have been used”, and an
+       * explanation assembled from a second read of the store is an explanation that can be wrong.
+       */
+      readonly used: PanelInputs;
     }
   | { readonly range: PhenoAgeRange; readonly status: 'calibrating' };
 
@@ -42,6 +57,17 @@ export type BioAge =
  * formula — `computePhenoAgeRange` would refuse it anyway, but it would refuse the whole panel
  * rather than the one bad marker.
  */
+function unitsOf(payload: Readonly<Record<string, unknown>>): Record<string, string> {
+  const raw = payload.unitsAsEntered;
+  if (typeof raw !== 'object' || raw === null) return {};
+
+  const units: Record<string, string> = {};
+  for (const [key, value] of Object.entries(raw as Record<string, unknown>)) {
+    if (typeof value === 'string' && value.length > 0) units[key] = value;
+  }
+  return units;
+}
+
 function markersOf(payload: Readonly<Record<string, unknown>>): Record<string, number> {
   const raw = payload.markers;
   if (typeof raw !== 'object' || raw === null) return {};
@@ -87,5 +113,11 @@ export function bioAgeFrom(
    */
   if (range.status !== 'ready') return { range, status: 'calibrating' };
 
-  return { drawnAt: panel.recordedAt, drivers: bioAgeDrivers(input), range, status: 'ready' };
+  return {
+    drawnAt: panel.recordedAt,
+    drivers: bioAgeDrivers(input),
+    range,
+    status: 'ready',
+    used: { ...input, unitsAsEntered: unitsOf(panel.payload) },
+  };
 }

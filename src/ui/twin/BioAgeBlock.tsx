@@ -76,9 +76,18 @@ export function BioAgeBlock({ bioAge }: { bioAge: BioAge }) {
       <Text style={[styles.number, { color: colors.text }]}>
         {whole ? years(range.point) : `${years(range.low)}–${years(range.high)}`}
       </Text>
-      <Text style={[styles.caption, { color: colors.textSubtle }]}>
-        Biological age · bloodwork {drawnOn(drawnAt)}
-      </Text>
+      {/* The owner asked for this: a way in to how the number was reached and which values were
+          used. It sits on the caption rather than beside the figure so it never competes with it. */}
+      <Link asChild href="/bio-age-method">
+        <Pressable accessibilityRole="link" style={styles.explain}>
+          <Text style={[styles.caption, { color: colors.textSubtle }]}>
+            Biological age · bloodwork {drawnOn(drawnAt)}
+          </Text>
+          <Text style={[styles.explainLink, { color: colors.accent }]}>
+            ⓘ How this was worked out
+          </Text>
+        </Pressable>
+      </Link>
       {!whole && (
         <Text style={[styles.caption, { color: colors.textSubtle }]}>{missingLine(range)}</Text>
       )}
@@ -146,6 +155,12 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   drivers: { gap: 2, marginTop: spacing.md },
+  explain: { alignItems: 'center' },
+  explainLink: {
+    fontFamily: fontFamily.medium,
+    fontSize: typography.caption,
+    marginTop: spacing.xs,
+  },
   // The size the Twin's number has always been. Literals because that is how `TwinMockup` held it —
   // this block replaces that markup, it does not get to change the typography with it.
   number: { fontFamily: fontFamily.display, fontSize: 40, lineHeight: 46 },
