@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 
 import { hubs } from '@/application/hubs/hubs';
+import { ALTERNATE_UNIT, boundsIn } from '@/application/labs/units';
 import {
   LEVINE_MARKERS,
   filledCount,
@@ -54,8 +55,10 @@ export function LabUploadFlow() {
     LEVINE_MARKERS.map((marker) => ({ key: marker.key, text: '' })),
   );
   const [state, setState] = useState<'approved' | 'failed' | 'idle' | 'saving'>('idle');
+  /** Which unit each marker is being typed in. Defaults to the one the formula reads. */
+  const [units, setUnits] = useState<Record<string, string>>({});
 
-  const problems = panelProblems(entries);
+  const problems = panelProblems(entries, units);
   const filled = filledCount(entries);
   const dateOk = testDate.trim().length === 0 || isValidTestDate(testDate.trim(), TODAY);
   const canApprove = filled > 0 && problems.length === 0 && dateOk;
@@ -70,7 +73,7 @@ export function LabUploadFlow() {
        * your last panel" line read this field, and both would be wrong the other way round.
        */
       const drawn = testDate.trim().length > 0 ? `${testDate.trim()}T00:00:00.000Z` : undefined;
-      await hubs.add('labs', 'panel', panelPayload(entries, source, new Date().toISOString()), {
+      await hubs.add('labs', 'panel', panelPayload(entries, source, new Date().toISOString(), units), {
         ...(drawn === undefined ? {} : { recordedAt: drawn }),
         source,
       });
@@ -165,7 +168,9 @@ export function LabUploadFlow() {
                 key={marker.key}
                 marker={marker}
                 onChange={(text) => setEntry(marker.key, text)}
+                onUnitChange={(unit) => setUnits((current) => ({ ...current, [marker.key]: unit }))}
                 text={entries.find((entry) => entry.key === marker.key)?.text ?? ''}
+                unit={units[marker.key] ?? marker.unit}
               />
             ))}
 
@@ -227,27 +232,79 @@ export function LabUploadFlow() {
   );
 }
 
+/**
+ * One marker, in whichever unit the laboratory printed.
+ *
+ * **This is the most likely way the whole calculation goes wrong.** Levine's formula takes American
+ * units; a European panel reports albumin in `g/L`, creatinine in `µmol/L` and glucose in `mmol/L`.
+ * Typed raw those are out by factors of ten, eighty-eight and eighteen, and the resulting biological
+ * age is confidently wrong rather than obviously wrong.
+ *
+ * The sanity ranges would catch all three — 45 g/L reads as impossible in `g/dL` — but "outside
+ * 1–7" does not tell somebody holding a German lab report what to do about it. So where a second
+ * unit exists it is offered, the range is restated in whatever is selected, and the conversion
+ * happens on the way to storage. What is stored is always the unit the formula reads.
+ */
 function MarkerRow({
   colors,
   marker,
   onChange,
+  onUnitChange,
   text,
+  unit,
 }: {
   colors: ThemeColors;
   marker: MarkerDefinition;
   onChange: (text: string) => void;
+  onUnitChange: (unit: string) => void;
   text: string;
+  unit: string;
 }) {
-  const problem = markerProblem(marker, text);
+  const problem = markerProblem(marker, text, unit);
+  const alternate = ALTERNATE_UNIT[marker.key];
+  const shown = boundsIn(marker.key, marker.sane, unit) ?? marker.sane;
 
   return (
     <View style={[styles.markerRow, { borderTopColor: colors.borderSubtle }]}>
       <View style={styles.markerLeft}>
         <Text style={[styles.markerLabel, { color: colors.text }]}>{marker.label}</Text>
-        <Text style={[styles.markerUnit, { color: colors.textSubtle }]}>{marker.unit}</Text>
+
+        {alternate === undefined ? (
+          <Text style={[styles.markerUnit, { color: colors.textSubtle }]}>{marker.unit}</Text>
+        ) : (
+          <View style={styles.unitToggle}>
+            {[marker.unit, alternate].map((option) => (
+              <Pressable
+                accessibilityRole="button"
+                accessibilityState={{ selected: unit === option }}
+                key={option}
+                onPress={() => onUnitChange(option)}
+                style={({ pressed }) => [
+                  styles.unitOption,
+                  {
+                    backgroundColor: unit === option ? colors.accentSoft : 'transparent',
+                    borderColor: unit === option ? colors.accentBorder : colors.hairline,
+                  },
+                  pressed && styles.pressed,
+                ]}>
+                <Text
+                  style={[
+                    styles.unitOptionText,
+                    { color: unit === option ? colors.accent : colors.textSubtle },
+                  ]}>
+                  {option}
+                </Text>
+              </Pressable>
+            ))}
+          </View>
+        )}
+
+        <Text style={[styles.markerRange, { color: colors.textSubtle }]}>
+          {shown.min}–{shown.max}
+        </Text>
       </View>
       <TextInput
-        accessibilityLabel={`${marker.label} in ${marker.unit}`}
+        accessibilityLabel={`${marker.label} in ${unit}`}
         keyboardType="decimal-pad"
         onChangeText={onChange}
         placeholder="—"
@@ -371,6 +428,26 @@ const styles = StyleSheet.create({
     fontSize: typography.micro,
     marginTop: spacing.xs,
     width: '100%',
+  },
+  markerRange: {
+    fontFamily: fontFamily.body,
+    fontSize: typography.micro,
+    marginTop: 2,
+  },
+  unitOption: {
+    borderRadius: radius.pill,
+    borderWidth: StyleSheet.hairlineWidth,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: 2,
+  },
+  unitOptionText: {
+    fontFamily: fontFamily.medium,
+    fontSize: typography.micro,
+  },
+  unitToggle: {
+    flexDirection: 'row',
+    gap: 4,
+    marginTop: 3,
   },
   markerRow: {
     alignItems: 'center',

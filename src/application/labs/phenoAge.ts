@@ -23,14 +23,21 @@
  * like this, and because it is pure: no React, no storage, no clock. It is testable in bare Node,
  * which is how Legacy wrote it too.
  */
-
-import type { LevineMarkerKey } from '@/ui/labs/levine';
-
-/** Conversions from the units the panel is entered in to the units the 2018 paper uses. */
-const ALBUMIN_GL_PER_GDL = 10;
-const CREATININE_UMOLL_PER_MGDL = 88.4;
-const CRP_MGL_PER_MGDL = 10;
-const GLUCOSE_MMOLL_TO_MGDL = 18.0182;
+/**
+ * The conversion factors and the marker vocabulary both come from `units.ts`, once.
+ *
+ * This used to import `LevineMarkerKey` from `@/ui/labs/levine` — an application module reaching
+ * into the UI layer, which is backwards and only went unnoticed because nothing enforces that
+ * direction. And it carried its own copies of `/ 88.4` and the rest, which is the duplication
+ * Legacy guards against with a build script.
+ */
+import {
+  ALBUMIN_GL_PER_GDL,
+  CREATININE_UMOLL_PER_MGDL,
+  CRP_MGL_PER_MGDL,
+  GLUCOSE_MMOLL_TO_MGDL,
+  type LevineMarkerKey,
+} from './units';
 
 /**
  * Reference bounds, used ONLY to bracket a partial panel. These are not a verdict on any value and
