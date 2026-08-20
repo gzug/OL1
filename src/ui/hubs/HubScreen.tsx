@@ -9,6 +9,7 @@ import type { Attachment } from '@/core/attachments';
 import { ChatBar } from '@/ui/chat/ChatBar';
 import { RecentThreads } from '@/ui/chat/RecentThreads';
 import { Heatmap } from '@/ui/exercise/Heatmap';
+import { KidneyFunction } from '@/ui/labs/KidneyFunction';
 import { PanelAge } from '@/ui/labs/PanelAge';
 import { WeekScore } from '@/ui/meals/WeekScore';
 import { LoggedWeek } from '@/ui/hubs/LoggedWeek';
@@ -161,6 +162,7 @@ export function HubScreen({
             fourteen-month-old panel is not wrong — it is old, and a screen that omits the date
             invites it to be read as current. */}
         {hub.id === 'labs' && <PanelAge />}
+        {hub.id === 'labs' && <KidneyFunction />}
 
         {state.observation !== undefined && (
           <Text style={[styles.observation, { color: colors.text }]}>{state.observation}</Text>
