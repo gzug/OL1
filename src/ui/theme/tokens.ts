@@ -69,7 +69,13 @@ export type ThemeColors = {
   background: string;
   /** The body figure's outline. A hairline, so the silhouette is an object rather than a shadow. */
   bodyOutline: string;
-  /** A muscle with nothing behind it. Must read as "no reading", never as "nothing happened". */
+  /**
+   * A muscle with nothing behind it. Must read as "no reading", never as "nothing happened".
+   *
+   * A neutral mid-grey, and neutral is the load-bearing half: the amber scale separates from it by
+   * HUE, not by lightness, because a grey light enough to sit under the palest amber step would be
+   * indistinguishable from the paper behind the figure. Grey means unmarked; amber means marked.
+   */
   bodyRest: string;
   border: string;
   borderSubtle: string;
@@ -112,8 +118,11 @@ export const lightColors: ThemeColors = {
   accentBorder: l.brandGreen,
   accentSoft: l.brandGreenSoft,
   background: l.background,
-  bodyOutline: l.hairline,
-  bodyRest: l.surfaceSoft,
+  // Literals rather than surface tokens, for the same reason the load scale is: these two are read
+  // against each OTHER and against the amber, not against the panels. A resting muscle at
+  // `surfaceSoft` disappeared into the paper once `BodyFigure` started applying it at all.
+  bodyOutline: '#8A8C84',
+  bodyRest: '#B2B2A9',
   border: l.border,
   borderSubtle: l.borderSubtle,
   danger: l.critical,
@@ -141,8 +150,8 @@ export const darkColors: ThemeColors = {
   accentBorder: d.brandGreen,
   accentSoft: d.brandGreenSoft,
   background: d.background,
-  bodyOutline: d.border,
-  bodyRest: d.surfaceSoft,
+  bodyOutline: '#71756F',
+  bodyRest: '#4A4D4B',
   border: d.border,
   borderSubtle: d.borderSubtle,
   danger: d.critical,
