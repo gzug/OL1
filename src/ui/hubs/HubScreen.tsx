@@ -11,6 +11,7 @@ import { RecentThreads } from '@/ui/chat/RecentThreads';
 import { Heatmap } from '@/ui/exercise/Heatmap';
 import { KidneyFunction } from '@/ui/labs/KidneyFunction';
 import { PanelAge } from '@/ui/labs/PanelAge';
+import { WhatChanged } from '@/ui/labs/WhatChanged';
 import { YourMarkers } from '@/ui/labs/YourMarkers';
 import { WeekScore } from '@/ui/meals/WeekScore';
 import { LoggedWeek } from '@/ui/hubs/LoggedWeek';
@@ -165,6 +166,7 @@ export function HubScreen({
         {hub.id === 'labs' && <PanelAge />}
         {hub.id === 'labs' && <KidneyFunction />}
         {hub.id === 'labs' && <YourMarkers />}
+        {hub.id === 'labs' && <WhatChanged />}
 
         {/**
           * The boundary, and it is drawn here because here is where it is. Everything above is the
