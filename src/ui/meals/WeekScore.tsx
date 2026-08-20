@@ -3,6 +3,7 @@ import { useCallback, useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 
 import { hubs as defaultHubs } from '@/application/hubs/hubs';
+import { entriesThisWeek } from '@/application/hubs/weekly';
 import {
   MIN_MEALS,
   confidenceSentence,
@@ -50,9 +51,18 @@ export function WeekScore({ source = defaultHubs }: { source?: typeof defaultHub
     }, [source]),
   );
 
-  const meals = entries
-    .filter((entry) => entry.kind === 'meal')
-    .map((entry) => ({ payload: entry.payload, recordedAt: entry.recordedAt }));
+  /**
+   * The same seven days `LoggedWeek` counts, through the same function.
+   *
+   * This said "this week's logging" while scoring every meal ever recorded, including one dated an
+   * hour into the future — so the screen printed "5 meals logged on 3 days" directly above "From 6
+   * meals across 4 days". Two numbers for the same meals is the fastest way to lose someone's trust
+   * in every other number on the page.
+   */
+  const meals = entriesThisWeek(entries, 'meal', new Date().toISOString()).map((entry) => ({
+    payload: entry.payload,
+    recordedAt: entry.recordedAt,
+  }));
 
   if (meals.length === 0) return null;
 

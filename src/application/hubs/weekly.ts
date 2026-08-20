@@ -37,6 +37,27 @@ function withinDays(iso: string, now: string, days: number): boolean {
   return Number.isFinite(ms) && ms >= 0 && ms < days * 86_400_000;
 }
 
+/**
+ * The entries of one kind that are inside the window — **the one definition of "this week"**.
+ *
+ * It exists because three components on the Nutrition screen each answered that question their own
+ * way and printed three different numbers for the same meals: "5 meals", "5 meals logged on 3 days"
+ * and "From 6 meals across 4 days". One of them capped its read at five and counted the cap; another
+ * had no window at all and was scoring a meal dated an hour into the future.
+ *
+ * A screen that cannot agree with itself about how many meals there were is worse than a screen
+ * that shows nothing, so there is now one function and everything that says "this week" calls it.
+ */
+export function entriesThisWeek<T extends Entryish>(
+  entries: readonly T[],
+  kind: string,
+  now: string,
+): readonly T[] {
+  return entries.filter(
+    (entry) => entry.kind === kind && withinDays(entry.recordedAt, now, WEEK_DAYS),
+  );
+}
+
 export type WeekOfEntries = {
   /** Distinct days with at least one entry. The number the weekly claim is gated on. */
   readonly days: number;
@@ -53,9 +74,7 @@ export function weekOfEntries(
   kind: string,
   now: string,
 ): WeekOfEntries {
-  const inWindow = entries.filter(
-    (entry) => entry.kind === kind && withinDays(entry.recordedAt, now, WEEK_DAYS),
-  );
+  const inWindow = entriesThisWeek(entries, kind, now);
 
   const days = new Set(inWindow.map((entry) => localDay(entry.recordedAt)));
   const today = inWindow.filter((entry) => localDay(entry.recordedAt) === localDay(now)).length;

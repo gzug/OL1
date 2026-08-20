@@ -4,6 +4,7 @@ import test from 'node:test';
 import {
   MIN_DAYS_FOR_A_WEEKLY_CLAIM,
   WEEK_DAYS,
+  entriesThisWeek,
   weekOfEntries,
   weekStrip,
 } from '../src/application/hubs/weekly';
@@ -86,4 +87,46 @@ test('an entry dated in the future is not part of this week', () => {
 
   assert.equal(week.total, 0);
   assert.equal(week.days, 0);
+});
+
+/**
+ * The bug this function exists to prevent, found on the live site on 2026-08-20: three components on
+ * the Nutrition screen each decided for themselves what "this week" meant, and printed "5 meals",
+ * "5 meals logged on 3 days" and "From 6 meals across 4 days" — for the same six meals.
+ *
+ * One of them capped its read at five rows and counted the cap. Another had no window at all and was
+ * scoring a meal dated an hour into the future. A screen that cannot agree with itself about how
+ * many meals there were is worse than one showing nothing, because it makes every other number on
+ * the page unbelievable too.
+ */
+test('everything that says "this week" counts the same entries', () => {
+  const entries = [
+    { kind: 'meal', recordedAt: '2026-08-17T08:00:00.000Z' },
+    { kind: 'meal', recordedAt: '2026-08-17T13:00:00.000Z' },
+    { kind: 'meal', recordedAt: '2026-08-18T12:00:00.000Z' },
+    { kind: 'meal', recordedAt: '2026-08-19T09:00:00.000Z' },
+    { kind: 'meal', recordedAt: '2026-08-19T19:00:00.000Z' },
+    { kind: 'meal', recordedAt: '2026-08-20T08:00:00.000Z' }, // an hour into the future
+    { kind: 'session', recordedAt: '2026-08-19T07:00:00.000Z' },
+  ];
+  const now = '2026-08-20T06:58:00.000Z';
+
+  const week = entriesThisWeek(entries, 'meal', now);
+  const counted = weekOfEntries(entries, 'meal', now);
+
+  assert.equal(week.length, 5, 'the future-dated meal was counted');
+  assert.equal(counted.total, week.length, 'the count and the selection disagree');
+  assert.equal(counted.days, 3);
+
+  // The strip is drawn from the same entries, so its filled bars cannot exceed them either.
+  const filled = weekStrip(entries, 'meal', now).filter((day) => day.fill > 0).length;
+  assert.equal(filled, counted.days, 'the strip shows more days than were counted');
+});
+
+test('a display limit never reaches the arithmetic', () => {
+  const many = Array.from({ length: 9 }, (_, index) => ({
+    kind: 'meal',
+    recordedAt: `2026-08-19T0${index}:00:00.000Z`,
+  }));
+  assert.equal(entriesThisWeek(many, 'meal', '2026-08-20T06:58:00.000Z').length, 9);
 });
