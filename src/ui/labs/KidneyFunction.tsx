@@ -98,7 +98,12 @@ export function KidneyFunction({
 }
 
 const styles = StyleSheet.create({
-  block: { marginBottom: spacing.md },
+  /**
+   * `marginTop` is not decoration. Without it the heading sits flush against the last line of
+   * `PanelAge` above and the two blocks read as one paragraph — caught by opening the deployed
+   * screen, which is the only place crowding is visible. No gate here can see it.
+   */
+  block: { marginBottom: spacing.md, marginTop: spacing.lg },
   card: { borderRadius: radius.md, padding: spacing.md },
   caveat: {
     fontFamily: fontFamily.body,
