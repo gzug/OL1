@@ -72,7 +72,7 @@ const SEXES: readonly { id: Sex; label: string }[] = [
 export function FirstRunFlow({ source = defaultProfiles }: { source?: typeof defaultProfiles }) {
   const { colors } = useTheme();
   const router = useRouter();
-  const seeded = useHubs();
+  const { hubs: seeded } = useHubs();
 
   const [step, setStep] = useState<Step>('welcome');
   const [typed, setTyped] = useState(false);

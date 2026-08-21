@@ -33,6 +33,11 @@ export type Hubs = {
   create(hub: Omit<StoredHub, 'createdAt'>): Promise<StoredHub>;
   entries(hubId: string, limit?: number): Promise<readonly HubEntry[]>;
   list(): Promise<readonly StoredHub[]>;
+
+  /** Put a hub away, and bring it back. Neither one touches a single entry. */
+  hide(hubId: string): Promise<void>;
+  hidden(): Promise<readonly string[]>;
+  unhide(hubId: string): Promise<void>;
 };
 
 export function createHubs(store: HubStore = defaultStore): Hubs {
@@ -57,6 +62,9 @@ export function createHubs(store: HubStore = defaultStore): Hubs {
     },
 
     entries: (hubId, limit) => store.listEntries(hubId, limit),
+    hidden: () => store.listHiddenHubs(),
+    hide: (hubId) => store.hideHub(hubId),
+    unhide: (hubId) => store.unhideHub(hubId),
 
     list: () => store.listHubs(),
   };

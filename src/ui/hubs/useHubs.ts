@@ -18,20 +18,33 @@ import { useCallback, useState } from 'react';
 
 import { hubs as defaultHubs } from '@/application/hubs/hubs';
 
+import { visibleHubs } from '@/application/hubs/visibility';
+
 import { SEED_HUBS, type HubDefinition } from './catalog';
 import { mergeHubs } from './mergeHubs';
 
-export function useHubs(source = defaultHubs): readonly HubDefinition[] {
+export type Hubs = {
+  /** Ids the person has put away. */
+  readonly hidden: readonly string[];
+  /** Every hub that exists, hidden ones included. */
+  readonly hubs: readonly HubDefinition[];
+  /** What belongs on the ring. */
+  readonly visible: readonly HubDefinition[];
+};
+
+export function useHubs(source = defaultHubs): Hubs {
   const [merged, setMerged] = useState<readonly HubDefinition[]>(SEED_HUBS);
+  const [away, setAway] = useState<readonly string[]>([]);
 
   useFocusEffect(
     useCallback(() => {
       let cancelled = false;
 
-      void source
-        .list()
-        .then((stored) => {
-          if (!cancelled) setMerged(mergeHubs(stored));
+      void Promise.all([source.list(), source.hidden()])
+        .then(([stored, hidden]) => {
+          if (cancelled) return;
+          setMerged(mergeHubs(stored));
+          setAway(hidden);
         })
         .catch(() => {
           // A store that cannot be read leaves the seeded hubs on screen. The alternative is an
@@ -45,5 +58,14 @@ export function useHubs(source = defaultHubs): readonly HubDefinition[] {
     }, [source]),
   );
 
-  return merged;
+  /**
+   * **`hubs` is every hub that exists; `visible` is the ones on the ring.**
+   *
+   * The two are deliberately separate rather than one filtered list. Hiding a hub is a statement
+   * about the ring, not about a person's history — the Twin's ledger reads `hubs` and still shows
+   * the meals logged in a Nutrition hub that has been put away, which is the same promise migration
+   * 7 makes: nothing is deleted. A single filtered list would have quietly broken that the first
+   * time somebody hid a hub they had used.
+   */
+  return { hidden: away, hubs: merged, visible: visibleHubs(merged, away) };
 }

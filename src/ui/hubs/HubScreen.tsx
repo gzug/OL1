@@ -1,8 +1,9 @@
-import { Link, useRouter } from 'expo-router';
-import { useState } from 'react';
+import { Link, useFocusEffect, useRouter } from 'expo-router';
+import { useCallback, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View, type TextStyle } from 'react-native';
 
 import { coachChat } from '@/application/chat/coachChat';
+import { hubs } from '@/application/hubs/hubs';
 import { toggleCoach } from '@/application/chat/threads';
 import { holdForHandoff, toRef } from '@/application/chat/attachments';
 import type { Attachment } from '@/core/attachments';
@@ -16,10 +17,12 @@ import { YourMarkers } from '@/ui/labs/YourMarkers';
 import { WeekScore } from '@/ui/meals/WeekScore';
 import { LoggedWeek } from '@/ui/hubs/LoggedWeek';
 import { StoredEntries } from '@/ui/hubs/StoredEntries';
+import { useHubs } from '@/ui/hubs/useHubs';
 import { CoachSelector } from '@/ui/chat/CoachSelector';
 import { coachesAtTable } from '@/ui/chat/coachList';
 import type { Coach, HubDefinition } from '@/ui/hubs/catalog';
 import { childHubs } from '@/ui/hubs/catalog';
+import { HideHub } from '@/ui/hubs/HideHub';
 import { SAMPLE_DATA_LINE } from '@/ui/hubs/hubState';
 import type { CockpitPeriod, DayBar, FacetState, HubState } from '@/ui/hubs/hubState';
 import {
@@ -91,6 +94,12 @@ export function HubScreen({
 }) {
   const { colors } = useTheme();
   const router = useRouter();
+  /**
+   * Every hub, hidden ones included, because the hide warning has to name the children that would
+   * go with this one — and it must name them whether or not they are on the ring right now.
+   */
+  const { hubs: allHubs } = useHubs();
+  const [entryCount, setEntryCount] = useState(0);
   const [contributeNoted, setContributeNoted] = useState(false);
   const [selecting, setSelecting] = useState(false);
   const inside = childHubs(hub.id);
@@ -120,6 +129,29 @@ export function HubScreen({
     setSelecting(false);
     router.push(`/table?coaches=${selected.join(',')}&thread=${thread}`);
   }
+
+  /**
+   * How much is in here, for the hide warning only. It says "the 14 things you logged are kept",
+   * and a warning that cannot count is a warning that has to be vague about the one thing a person
+   * is actually worried about.
+   */
+  useFocusEffect(
+    useCallback(() => {
+      let cancelled = false;
+      void hubs
+        .entries(hub.id)
+        .then((found) => {
+          if (!cancelled) setEntryCount(found.length);
+        })
+        .catch(() => {
+          // A count that cannot be read stays 0, and the warning says "Nothing is deleted" — true
+          // either way, and never a number this could not stand behind.
+        });
+      return () => {
+        cancelled = true;
+      };
+    }, [hub.id]),
+  );
 
   async function startFresh() {
     const thread = await coachChat.start(selected);
@@ -316,6 +348,14 @@ export function HubScreen({
             </View>
           ))}
         </View>
+
+
+        {/* Last on the screen, under the fixtures. Putting a hub away is a rare, considered act;
+
+            putting it in the header would make it the second most prominent thing on a hub. */}
+
+        <HideHub entryCount={entryCount} hub={hub} hubs={allHubs} />
+
 
       </ScrollView>
 

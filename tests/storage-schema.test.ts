@@ -8,10 +8,10 @@ import {
 } from '../src/infrastructure/storage/schema';
 
 test('the schema is versioned and contains no legacy health tables', () => {
-  assert.equal(CURRENT_SCHEMA_VERSION, 6);
+  assert.equal(CURRENT_SCHEMA_VERSION, 7);
   assert.deepEqual(
     MIGRATIONS.map((migration) => migration.version),
-    [1, 2, 3, 4, 5, 6],
+    [1, 2, 3, 4, 5, 6, 7],
   );
 
   const sql = `${CREATE_MIGRATION_TABLE_SQL}\n${MIGRATIONS.map((item) => item.sql).join('\n')}`;
@@ -21,6 +21,7 @@ test('the schema is versioned and contains no legacy health tables', () => {
   assert.match(sql, /chat_turn/);
   assert.match(sql, /attachment_json/);
   assert.match(sql, /hub_entry/);
+  assert.match(sql, /hidden_hub/);
   // Chat is the first thing here that holds what a person typed, so the table names are the first
   // real test of this rule rather than a formality: no domain table arrives by the back door.
   assert.doesNotMatch(sql, /(heart_rate|sleep|nutrition|blood|garmin)/i);
@@ -153,4 +154,31 @@ test('the profile takes a height and never a weight', () => {
 
   assert.match(migration.sql, /ALTER TABLE profile ADD COLUMN height_cm/i);
   assert.doesNotMatch(migration.sql, /weight/i, 'a weight belongs in an entry, not on an identity');
+});
+
+
+/**
+ * **Putting a hub away must never be able to delete what is in it.**
+ *
+ * Migration 7 stores hidden hubs as ids in their own table precisely so that hiding touches no
+ * entry. The failure this guards is somebody later "tidying" it into a cascade — `hub_entry` has no
+ * foreign key to `hub` at all (migration 4 says why), so a cascade added here would silently do
+ * nothing on the seeded hubs and delete everything on a user-made one. Inconsistent destruction is
+ * worse than either outcome alone.
+ */
+test('hiding a hub is a row of its own, with nothing cascading off it', () => {
+  const hiding = MIGRATIONS.find((migration) => migration.version === 7);
+
+  assert.ok(hiding !== undefined);
+  assert.match(hiding?.sql ?? '', /CREATE TABLE IF NOT EXISTS hidden_hub/);
+  assert.doesNotMatch(hiding?.sql ?? '', /REFERENCES/i, 'a reference here would invite a cascade');
+  assert.doesNotMatch(hiding?.sql ?? '', /hub_entry/i, 'hiding must not mention entries at all');
+});
+
+/** Additive only, all the way down. A rebuild is how a migration becomes the thing that loses data. */
+test('no migration drops or rewrites a table', () => {
+  for (const migration of MIGRATIONS) {
+    assert.doesNotMatch(migration.sql, /DROP\s+TABLE/i, `migration ${migration.version} drops a table`);
+    assert.doesNotMatch(migration.sql, /DROP\s+COLUMN/i, `migration ${migration.version} drops a column`);
+  }
 });

@@ -137,4 +137,30 @@ export const hubStore: HubStore = {
     );
     return rows.map(toHub);
   },
+
+  /**
+   * `INSERT OR IGNORE`, so hiding an already-hidden hub is a no-op rather than a constraint error.
+   *
+   * **No statement here reads or writes `hub_entry`.** Hiding is a row in `hidden_hub` and nothing
+   * else — see migration 7 for why that is the whole point.
+   */
+  async hideHub(hubId) {
+    const db = await database();
+    await db.runAsync(`INSERT OR IGNORE INTO hidden_hub (hub_id, hidden_at) VALUES (?, ?)`, [
+      hubId,
+      new Date().toISOString(),
+    ]);
+  },
+
+  async listHiddenHubs() {
+    const db = await database();
+    const rows = await db.getAllAsync<{ hub_id: string }>(`SELECT hub_id FROM hidden_hub`);
+    return rows.map((row) => row.hub_id);
+  },
+
+  /** The one delete in this feature, and it destroys a row that says "put away". */
+  async unhideHub(hubId) {
+    const db = await database();
+    await db.runAsync(`DELETE FROM hidden_hub WHERE hub_id = ?`, [hubId]);
+  },
 };
