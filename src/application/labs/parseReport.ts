@@ -34,7 +34,7 @@ type Rule = {
  * Kept in one place rather than repeated per rule, and deliberately generous — a unit this does not
  * recognise is better reported as absent than mistaken for a different one.
  */
-const UNIT = String.raw`(?:g\s*\/\s*[dD]?[lL]|mg\s*\/\s*[dD]?[lL]|[µu]mol\s*\/\s*[lL]|mmol\s*\/\s*[lL]|[UIui]\s*\/\s*[lL]|fl|fL|%|[xX]?\s*10\s*[\^]?\s*[39]\s*\/\s*[µu]?[lL]|[GKgk]\s*\/\s*[lL])`;
+const UNIT = String.raw`(?:g\s*\/\s*[dD]?[lL]|mg\s*\/\s*[dD]?[lL]|ng\s*\/\s*m?[lL]|[µun]mol\s*\/\s*[lL]|mmol\s*\/\s*[lL]|[UIui]\s*\/\s*[lL]|fl|fL|%|[xX]?\s*10\s*[\^]?\s*[39]\s*\/\s*[µu]?[lL]|[GKgk]\s*\/\s*[lL])`;
 
 const VALUE = String.raw`(\d+(?:[.,]\d+)?)`;
 
@@ -94,6 +94,27 @@ const RULES: readonly Rule[] = [
     String.raw`Leukozyten|Leukocytes|White (?:Blood )?Cell Count|\bLeukos\b|\bWBC\b|\bLEU\b`,
     'wbc',
   ),
+
+  /**
+   * The markers the age calculation does NOT read, added 2026-08-21.
+   *
+   * A panel arrives with a lipid profile on it and the app used to read straight past it. These are
+   * recorded and shown; `computePhenoAgeRange` reads exactly nine keys and would ignore them —
+   * which is the point, and why they are a separate union in `units.ts`.
+   *
+   * **`LDL` must not match `LDL/HDL Ratio`**, and `HDL` must not match it either. A ratio line sits
+   * directly beneath the two values it is built from on almost every printed panel, and matched as
+   * a value it reads as a cholesterol of three. That is the `Adjusted for Albumin` shape again, and
+   * it was found the same way — by looking at a real report.
+   */
+  rule(String.raw`Gesamtcholesterin|Total Cholesterol|Cholesterol,? Total|\bTC\b`, 'total_cholesterol'),
+  rule(String.raw`LDL[- ]?Cholesterin|LDL[- ]?Cholesterol|\bLDL\b(?!\s*[/:])`, 'ldl'),
+  rule(String.raw`HDL[- ]?Cholesterin|HDL[- ]?Cholesterol|\bHDL\b(?!\s*[/:])`, 'hdl'),
+  rule(String.raw`Triglyzeride|Triglyceride[sn]?|\bTG\b`, 'triglycerides'),
+  rule(String.raw`Apolipoprotein B|\bApo\s?B\b|\bApoB\b`, 'apob'),
+  rule(String.raw`Lipoprotein\s?\(a\)|\bLp\s?\(a\)\b`, 'lpa'),
+  rule(String.raw`\bHbA1c\b|Hämoglobin A1c|Haemoglobin A1c|Glycated Haemoglobin`, 'hba1c'),
+  rule(String.raw`Vitamin\s?D|25-?OH[- ]?Vitamin\s?D|25[- ]?Hydroxyvitamin\s?D`, 'vitamin_d'),
 ];
 
 export type Finding = {

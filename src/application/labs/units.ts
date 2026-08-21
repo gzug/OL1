@@ -21,6 +21,22 @@
  * refusal; it is carried because it is a decision rather than an omission.
  */
 
+/**
+ * Markers a panel can hold beyond the nine the formula reads.
+ *
+ * Kept as its own union so nothing can pass one where a `LevineMarkerKey` is expected — a lipid
+ * reaching `computePhenoAge` is the failure this separation exists to prevent.
+ */
+export type ExtraUnitKey =
+  | 'apob'
+  | 'hba1c'
+  | 'hdl'
+  | 'ldl'
+  | 'lpa'
+  | 'total_cholesterol'
+  | 'triglycerides'
+  | 'vitamin_d';
+
 export type LevineMarkerKey =
   | 'albumin'
   | 'alp'
@@ -31,6 +47,20 @@ export type LevineMarkerKey =
   | 'mcv'
   | 'rdw'
   | 'wbc';
+
+/**
+ * Cholesterol and triglycerides, `mmol/L` to `mg/dL`.
+ *
+ * **Two different factors, and they are not interchangeable.** Cholesterol species — total, LDL,
+ * HDL — divide by 38.67; triglycerides divide by 88.57, because a triglyceride molecule is far
+ * heavier. Using one factor for all four is the single most common mistake in converting a lipid
+ * panel, and it puts triglycerides out by more than a factor of two.
+ *
+ * Everywhere outside the United States prints `mmol/L`, so this is the ordinary case rather than
+ * the exotic one — the owner's own panel is Australian.
+ */
+export const CHOLESTEROL_MMOLL_TO_MGDL = 38.67;
+export const TRIGLYCERIDES_MMOLL_TO_MGDL = 88.57;
 
 /** Defined once, and nowhere else in the repository. */
 export const ALBUMIN_GL_PER_GDL = 10;
@@ -50,6 +80,63 @@ export const TARGET_UNIT: Readonly<Record<LevineMarkerKey, string>> = {
   rdw: '%',
   wbc: '10³/µL',
 };
+
+/** What each extra marker is stored in, and what a laboratory elsewhere is likely to have printed. */
+export const EXTRA_TARGET_UNIT: Readonly<Record<ExtraUnitKey, string>> = {
+  apob: 'mg/dL',
+  hba1c: '%',
+  hdl: 'mg/dL',
+  ldl: 'mg/dL',
+  lpa: 'nmol/L',
+  total_cholesterol: 'mg/dL',
+  triglycerides: 'mg/dL',
+  vitamin_d: 'ng/mL',
+};
+
+export const EXTRA_ALTERNATE_UNIT: Readonly<Partial<Record<ExtraUnitKey, string>>> = {
+  apob: 'g/L',
+  hdl: 'mmol/L',
+  ldl: 'mmol/L',
+  lpa: 'mg/dL',
+  total_cholesterol: 'mmol/L',
+  triglycerides: 'mmol/L',
+  vitamin_d: 'nmol/L',
+};
+
+/**
+ * An extra marker in the unit it is stored in, or null when this is not a conversion it knows.
+ *
+ * **`mmol/L` for Lp(a) is deliberately absent.** Lp(a) is reported in `nmol/L` or `mg/dL`, and the
+ * factor between them depends on the particle's size, which differs between people — there is no
+ * single correct number. Laboratories say so themselves. Refusing is the only honest answer, and it
+ * is the same refusal `cells/µL` gets above.
+ */
+export function extraToTargetUnit(
+  key: ExtraUnitKey,
+  value: number,
+  fromUnit: string,
+): number | null {
+  const target = normUnit(EXTRA_TARGET_UNIT[key]);
+  const source = normUnit(fromUnit);
+
+  if (source === target) return value;
+
+  // Cholesterol species and triglycerides use DIFFERENT factors. See the note on the constants.
+  if (source === 'mmol/l') {
+    if (key === 'hdl' || key === 'ldl' || key === 'total_cholesterol') {
+      return value * CHOLESTEROL_MMOLL_TO_MGDL;
+    }
+    if (key === 'triglycerides') return value * TRIGLYCERIDES_MMOLL_TO_MGDL;
+  }
+
+  // ApoB is printed either way; 1 g/L is 100 mg/dL, which is exact rather than a conversion factor.
+  if (key === 'apob' && source === 'g/l') return value * 100;
+
+  // Vitamin D: 1 ng/mL is 2.496 nmol/L, and this direction is a division.
+  if (key === 'vitamin_d' && source === 'nmol/l') return value / 2.496;
+
+  return null;
+}
 
 /** The other unit a laboratory is likely to have used, where there is one. */
 export const ALTERNATE_UNIT: Readonly<Partial<Record<LevineMarkerKey, string>>> = {
