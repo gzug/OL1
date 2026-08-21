@@ -81,6 +81,27 @@ export const TARGET_UNIT: Readonly<Record<LevineMarkerKey, string>> = {
   wbc: '10³/µL',
 };
 
+/**
+ * The order a panel prints these in, which is the order every screen must show them in.
+ *
+ * **Not alphabetical, and not the object's key order.** `EXTRA_TARGET_UNIT` is written
+ * alphabetically because a lookup table should be scannable, and reading the order off it put ApoB
+ * at the top of "what changed" while the Labs block led with total cholesterol — the same markers
+ * in two orders on one screen, which reads as two different lists.
+ *
+ * A lipid panel is printed total, LDL, HDL, triglycerides. Anything else follows.
+ */
+export const EXTRA_MARKER_ORDER: readonly ExtraUnitKey[] = [
+  'total_cholesterol',
+  'ldl',
+  'hdl',
+  'triglycerides',
+  'apob',
+  'lpa',
+  'hba1c',
+  'vitamin_d',
+];
+
 /** What each extra marker is stored in, and what a laboratory elsewhere is likely to have printed. */
 export const EXTRA_TARGET_UNIT: Readonly<Record<ExtraUnitKey, string>> = {
   apob: 'mg/dL',

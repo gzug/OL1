@@ -4,6 +4,8 @@ import test from 'node:test';
 import { REQUIRED_MARKERS, computePhenoAgeRange } from '../src/application/labs/phenoAge';
 import {
   CHOLESTEROL_MMOLL_TO_MGDL,
+  EXTRA_MARKER_ORDER,
+  EXTRA_TARGET_UNIT,
   TRIGLYCERIDES_MMOLL_TO_MGDL,
   extraToTargetUnit,
 } from '../src/application/labs/units';
@@ -139,4 +141,30 @@ test('an extra marker does not borrow the nine’s reason for being there', () =
   for (const marker of EXTRA_MARKERS) {
     assert.ok(!nine.has(marker.why), `${marker.key} reuses a Levine marker's reason`);
   }
+});
+
+/**
+ * **One order, everywhere.**
+ *
+ * `EXTRA_TARGET_UNIT` is written alphabetically because a lookup table should be scannable, and
+ * reading the order off it put ApoB at the top of "what changed" while the Labs block led with
+ * total cholesterol — the same markers in two orders on one screen, which reads as two lists.
+ * Caught by opening the deployed page after both landed.
+ */
+test('every screen shows the extras in the order a panel prints them', () => {
+  assert.deepEqual(
+    EXTRA_MARKERS.map((marker) => marker.key),
+    [...EXTRA_MARKER_ORDER],
+    'the catalogue and the canonical order disagree',
+  );
+});
+
+/** And the order names every marker exactly once, so nothing can fall out of a screen silently. */
+test('the order covers every extra marker, with no repeats', () => {
+  assert.equal(new Set(EXTRA_MARKER_ORDER).size, EXTRA_MARKER_ORDER.length);
+  assert.deepEqual(
+    [...EXTRA_MARKER_ORDER].sort(),
+    Object.keys(EXTRA_TARGET_UNIT).sort(),
+    'a marker exists in one place and not the other',
+  );
 });
