@@ -9,6 +9,7 @@ import {
 } from '../src/application/labs/units';
 import { EXTRA_MARKERS, EXTRA_MARKER_KEYS } from '../src/ui/labs/lipids';
 import { LEVINE_MARKERS } from '../src/ui/labs/levine';
+import { MARKER_CONTEXT } from '../src/ui/labs/markerContext';
 
 /**
  * The markers a panel holds that the age calculation does not read.
