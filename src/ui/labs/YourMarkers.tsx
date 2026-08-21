@@ -4,6 +4,7 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { hubs as defaultHubs } from '@/application/hubs/hubs';
 import { LEVINE_MARKERS, isLevineKey } from '@/ui/labs/levine';
+import { EXTRA_MARKERS } from '@/ui/labs/lipids';
 import { markerContext } from '@/ui/labs/markerContext';
 import { fontFamily, lineHeights, radius, spacing, tracking, typography, useTheme } from '@/ui/theme';
 
@@ -56,6 +57,14 @@ export function YourMarkers({ source = defaultHubs }: { source?: typeof defaultH
   if (markers === null) return null;
 
   const present = LEVINE_MARKERS.filter((marker) => typeof markers[marker.key] === 'number');
+  /**
+   * The markers the age calculation does not read, in their own block below the nine.
+   *
+   * **Separated rather than merged, and the heading says why.** One list would suggest a fuller
+   * panel produces a more certain number — `computePhenoAgeRange` reads exactly nine keys and
+   * ignores the rest. Absent entirely when a panel carries none, which is most panels.
+   */
+  const extras = EXTRA_MARKERS.filter((marker) => typeof markers[marker.key] === 'number');
   if (present.length === 0) return null;
 
   const absent = LEVINE_MARKERS.filter((marker) => typeof markers[marker.key] !== 'number');
@@ -99,6 +108,52 @@ export function YourMarkers({ source = defaultHubs }: { source?: typeof defaultH
         })}
       </View>
 
+      {extras.length > 0 && (
+        <>
+          <Text style={[styles.heading, styles.extraHeading, { color: colors.textSubtle }]}>
+            ALSO ON THIS PANEL
+          </Text>
+          <View style={[styles.card, { backgroundColor: colors.surface }]}>
+            {extras.map((marker, index) => {
+              const isOpen = open === marker.key;
+
+              return (
+                <Fragment key={marker.key}>
+                  {index > 0 && (
+                    <View style={[styles.rule, { backgroundColor: colors.borderSubtle }]} />
+                  )}
+                  <Pressable
+                    accessibilityRole="button"
+                    onPress={() => setOpen(isOpen ? null : marker.key)}
+                    style={({ pressed }) => [styles.row, pressed && styles.pressed]}>
+                    <Text style={[styles.label, { color: colors.text }]}>{marker.label}</Text>
+                    <Text style={[styles.value, { color: colors.text }]}>
+                      {markers[marker.key]} {marker.unit}
+                    </Text>
+                  </Pressable>
+                  {isOpen && (
+                    <View style={styles.context}>
+                      <Text style={[styles.what, { color: colors.textMuted }]}>{marker.what}</Text>
+                      <Text style={[styles.why, { color: colors.textSubtle }]}>{marker.why}</Text>
+                      <Text style={[styles.alongsideLabel, { color: colors.textSubtle }]}>
+                        READ ALONGSIDE
+                      </Text>
+                      <Text style={[styles.why, { color: colors.textSubtle }]}>
+                        {marker.alongside}
+                      </Text>
+                    </View>
+                  )}
+                </Fragment>
+              );
+            })}
+          </View>
+          <Text style={[styles.absent, { color: colors.textSubtle }]}>
+            These are recorded because you measure them. The biological age above reads the nine and
+            nothing else, so a fuller panel does not make it more certain.
+          </Text>
+        </>
+      )}
+
       {absent.length > 0 && (
         <Text style={[styles.absent, { color: colors.textSubtle }]}>
           Not on this panel: {absent.map((marker) => marker.label).join(', ')}.
@@ -127,6 +182,7 @@ const styles = StyleSheet.create({
     marginTop: spacing.xs,
   },
   block: { marginBottom: spacing.md, marginTop: spacing.lg },
+  extraHeading: { marginTop: spacing.lg },
   card: { borderRadius: radius.md, paddingHorizontal: spacing.md },
   context: { paddingBottom: spacing.sm, gap: spacing.xs },
   heading: {
