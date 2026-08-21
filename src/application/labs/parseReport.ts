@@ -128,13 +128,29 @@ const RULES: readonly Rule[] = [
    * directly beneath the two values it is built from on almost every printed panel, and matched as
    * a value it reads as a cholesterol of three. That is the `Adjusted for Albumin` shape again, and
    * it was found the same way — by looking at a real report.
+   *
+   * **The guard has to be on the correct side of each name, and it was not.** A ratio only ever
+   * puts its slash to the LEFT of its second marker, which no lookahead can see: `LDL/HDL 2.2` and
+   * `Chol/HDL 3.5` were read as an HDL of 2.2 and 3.5. And the right-hand guard was `[/:]`, which
+   * also swallowed the plainest separator a report prints — `HDL: 1.4` matched nothing at all,
+   * on the same colon `GAP` admits two comments above. Left edge refuses `/` and `:`; right edge
+   * refuses only `/`.
+   *
+   * A ratio written `LDL : HDL 2.2` needs no guard of its own. The name after the colon is not a
+   * number, so the value never arrives and the rule simply fails.
    */
   rule(String.raw`Gesamtcholesterin|Total Cholesterol|Cholesterol,? Total|\bTC\b`, 'total_cholesterol'),
-  rule(String.raw`LDL[- ]?Cholesterin|LDL[- ]?Cholesterol|\bLDL\b(?!\s*[/:])`, 'ldl'),
-  rule(String.raw`HDL[- ]?Cholesterin|HDL[- ]?Cholesterol|\bHDL\b(?!\s*[/:])`, 'hdl'),
+  rule(String.raw`LDL[- ]?Cholesterin|LDL[- ]?Cholesterol|(?<![/:]\s*)\bLDL\b(?!\s*\/)`, 'ldl'),
+  rule(String.raw`HDL[- ]?Cholesterin|HDL[- ]?Cholesterol|(?<![/:]\s*)\bHDL\b(?!\s*\/)`, 'hdl'),
   rule(String.raw`Triglyzeride|Triglyceride[sn]?|\bTG\b`, 'triglycerides'),
   rule(String.raw`Apolipoprotein B|\bApo\s?B\b|\bApoB\b`, 'apob'),
-  rule(String.raw`Lipoprotein\s?\(a\)|\bLp\s?\(a\)\b`, 'lpa'),
+  /**
+   * **No trailing `\b` after `Lp(a)`.** A word boundary needs a word character on one side of it,
+   * and here neither side is one: `)` then a space. So `Lp(a) 50 nmol/L` — the spelling every
+   * report prints — matched nothing at all, while the written-out `Lipoprotein (a)` matched
+   * perfectly well and hid it. The closing bracket is its own right edge.
+   */
+  rule(String.raw`Lipoprotein\s?\(a\)|\bLp\s?\(a\)`, 'lpa'),
   rule(String.raw`\bHbA1c\b|Hämoglobin A1c|Haemoglobin A1c|Glycated Haemoglobin`, 'hba1c'),
   rule(String.raw`Vitamin\s?D|25-?OH[- ]?Vitamin\s?D|25[- ]?Hydroxyvitamin\s?D`, 'vitamin_d'),
 ];
