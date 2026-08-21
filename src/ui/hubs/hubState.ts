@@ -93,3 +93,19 @@ export type HubState = {
   /** Co-occurrence, never cause. Same grammar as Home's weekly insight, kept deliberately. */
   readonly observation?: string;
 };
+
+/**
+ * A hub with nothing invented in it.
+ *
+ * Every hub the app ships has a `HubState` under `states/` full of sample periods and coverage
+ * facets. A hub somebody made has none, and the screen used to answer that with a stub reading
+ * "Nothing has been recorded in this hub yet" — printed without reading the store, while the
+ * first-run flow was filing goals into those very hubs.
+ *
+ * This is the honest shape instead: no observation, no basis, no cockpit, no facets. `HubScreen`
+ * renders what is really in the store above it and nothing below, and its sample-data marker
+ * correctly does not appear, because there is no sample data.
+ */
+export function emptyHubState(): HubState {
+  return { cockpit: { periods: [] }, facets: [] };
+}
