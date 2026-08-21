@@ -21,12 +21,39 @@
  * which is also where the conversion factors live. One definition, so a screen and a calculation
  * cannot disagree about what `mg/dL` means.
  */
-import { TARGET_UNIT, toTargetUnit, type LevineMarkerKey } from '@/application/labs/units';
+import {
+  TARGET_UNIT,
+  extraToTargetUnit,
+  toTargetUnit,
+  type ExtraUnitKey,
+  type LevineMarkerKey,
+} from '@/application/labs/units';
+
+/**
+ * Whether a key is one of the nine the formula reads, which decides its conversion table.
+ *
+ * Derived from `TARGET_UNIT` rather than listed again — a tenth marker added to the formula would
+ * otherwise be validated against the wrong table until somebody remembered this line.
+ */
+function isLevineKey(key: ExtraUnitKey | LevineMarkerKey): key is LevineMarkerKey {
+  return Object.prototype.hasOwnProperty.call(TARGET_UNIT, key);
+}
 
 export type { LevineMarkerKey };
 
+/**
+ * A marker a panel screen can put on the page.
+ *
+ * **Widened from `LevineMarkerKey` on 2026-08-21**, so the same row, the same validation and the
+ * same unit toggle serve a lipid as serve albumin. The nine and the rest stay separate lists and
+ * separate unions everywhere else — that separation is what keeps a lipid out of
+ * `computePhenoAge`. What they share is being a number somebody types off a report, and writing a
+ * second row component for that would be two places for one bug to live.
+ */
+export type PanelMarkerKey = ExtraUnitKey | LevineMarkerKey;
+
 export type MarkerDefinition = {
-  readonly key: LevineMarkerKey;
+  readonly key: PanelMarkerKey;
   readonly label: string;
   /** Outside this a number is a misread unit or a typo, not a person. Not a reference range. */
   readonly sane: { readonly max: number; readonly min: number };
@@ -80,7 +107,11 @@ export function markerProblem(
    * the g/dL range would reject a normal result. Converting first is what lets somebody type the
    * number exactly as their laboratory printed it.
    */
-  const value = toTargetUnit(marker.key, typed, unit);
+  /* Each key's own conversion table. The two are separate because the unions are — a lipid uses
+     `extraToTargetUnit`, and cholesterol and triglycerides do not even share a factor. */
+  const value = isLevineKey(marker.key)
+    ? toTargetUnit(marker.key, typed, unit)
+    : extraToTargetUnit(marker.key, typed, unit);
   if (value === null) return 'notANumber';
   if (value < marker.sane.min || value > marker.sane.max) return 'outsideSane';
 
@@ -110,17 +141,30 @@ export function isValidTestDate(value: string, today: string): boolean {
   );
 }
 
-/** Markers with something in them. What "review" is counted against. */
-export function filledCount(entries: readonly MarkerEntry[]): number {
-  return entries.filter((entry) => entry.text.trim().length > 0).length;
+/**
+ * Markers with something in them. What "review" is counted against.
+ *
+ * **Counted against a given list, defaulting to the nine.** A panel screen holds seventeen rows
+ * now, and counting all of them against "of 9" would print "12 of 9 filled" the moment somebody
+ * typed a lipid — a label describing a screen that had changed underneath it.
+ */
+export function filledCount(
+  entries: readonly MarkerEntry[],
+  markers: readonly MarkerDefinition[] = LEVINE_MARKERS,
+): number {
+  const wanted = new Set(markers.map((marker) => marker.key));
+  return entries.filter((entry) => wanted.has(entry.key as never) && entry.text.trim().length > 0)
+    .length;
 }
 
 /** Every problem in the panel, so approval can be blocked on all of them rather than the first. */
 export function panelProblems(
   entries: readonly MarkerEntry[],
   units: Readonly<Record<string, string>> = {},
-): readonly LevineMarkerKey[] {
-  return LEVINE_MARKERS.filter((marker) => {
+  /** Which markers to check. Defaults to the nine, so existing callers are unchanged. */
+  markers: readonly MarkerDefinition[] = LEVINE_MARKERS,
+): readonly PanelMarkerKey[] {
+  return markers.filter((marker) => {
     const entry = entries.find((candidate) => candidate.key === marker.key);
     if (entry === undefined) return false;
     return markerProblem(marker, entry.text, units[marker.key] ?? marker.unit) !== null;
@@ -144,10 +188,12 @@ export function panelPayload(
   source: LabSource,
   approvedAt: string,
   units: Readonly<Record<string, string>> = {},
+  /** Which markers to write. Defaults to the nine, so existing callers are unchanged. */
+  markers: readonly MarkerDefinition[] = LEVINE_MARKERS,
 ): Readonly<Record<string, unknown>> {
-  const markers: Record<string, number> = {};
+  const stored: Record<string, number> = {};
 
-  for (const marker of LEVINE_MARKERS) {
+  for (const marker of markers) {
     const entry = entries.find((item) => item.key === marker.key);
     const text = entry?.text.trim() ?? '';
     if (text.length === 0) continue;
@@ -162,9 +208,11 @@ export function panelPayload(
      * means every future reader has to remember to. One conversion, at the edge, is the same
      * argument `metricFormat` makes about display: decide once, at the boundary.
      */
-    const value = toTargetUnit(marker.key, Number(text), unit);
-    if (value !== null) markers[marker.key] = value;
+    const value = isLevineKey(marker.key)
+      ? toTargetUnit(marker.key, Number(text), unit)
+      : extraToTargetUnit(marker.key, Number(text), unit);
+    if (value !== null) stored[marker.key] = value;
   }
 
-  return { approvedAt, markers, readBy: source, unitsAsEntered: units };
+  return { approvedAt, markers: stored, readBy: source, unitsAsEntered: units };
 }
