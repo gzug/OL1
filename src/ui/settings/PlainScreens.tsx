@@ -1,12 +1,16 @@
 import Constants from 'expo-constants';
-import { useState } from 'react';
-import { Linking, Platform } from 'react-native';
+import { Platform } from 'react-native';
 
 import { COPY as FIRST_RUN } from '@/ui/onboarding/firstRun';
 
-import { Label, Line, Note, Screen, Waiting } from './chrome';
-import { ContactIcon, NotificationsIcon, SubscriptionIcon } from './icons';
-import { COPY, FEEDBACK_TO } from './rows';
+import { Label, Note, Screen, Waiting } from './chrome';
+import {
+  ContactIcon,
+  FeedbackIcon,
+  NotificationsIcon,
+  SubscriptionIcon,
+} from './icons';
+import { COPY } from './rows';
 
 /**
  * The screens made of nothing but words.
@@ -14,7 +18,7 @@ import { COPY, FEEDBACK_TO } from './rows';
  * Six of them, together, because each is a heading and a paragraph and six files of that would be
  * five more places for the frame to drift. Anything that grows a control moves out to its own file.
  *
- * **Three of these are rows that are waiting on something that does not exist.** They are reachable
+ * **Four of these are rows that are waiting on something that does not exist.** They are reachable
  * on purpose: a person tapping *Subscription* should find out why there is nothing there rather than
  * meet a dead row. Each says what is missing in terms of the thing itself — no server, no plans,
  * nothing sent — and never a date, because a date is a promise nobody has made.
@@ -57,43 +61,23 @@ export function NotificationsScreen() {
 }
 
 /**
- * Give feedback — the only row here that reaches a human.
+ * Give feedback — waiting on an address, and nothing else.
  *
- * **It opens a mail app rather than collecting anything.** A form would need a server to post to,
- * and there is none; a form that posted nowhere would be the worst thing on this screen. Handing the
- * message to the mail app the person already uses costs nothing and cannot silently fail.
+ * It briefly opened a mail app at the owner's own address, which he supplied and then withdrew: the
+ * repository is public, and a personal address published in a product is scraped within days.
  *
- * **Whether it can open is checked before it tries.** A device with no mail app configured would
- * otherwise take the tap and do nothing at all, which is the shape of failure this repository likes
- * least. When it cannot open, the screen says so — and the address is on the screen above either
- * way, so somebody can copy it.
+ * **Nothing is guessed in its place.** An address that went nowhere would send somebody's feedback
+ * into a void while looking like it worked, which is worse than a row that says it is not ready.
+ * Two lines of work the moment there is one to use.
  */
 export function FeedbackScreen() {
-  const [failed, setFailed] = useState(false);
-
-  const href = `mailto:${FEEDBACK_TO}?subject=${encodeURIComponent(COPY.feedbackSubject)}`;
-
-  async function open() {
-    setFailed(false);
-    try {
-      const can = await Linking.canOpenURL(href);
-      if (!can) {
-        setFailed(true);
-        return;
-      }
-      await Linking.openURL(href);
-    } catch {
-      setFailed(true);
-    }
-  }
-
   return (
     <Screen title={COPY.feedbackTitle}>
-      <Note text={COPY.feedbackBody} />
-      <Label text="TO" />
-      <Line label={FEEDBACK_TO} />
-      <Line action={COPY.feedbackOpen} label={COPY.feedbackTitle} onPress={() => void open()} />
-      {failed && <Note text={COPY.feedbackNoMailApp} />}
+      <Waiting
+        icon={<FeedbackIcon size={30} muted />}
+        text={COPY.feedbackWaiting}
+        title="No address yet"
+      />
     </Screen>
   );
 }
