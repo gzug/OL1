@@ -110,6 +110,16 @@ test('a profile says only what was actually given', () => {
   assert.equal(never.profile, COPY.profileEmpty);
 });
 
+/**
+ * A COUNT OF THE WRONG THING. This said "7 on your ring" to somebody with the six that ship, because
+ * Labs sits inside Health record rather than on the ring. Wrong about a person's own app, invisible
+ * to every gate here, and found by reading the deployed screen.
+ */
+test('the ring count is places on the ring, not hubs that exist', () => {
+  const said = subtitles({ ...FACTS, hubsAway: 0, hubsOnRing: 6 });
+  assert.equal(said.hubs, '6 on your ring');
+});
+
 test('nothing held reads as nothing, not as zero', () => {
   const empty = subtitles({ ...FACTS, coachesTold: 0, goals: [], hubsAway: 0 });
 

@@ -122,8 +122,17 @@ export function factsFrom(data: SettingsData, today: Date): IndexFacts {
     coachesTold: coached.filter((hub) => data.briefs[hub.id] !== undefined).length,
     coachesTotal: coached.length,
     goals: goalsHeld(data.entries).map((goal) => goal.label),
-    hubsAway: rows.filter((row) => row.away).length,
-    hubsOnRing: rows.filter((row) => !row.away).length,
+    /**
+     * **Places on the ring, not hubs.** Both count `depth === 0` only.
+     *
+     * Counting every row said "7 on your ring" to somebody with the six that ship, because Labs is
+     * inside Health record rather than on the ring — a wrong number about a person's own app, found
+     * by reading the deployed screen. The put-away count follows the same rule: hiding Health record
+     * takes Labs with it, and reporting that as two things put away would count a consequence as a
+     * choice.
+     */
+    hubsAway: rows.filter((row) => row.depth === 0 && row.away).length,
+    hubsOnRing: rows.filter((row) => row.depth === 0 && !row.away).length,
     profile:
       data.profile === null
         ? null
