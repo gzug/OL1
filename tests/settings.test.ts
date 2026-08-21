@@ -5,7 +5,6 @@ import { SEED_HUBS, orbitHubs } from '../src/ui/hubs/catalog';
 import { GOALS, SPORTS } from '../src/ui/onboarding/firstRun';
 import {
   COPY,
-  FEEDBACK_TO,
   ROWS,
   groups,
   rowsIn,
@@ -158,16 +157,20 @@ test('there is no Memory row', () => {
 });
 
 /** Every waiting row must open something, so none of them may be silently dropped from the list. */
-test('the rows waiting on something are the three we know about', () => {
+test('the rows waiting on something are the four we know about', () => {
   const waiting: RowId[] = ROWS.filter((row) => row.state === 'waiting').map((row) => row.id);
-  assert.deepEqual(waiting.sort(), ['contact', 'notifications', 'subscription']);
+  assert.deepEqual(waiting.sort(), ['contact', 'feedback', 'notifications', 'subscription']);
 });
 
-/** Feedback stopped waiting the moment there was an address to send to. */
-test('give feedback reaches a person', () => {
-  assert.equal(ROWS.find((row) => row.id === 'feedback')?.state, 'ready');
-  assert.match(FEEDBACK_TO, /^[^@\s]+@[^@\s]+\.[^@\s]+$/, 'the address must be one a mail app accepts');
-  assert.match(COPY.feedbackUnder, /mail app/i);
+/**
+ * The address came out again on 2026-08-22. The owner gave his own, then withdrew it once it was
+ * clear the repository is public — so nothing in `src/` may carry one until there is an address that
+ * belongs to the product rather than to a person.
+ */
+test('no contact address is published in the settings copy', () => {
+  for (const [key, line] of Object.entries(COPY)) {
+    assert.doesNotMatch(line, /[\w.+-]+@[\w-]+\.[\w.]+/, `COPY.${key} publishes an address`);
+  }
 });
 
 /* ── About you ─────────────────────────────────────────────────────────────────────────────── */
@@ -294,7 +297,7 @@ test('there are three states, and the failure sentence is about the app, not abo
  * has made, and "soon" is the same promise with the number removed.
  */
 test('nothing waiting promises a date', () => {
-  for (const line of [COPY.contactWaiting, COPY.subscriptionWaiting, COPY.notificationsWaiting]) {
+  for (const line of [COPY.contactWaiting, COPY.subscriptionWaiting, COPY.notificationsWaiting, COPY.feedbackWaiting]) {
     assert.doesNotMatch(line, /\bsoon\b|\bshortly\b|\bcoming (in|within)\b|\bnext (week|month)\b/i);
   }
   assert.match(COPY.subscriptionWaiting, /nothing behind a paywall/i);
