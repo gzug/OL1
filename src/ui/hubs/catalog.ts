@@ -233,6 +233,26 @@ export function findCoach(
  * silently answered by the wrong coach is worse than a hub that says it has none, and the creation
  * flow is what guarantees a user-made hub gets one.
  */
+/**
+ * The hub a coach belongs to. The reverse of `coachForHub`, and the two must stay reverses.
+ *
+ * **This is what lets a hub's brief follow its coach into a conversation.** The chat surface is
+ * reached by coaches and a thread id, not by hub — so deriving the hub from the coach is what makes
+ * reopening yesterday's conversation from history keep the frame it was started in, rather than
+ * losing it the moment you navigate away from the hub.
+ *
+ * Undefined where a coach belongs to no hub, or to more than one. More than one has never happened
+ * and would be a catalog mistake; returning nothing is the safe reading of it, because a brief
+ * applied to the wrong hub is worse than none.
+ */
+export function hubForCoach(
+  coachId: string,
+  hubs: readonly HubDefinition[] = SEED_HUBS,
+): HubDefinition | undefined {
+  const found = hubs.filter((hub) => hub.coachId === coachId);
+  return found.length === 1 ? found[0] : undefined;
+}
+
 export function coachForHub(
   id: HubId,
   hubs: readonly HubDefinition[] = SEED_HUBS,

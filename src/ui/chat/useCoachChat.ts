@@ -26,6 +26,8 @@ import type { Attachment } from '@/core/attachments';
 import type { ChatTurn, CoachDescriptor, UnavailableReason } from '@/core/chat';
 import { takeHeld, toRef } from '@/application/chat/attachments';
 import { coachChat } from '@/application/chat/coachChat';
+import { hubs } from '@/application/hubs/hubs';
+import { hubForCoach } from '@/ui/hubs/catalog';
 
 import { dropPendingTurn, resolvePendingTurn } from './chatTurns';
 
@@ -54,7 +56,18 @@ export function useCoachChat(threadId: string | null, coaches: readonly CoachDes
     setStatus('generating');
     setTurns((current) => [...current, { id: 'pending', role: 'assistant', text: '' }]);
 
-    const reply = await coachChat.answer(thread, coaches, attachment);
+    /**
+     * The brief of the hub this conversation belongs to, read at the moment of asking rather than
+     * held from when the screen opened — somebody may have just changed it, and the next answer
+     * should be the one they asked for.
+     *
+     * Only where exactly one coach is at the table. At the Open Table several coaches speak, and
+     * feeding one hub's brief to all of them would put a frame on coaches it was never written for.
+     */
+    const only = coaches.length === 1 ? hubForCoach(coaches[0]?.id ?? '') : undefined;
+    const brief = only === undefined ? null : await hubs.brief(only.id);
+
+    const reply = await coachChat.answer(thread, coaches, attachment, brief);
 
     if (!mounted.current) return;
     if (reply === null || reply.status === 'unavailable') {

@@ -8,6 +8,7 @@ import {
   coachForHub,
   findCoach,
   findHub,
+  hubForCoach,
   isDomainHub,
   orbitHubs,
 } from '../src/ui/hubs/catalog';
@@ -190,4 +191,27 @@ test('nothing user-facing still calls it Medical', () => {
     !coach?.name.includes('Medical'),
     'a coach named "Medical" implies the clinical authority the hub was renamed to disclaim',
   );
+});
+
+/**
+ * `hubForCoach` and `coachForHub` must stay exact reverses.
+ *
+ * This is what lets a hub's brief follow its coach into a conversation: the chat surface is reached
+ * by coaches and a thread id, never by hub, so the hub is derived from the coach. If the two ever
+ * disagree, a brief written for one hub reaches a coach from another — which is worse than no brief
+ * at all.
+ */
+test('every hub with a coach can be found back from that coach', () => {
+  for (const hub of SEED_HUBS) {
+    if (hub.coachId === undefined) continue;
+
+    const back = hubForCoach(hub.coachId);
+    assert.equal(back?.id, hub.id, `${hub.label}'s coach leads to ${back?.label ?? 'nothing'}`);
+  }
+});
+
+/** A coach nothing owns leads nowhere, rather than to the first hub that happens to match. */
+test('an unknown coach belongs to no hub', () => {
+  assert.equal(hubForCoach('not-a-coach'), undefined);
+  assert.equal(hubForCoach(''), undefined);
 });

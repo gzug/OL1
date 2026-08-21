@@ -13,6 +13,7 @@ export function createMemoryHubStore(): HubStore {
   const hubs = new Map<string, StoredHub>();
   const entries: HubEntry[] = [];
   const hidden = new Set<string>();
+  const briefs = new Map<string, string>();
 
   return {
     async addEntry(entry) {
@@ -34,6 +35,16 @@ export function createMemoryHubStore(): HubStore {
 
     async listHubs() {
       return [...hubs.values()].sort((a, b) => a.createdAt.localeCompare(b.createdAt));
+    },
+
+    async readBrief(hubId) {
+      return briefs.get(hubId) ?? null;
+    },
+
+    // Empty clears it rather than storing a blank, so "no brief" is one state and not two.
+    async writeBrief(hubId, brief) {
+      if (brief.trim().length === 0) briefs.delete(hubId);
+      else briefs.set(hubId, brief.trim());
     },
 
     // Hiding never touches `entries`. That is the whole contract — see migration 7.

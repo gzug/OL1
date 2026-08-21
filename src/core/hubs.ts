@@ -58,6 +58,16 @@ export interface HubStore {
    * `hide` is idempotent, because a screen that hides an already-hidden hub should do nothing
    * rather than fail. So is `unhide`.
    */
+  /**
+   * How a person wants to be coached in this hub, in their own words. Empty clears it.
+   *
+   * **Their words, never the app's.** Nothing writes a brief on somebody's behalf, and nothing
+   * derives one — a sentence in here is one a person typed, which is what makes it safe to hand to
+   * a model as fact about them.
+   */
+  readBrief(hubId: string): Promise<string | null>;
+  writeBrief(hubId: string, brief: string): Promise<void>;
+
   hideHub(hubId: string): Promise<void>;
   listHiddenHubs(): Promise<readonly string[]>;
   unhideHub(hubId: string): Promise<void>;

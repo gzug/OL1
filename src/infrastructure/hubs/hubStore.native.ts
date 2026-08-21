@@ -138,6 +138,34 @@ export const hubStore: HubStore = {
     return rows.map(toHub);
   },
 
+  async readBrief(hubId) {
+    const db = await database();
+    const row = await db.getFirstAsync<{ brief: string }>(
+      `SELECT brief FROM hub_brief WHERE hub_id = ?`,
+      [hubId],
+    );
+    return row?.brief ?? null;
+  },
+
+  /**
+   * `INSERT OR REPLACE`, because writing again is changing your mind rather than adding an opinion.
+   * Empty clears the row, so "no brief" is one state and not two that render the same.
+   */
+  async writeBrief(hubId, brief) {
+    const db = await database();
+    const text = brief.trim();
+
+    if (text.length === 0) {
+      await db.runAsync(`DELETE FROM hub_brief WHERE hub_id = ?`, [hubId]);
+      return;
+    }
+
+    await db.runAsync(
+      `INSERT OR REPLACE INTO hub_brief (hub_id, brief, updated_at) VALUES (?, ?, ?)`,
+      [hubId, text, new Date().toISOString()],
+    );
+  },
+
   /**
    * `INSERT OR IGNORE`, so hiding an already-hidden hub is a no-op rather than a constraint error.
    *

@@ -1,4 +1,4 @@
-export const CURRENT_SCHEMA_VERSION = 7;
+export const CURRENT_SCHEMA_VERSION = 8;
 
 export const CREATE_MIGRATION_TABLE_SQL = `
   CREATE TABLE IF NOT EXISTS schema_migrations (
@@ -165,6 +165,35 @@ export const MIGRATIONS = [
       CREATE TABLE IF NOT EXISTS hidden_hub (
         hub_id TEXT PRIMARY KEY NOT NULL,
         hidden_at TEXT NOT NULL
+      );
+    `,
+  },
+  {
+    /**
+     * How a person wants to be coached in one hub, in their own words.
+     *
+     * The owner's example, 2026-08-21: a Longevity hub where he writes *"coach me based on the book
+     * Outlive"*, and from then on that hub's coach answers in that frame without being told again.
+     *
+     * **A table keyed by hub, not a column on `hub`**, for the same reason `hidden_hub` is: the
+     * seeded hubs live in `catalog.ts` as code and have no row in `hub` at all. A brief has to work
+     * for Sleep and Nutrition exactly as it does for a hub somebody made.
+     *
+     * **Not a `hub_entry`, which is the tempting shortcut.** An entry is something that HAPPENED at
+     * a time, and it belongs in the ledger and in "what you have logged". A brief is a standing
+     * preference, not an event — filing it as an entry would put "how I want to be coached" in a
+     * list of meals and sessions, and the newest-wins reading would be an accident rather than a
+     * decision.
+     *
+     * One row per hub: writing again replaces it. There is no history here on purpose — a person
+     * changing how they want to be coached has changed their mind, not logged a second opinion.
+     */
+    version: 8,
+    sql: `
+      CREATE TABLE IF NOT EXISTS hub_brief (
+        hub_id TEXT PRIMARY KEY NOT NULL,
+        brief TEXT NOT NULL,
+        updated_at TEXT NOT NULL
       );
     `,
   },

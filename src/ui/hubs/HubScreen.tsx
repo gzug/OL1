@@ -22,6 +22,7 @@ import { CoachSelector } from '@/ui/chat/CoachSelector';
 import { coachesAtTable } from '@/ui/chat/coachList';
 import type { Coach, HubDefinition } from '@/ui/hubs/catalog';
 import { childHubs } from '@/ui/hubs/catalog';
+import { HubBrief } from '@/ui/hubs/HubBrief';
 import { HideHub } from '@/ui/hubs/HideHub';
 import { SAMPLE_DATA_LINE } from '@/ui/hubs/hubState';
 import type { CockpitPeriod, DayBar, FacetState, HubState } from '@/ui/hubs/hubState';
@@ -219,6 +220,9 @@ export function HubScreen({
         {hub.id === 'labs' && <KidneyFunction />}
         {hub.id === 'labs' && <YourMarkers />}
         {hub.id === 'labs' && <WhatChanged />}
+
+        {/* How this hub's coach should work with you. Above the line because it is yours. */}
+        <HubBrief coach={coach} hubId={hub.id} />
 
         {/* Real, both of them, so they belong above the line. The button genuinely adds a
             panel or a meal, and the chips genuinely lead to hubs that hold your entries —
