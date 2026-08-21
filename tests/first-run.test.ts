@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 
-import { SEED_HUBS, childHubs } from '../src/ui/hubs/catalog';
+import { SEED_HUBS, findCoach, findHub } from '../src/ui/hubs/catalog';
 import {
   COPY,
   GOALS,
@@ -72,12 +72,19 @@ test('every goal lands in a hub that actually exists', () => {
   assert.ok(GOALS.length > 0, 'this guard has stopped checking anything');
 });
 
-test('every offered sport is an exercise type that already ships inside Exercise', () => {
-  const children = new Map(childHubs('exercise').map((hub) => [hub.id, hub]));
-
+/**
+ * **A sport names a COACH now, not a hub — `docs/decisions/0014`.**
+ *
+ * This used to assert every offered sport pointed at a hub inside Exercise. Those hubs were empty
+ * rooms and are gone; what a sport earns you is its voice, so that is what has to exist.
+ */
+test('every offered sport names a coach that really exists', () => {
   for (const sport of SPORTS) {
-    const hub = children.get(sport.hubId as string);
-    assert.ok(hub !== undefined, `${sport.id} points at "${sport.hubId}", which is not inside Exercise`);
+    assert.ok(
+      findCoach(sport.coachId) !== undefined,
+      `${sport.id} names the coach "${sport.coachId}", which is not in the catalog`,
+    );
+    assert.equal(findHub(sport.id), undefined, `${sport.id} is shipping as a hub again`);
   }
   assert.ok(SPORTS.length > 0, 'this guard has stopped checking anything');
 });

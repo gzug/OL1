@@ -26,12 +26,12 @@ test('a hidden hub leaves the ring and the rest keep their order', () => {
  * and lost three without being told.
  */
 test('hiding a parent takes its children with it', () => {
-  const going = withDescendants(SEED_HUBS, 'exercise');
+  // Labs inside Health record is the one nesting that still ships — the sports stopped being hubs
+  // on 2026-08-21, `docs/decisions/0014`.
+  const going = withDescendants(SEED_HUBS, 'medical');
 
-  assert.ok(going.includes('exercise'));
-  for (const sport of ['running', 'gym', 'cycling', 'swimming', 'golf']) {
-    assert.ok(going.includes(sport), `${sport} would have been left unreachable`);
-  }
+  assert.ok(going.includes('medical'));
+  assert.ok(going.includes('labs'), 'Labs would have been left unreachable');
   assert.ok(!going.includes('nutrition'), 'it took a hub that was not inside it');
 });
 
@@ -68,10 +68,10 @@ test('the warning counts in a person’s words, singular and plural', () => {
 
 /** And it names the children, because that is the surprise. */
 test('the warning names what else goes, and stays silent when nothing does', () => {
-  const exercise = hideWarning(SEED_HUBS, 'exercise', 3);
-  for (const sport of ['Running', 'Gym', 'Cycling', 'Swimming', 'Golf']) {
-    assert.ok(exercise.includes(sport), `the warning did not mention ${sport}`);
-  }
+  const medical = hideWarning(SEED_HUBS, 'medical', 3);
+  assert.ok(medical.includes('Labs'), 'the warning did not mention the hub that goes with it');
+  assert.match(medical, /goes with it/);
 
   assert.ok(!hideWarning(SEED_HUBS, 'sleep', 3).includes('goes with it'));
+  assert.ok(!hideWarning(SEED_HUBS, 'exercise', 3).includes('goes with it'), 'Exercise has no children now');
 });
