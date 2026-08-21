@@ -129,7 +129,14 @@ export function Row({
   );
 }
 
-/** A row inside a detail screen: a name on the left, its value on the right. */
+/**
+ * A row inside a detail screen: the thing on the left, what is true of it on the right.
+ *
+ * **The label carries the weight, not the value.** It read the other way first — a coach called
+ * *Exercise Coach* in grey beside its hub *Exercise* in near-black, so the secondary fact was the
+ * loudest thing on the row. Every use here puts the subject in `label`: a coach, a goal, a hub. The
+ * value is what qualifies it.
+ */
 export function Line({
   action,
   label,
@@ -145,9 +152,9 @@ export function Line({
 
   const body = (
     <View style={[styles.line, { backgroundColor: colors.surface }]}>
-      <Text style={[styles.lineLabel, { color: colors.textMuted }]}>{label}</Text>
+      <Text style={[styles.lineLabel, { color: colors.text }]}>{label}</Text>
       {value !== undefined && (
-        <Text style={[styles.lineValue, { color: colors.text }]}>{value}</Text>
+        <Text style={[styles.lineValue, { color: colors.textSubtle }]}>{value}</Text>
       )}
       {action !== undefined && (
         <Text style={[styles.lineAction, { color: colors.accent }]}>{action}</Text>
@@ -239,8 +246,8 @@ export const styles = StyleSheet.create({
     paddingVertical: spacing.md,
   },
   lineAction: { fontFamily: fontFamily.medium, fontSize: typography.caption },
-  lineLabel: { flexShrink: 1, fontFamily: fontFamily.body, fontSize: typography.caption },
-  lineValue: { fontFamily: fontFamily.medium, fontSize: typography.bodySmall, textAlign: 'right' },
+  lineLabel: { flexShrink: 1, fontFamily: fontFamily.body, fontSize: typography.bodySmall },
+  lineValue: { fontFamily: fontFamily.body, fontSize: typography.caption, textAlign: 'right' },
   note: {
     fontFamily: fontFamily.body,
     fontSize: typography.micro,
