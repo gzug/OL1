@@ -134,7 +134,24 @@ export function HomeMockup() {
       {/* The top row is navigation. Earlier conversations belong here rather than only inside a
           chat: reaching yesterday's thread should not require starting a new one first. */}
       <View style={styles.topRow}>
-        <View style={styles.topSide} />
+        {/**
+          * Replays the first run. **It is here for demonstrating the app**, which the owner asked
+          * for on 2026-08-21 — the flow is otherwise reachable exactly once per browser, and the
+          * best-written screens in OL1 were the ones nobody could see twice.
+          *
+          * It replays rather than resets: nothing is cleared, no hub is removed, and the profile is
+          * only overwritten if somebody answers again. Walking through and leaving costs nothing.
+          */}
+        <View style={styles.topSideLeft}>
+          <Link asChild href="/welcome">
+            <Pressable
+              accessibilityLabel="Show the first-run flow again"
+              accessibilityRole="link"
+              style={({ pressed }) => [styles.onboarding, pressed && styles.pressed]}>
+              <Text style={[styles.earlierText, { color: colors.textMuted }]}>Onboarding</Text>
+            </Pressable>
+          </Link>
+        </View>
         <Link asChild href="/twin">
           <Pressable accessibilityRole="link" style={styles.twinLink}>
             <Text style={[styles.twinLinkText, { color: colors.textMuted }]}>⌃  Digital Twin</Text>
@@ -302,6 +319,11 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.lg,
     paddingVertical: spacing.xs,
   },
+  /** Mirrors `earlier` on the other side of the row, left-aligned rather than right. */
+  onboarding: {
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.xs,
+  },
   earlierText: {
     fontFamily: fontFamily.body,
     fontSize: typography.caption,
@@ -345,6 +367,10 @@ const styles = StyleSheet.create({
   /** Equal sides, so "Digital Twin" centres against the screen and not against what is left. */
   topSide: {
     alignItems: 'flex-end',
+    flex: 1,
+  },
+  topSideLeft: {
+    alignItems: 'flex-start',
     flex: 1,
   },
   twinLink: {
