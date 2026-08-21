@@ -8,11 +8,11 @@ import {
   profiles as defaultProfiles,
 } from '@/application/profile/profile';
 import type { Profile, Sex } from '@/core/profile';
-import { COPY as FIRST_RUN } from '@/ui/onboarding/firstRun';
+import { COPY as FIRST_RUN, SKIPPED } from '@/ui/onboarding/firstRun';
 import { useTheme } from '@/ui/theme';
 
 import { Chip, Chips, Field, Note, Problem, Section, styles } from './parts';
-import { COPY, type Loaded } from './settings';
+import { COPY, shownSex, type Loaded } from './settings';
 
 /** Legacy's own set, unchanged, and the same four the first run offers. */
 const SEXES: readonly { id: Sex; label: string }[] = [
@@ -65,7 +65,8 @@ export function AboutYouSection({
   const stored = profile.value;
   const storedYear = stored === null ? null : stored.birthYear;
   const storedHeight = stored === null ? null : stored.heightCm;
-  const sex: Sex = stored === null ? 'preferNotToSay' : stored.sex;
+  /** `null` when nobody has answered, so no pill is highlighted. See `shownSex`. */
+  const sex: Sex | null = shownSex(stored);
 
   const yearText = year ?? (storedYear === null ? '' : String(storedYear));
   const heightText = height ?? (storedHeight === null ? '' : String(storedHeight));
@@ -108,7 +109,7 @@ export function AboutYouSection({
           maxLength={4}
           onBlur={() => {
             if (year === null || yearIsWrong) return;
-            void keep(() => source.save(typedYear, sex), () => setYear(null));
+            void keep(() => source.save(typedYear, sex ?? SKIPPED.sex), () => setYear(null));
           }}
           onChangeText={(value) => setYear(value.replace(/[^0-9]/g, ''))}
           placeholder="1982"

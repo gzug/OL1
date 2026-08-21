@@ -11,6 +11,7 @@ import {
   goalsFrom,
   hubRows,
   ready,
+  shownSex,
   sportPayload,
   sportsFrom,
   tally,
@@ -43,6 +44,26 @@ function entry(
 function tapGoal(hubId: string, label: string, held: boolean) {
   return entry(hubId, 'goal', goalPayload(label, held));
 }
+
+/* ── About you ─────────────────────────────────────────────────────────────────────────────── */
+
+/**
+ * A DEFAULT IS NOT AN ANSWER, and this one shipped. With no profile at all the sex pills rendered
+ * "Rather not say" highlighted — a choice shown as already made on behalf of somebody who had not
+ * made one. `FirstRunFlow` holds `null` for exactly this reason and says so in a comment; this
+ * screen reintroduced it from the other end, by reading a default out of an absent profile. Nothing
+ * in CI could see it, and one look at the deployed page could.
+ */
+test('no pill is highlighted until somebody has answered', () => {
+  assert.equal(shownSex(null), null, 'an absent profile highlighted a choice nobody made');
+});
+
+/** Skipping IS an answer — `SKIPPED` is built on that — so a stored one stays highlighted. */
+test('a stored "rather not say" is an answer and shows as one', () => {
+  const skipped = { birthYear: null, heightCm: null, sex: 'preferNotToSay', updatedAt: 'x' } as const;
+  assert.equal(shownSex(skipped), 'preferNotToSay');
+  assert.equal(shownSex({ ...skipped, sex: 'male' }), 'male');
+});
 
 /* ── Goals converge ────────────────────────────────────────────────────────────────────────── */
 
@@ -241,6 +262,27 @@ test('there are three states, and the failure sentence is about the app and not 
 
   assert.match(COPY.unread, /could not read/i);
   assert.doesNotMatch(COPY.unread, /\byou have no\b|\bnothing (logged|recorded|added)\b/i);
+});
+
+/**
+ * THE LINE THIS SCREEN NEARLY BORROWED. `firstRun.COPY.storageWeb` reads *what you just gave is
+ * kept in this browser* — true on the last card of a flow somebody has just walked, and false on a
+ * settings screen, where nothing was just given. It shipped that way and was caught by reading the
+ * deployed page, which is the only thing that catches this class.
+ *
+ * The two claims that matter are asserted exactly as `tests/first-run.test.ts` asserts its own:
+ * which store this actually is, and that it is not a durable one.
+ */
+test('the stored section names its own store, and does not borrow the first run\'s sentence', () => {
+  assert.match(COPY.storedWeb, /browser/i, 'the web line must name where it actually is');
+  assert.match(COPY.storedWeb, /not durable/i);
+  assert.doesNotMatch(COPY.storedWeb, /on (this|your) (device|phone)/i);
+  assert.doesNotMatch(COPY.storedWeb, /stays local|remains local/i);
+  assert.doesNotMatch(COPY.storedWeb, /just gave/i, 'nothing was just given on this screen');
+
+  // The phone's line is allowed to say phone, because there it is true.
+  assert.match(COPY.storedNative, /phone/i);
+  assert.doesNotMatch(COPY.storedNative, /just gave/i);
 });
 
 /**

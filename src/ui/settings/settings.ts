@@ -15,6 +15,7 @@
 
 import { sportCoachesFor, type NamedSport } from '@/application/exercise/sportCoaches';
 import type { HubEntry } from '@/core/hubs';
+import type { Profile, Sex } from '@/core/profile';
 import { childHubs, orbitHubs, type HubDefinition } from '@/ui/hubs/catalog';
 import { kindWords } from '@/ui/hubs/entryWords';
 import { GOALS, SPORTS } from '@/ui/onboarding/firstRun';
@@ -49,6 +50,27 @@ export const FAILED = { status: 'failed' } as const;
 
 export function ready<T>(value: T): Loaded<T> {
   return { status: 'ready', value };
+}
+
+/* ── About you ─────────────────────────────────────────────────────────────────────────────── */
+
+/**
+ * Which sex pill is highlighted, and `null` for none of them.
+ *
+ * **A default is not an answer.** With no profile at all this returned `preferNotToSay`, which is
+ * exactly right to STORE for a question nobody answered and exactly wrong to SHOW: a highlighted
+ * pill reads as a choice already made, on behalf of somebody who has not made one. `FirstRunFlow`
+ * holds `null` in its own state for this reason and says so in a comment; the settings screen
+ * reintroduced the bug from the other end, by reading a default out of an absent profile.
+ *
+ * A profile that EXISTS and says `preferNotToSay` is a different thing. Skipping IS an answer —
+ * `SKIPPED` in `firstRun.ts` is built on that — so it stays highlighted.
+ *
+ * It is here rather than in the component because a judgement inside a component is a judgement
+ * nothing can assert in bare Node, which is how this one shipped.
+ */
+export function shownSex(profile: Profile | null): Sex | null {
+  return profile === null ? null : profile.sex;
 }
 
 /* ── Goals ─────────────────────────────────────────────────────────────────────────────────── */
@@ -291,7 +313,18 @@ export const COPY = {
   saveFailed: 'That did not save, so nothing changed. Try again.',
   storedNote:
     'Everything OL1 has written down, including answers you later changed. Nothing here is ever deleted.',
+  /**
+   * The storage line, and NOT the first run's.
+   *
+   * `COPY.storageWeb` reads *what you just gave is kept in this browser* — true on the last card of
+   * a flow somebody has just walked, and false here, where nothing was just given. Reused verbatim
+   * it was a sentence that described the screen it was written for. The two claims that matter are
+   * the same and are asserted the same way: which store this is, and that it is not a durable one.
+   */
+  storedNative: 'Everything above is kept in a file on this phone.',
   storedTitle: 'WHAT IS STORED',
+  storedWeb:
+    'This is the web preview, so everything above is kept in this browser and goes when its data is cleared. It is not durable storage for health data.',
   title: 'Settings',
   trainingHint:
     'Naming one gives you its coach. Turning a sport off is not built yet, so nothing here pretends to.',

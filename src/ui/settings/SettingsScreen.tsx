@@ -49,18 +49,23 @@ export function SettingsScreen() {
   return (
     <View style={local.screen}>
       <View style={local.top}>
-        <Pressable
-          accessibilityLabel="Back"
-          accessibilityRole="button"
-          onPress={() => (router.canGoBack() ? router.back() : router.replace('/'))}
-          style={({ pressed }) => [local.back, pressed && shared.pressed]}>
-          <Text style={[local.backText, { color: colors.textMuted }]}>{'‹  Home'}</Text>
-        </Pressable>
-        <Text style={[local.title, { color: colors.text }]}>{COPY.title}</Text>
-        {/* Balances the back link so the title sits centred without measuring anything. */}
-        <View style={local.back}>
-          <Text style={[local.backText, { color: 'transparent' }]}>{'‹  Home'}</Text>
+        <View style={local.side}>
+          <Pressable
+            accessibilityLabel="Back"
+            accessibilityRole="button"
+            onPress={() => (router.canGoBack() ? router.back() : router.replace('/'))}
+            style={({ pressed }) => [local.back, pressed && shared.pressed]}>
+            <Text style={[local.backText, { color: colors.textMuted }]}>{'‹  Home'}</Text>
+          </Pressable>
         </View>
+        <Text style={[local.title, { color: colors.text }]}>{COPY.title}</Text>
+        {/**
+          * Empty, and empty is the point. This used to be a second copy of the back link painted
+          * transparent, which centres the title and also reads the words "Home" out loud a second
+          * time to anybody using a screen reader. Two flexed sides and nothing in this one balance
+          * it without putting a word on the screen that nobody was meant to hear.
+          */}
+        <View style={local.side} />
       </View>
 
       <ScrollView contentContainerStyle={local.body} keyboardShouldPersistTaps="handled">
@@ -116,7 +121,7 @@ function Stored({ entries }: { entries: EntriesByHub }) {
           <Note text={COPY.storedNote} />
         </>
       )}
-      <Note text={Platform.OS === 'web' ? FIRST_RUN.storageWeb : FIRST_RUN.storageNative} />
+      <Note text={Platform.OS === 'web' ? COPY.storedWeb : COPY.storedNative} />
       <Note text={FIRST_RUN.noAccount} />
     </Section>
   );
@@ -134,7 +139,8 @@ const local = StyleSheet.create({
     marginTop: spacing.sm,
   },
   screen: { flex: 1 },
-  title: { fontFamily: fontFamily.serif, fontSize: 22, lineHeight: 28 },
+  side: { flex: 1 },
+  title: { fontFamily: fontFamily.serif, fontSize: 22, lineHeight: 28, textAlign: 'center' },
   top: {
     alignItems: 'center',
     flexDirection: 'row',
