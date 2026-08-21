@@ -165,3 +165,23 @@ test('a failed write says so, and says where to fix it', () => {
   assert.match(COPY.writeFailed, /did not save/i);
   assert.match(COPY.writeFailed, /About you/);
 });
+
+/**
+ * The copy has to count what is actually on the screen.
+ *
+ * "Three things, and you can skip any of them" sat above four fields — year, height, weight, sex —
+ * and had been wrong since the flow's first commit. Small, and exactly the shape of everything else
+ * the sweep found: a sentence that described the screen when it was written.
+ */
+test('the about screen says how many things it asks for, and is right', () => {
+  const asked = ['yearLabel', 'heightLabel', 'weightLabel', 'sexLabel'] as const;
+  const words = ['One', 'Two', 'Three', 'Four', 'Five', 'Six'];
+
+  for (const key of asked) {
+    assert.ok(typeof COPY[key] === 'string' && COPY[key].length > 0, `${key} is not a real field`);
+  }
+  assert.ok(
+    COPY.aboutHint.startsWith(`${words[asked.length - 1]} things`),
+    `the hint counts wrong: "${COPY.aboutHint.slice(0, 40)}…" above ${asked.length} fields`,
+  );
+});

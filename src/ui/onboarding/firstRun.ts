@@ -191,7 +191,7 @@ export function stillMissing(answers: {
  */
 export const COPY = {
   aboutHint:
-    'Three things, and you can skip any of them. The year is what a biological age is worked out against — without it there is no number at all.',
+    'Four things, and you can skip any of them. The year is what a biological age is worked out against — without it there is no number at all.',
   aboutTitle: 'A little about you.',
   conditionsLabel: 'ANYTHING YOU LIVE WITH',
   conditionsPlaceholder: 'In your own words. Kept exactly as you write it.',
