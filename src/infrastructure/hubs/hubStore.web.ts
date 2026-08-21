@@ -20,6 +20,7 @@ import type { HubEntry, HubStore, StoredHub } from '@/core/hubs';
 const HUBS_KEY = 'ol1.hubs';
 const ENTRIES_PREFIX = 'ol1.hub.entries.';
 const HIDDEN_KEY = 'ol1.hubs.hidden';
+const BRIEF_PREFIX = 'ol1.hub.brief.';
 
 function storage(): Storage | null {
   try {
@@ -76,6 +77,21 @@ export const hubStore: HubStore = {
 
   async listHubs() {
     return read<StoredHub[]>(HUBS_KEY, []).sort((a, b) => a.createdAt.localeCompare(b.createdAt));
+  },
+
+  async readBrief(hubId) {
+    const store = storage();
+    const found = store === null ? null : store.getItem(`${BRIEF_PREFIX}${hubId}`);
+    return found === null || found.length === 0 ? null : found;
+  },
+
+  /** Empty clears it, so "no brief" is one state rather than two that render the same. */
+  async writeBrief(hubId, brief) {
+    const store = storage();
+    if (store === null) return;
+    const text = brief.trim();
+    if (text.length === 0) store.removeItem(`${BRIEF_PREFIX}${hubId}`);
+    else store.setItem(`${BRIEF_PREFIX}${hubId}`, text);
   },
 
   /** Hiding writes an id and nothing else. No entry key is read, let alone written. */

@@ -49,6 +49,8 @@ export type CoachChat = {
     threadId: string,
     coaches: readonly CoachDescriptor[],
     attachment?: Attachment,
+    /** The hub's brief, when this conversation is inside one. Absent at the Open Table. */
+    brief?: string | null,
   ): Promise<CoachReply | null>;
   isConfigured(): boolean;
   listThreads(): Promise<readonly ChatThreadSummary[]>;
@@ -90,7 +92,7 @@ export function createCoachChat(
   }
 
   return {
-    async answer(threadId, coaches, attachment) {
+    async answer(threadId, coaches, attachment, brief) {
       const turns = await store.readTurns(threadId);
       const last = turns[turns.length - 1];
 
@@ -101,7 +103,12 @@ export function createCoachChat(
         attachment,
         history: turns.slice(0, -1),
         message: last.text,
-        systemPrompt: systemPromptFor(coaches),
+        /**
+         * The hub's brief, when the conversation is inside one. It is what the person wrote about
+         * how they want to be coached there, and it reaches the model as their words — see
+         * `briefSection` in `prompt.ts` for why it is fenced and why `SAFETY` follows it.
+         */
+        systemPrompt: systemPromptFor(coaches, brief),
       });
 
       // Only a real answer is persisted. Writing the failure copy as an assistant turn would put

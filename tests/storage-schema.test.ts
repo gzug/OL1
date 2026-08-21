@@ -8,10 +8,10 @@ import {
 } from '../src/infrastructure/storage/schema';
 
 test('the schema is versioned and contains no legacy health tables', () => {
-  assert.equal(CURRENT_SCHEMA_VERSION, 7);
+  assert.equal(CURRENT_SCHEMA_VERSION, 8);
   assert.deepEqual(
     MIGRATIONS.map((migration) => migration.version),
-    [1, 2, 3, 4, 5, 6, 7],
+    [1, 2, 3, 4, 5, 6, 7, 8],
   );
 
   const sql = `${CREATE_MIGRATION_TABLE_SQL}\n${MIGRATIONS.map((item) => item.sql).join('\n')}`;
@@ -22,6 +22,7 @@ test('the schema is versioned and contains no legacy health tables', () => {
   assert.match(sql, /attachment_json/);
   assert.match(sql, /hub_entry/);
   assert.match(sql, /hidden_hub/);
+  assert.match(sql, /hub_brief/);
   // Chat is the first thing here that holds what a person typed, so the table names are the first
   // real test of this rule rather than a formality: no domain table arrives by the back door.
   assert.doesNotMatch(sql, /(heart_rate|sleep|nutrition|blood|garmin)/i);

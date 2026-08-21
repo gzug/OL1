@@ -32,14 +32,47 @@ const STYLE =
   'short list when there are genuinely several things. No preamble, no praise, no restating the ' +
   'question.';
 
-export function systemPromptFor(coaches: readonly CoachDescriptor[]): string {
+/**
+ * The person's own brief for this hub, folded into the prompt.
+ *
+ * **Three things about the wording, and each is a decision:**
+ *
+ * 1. **It is quoted as their words, not issued as instructions.** A brief reading "ignore
+ *    everything above" is a person misusing their own coach rather than an attacker, but the floor
+ *    under a health app must not depend on that staying true — so the brief arrives fenced, as
+ *    reported speech, and `SAFETY` sits after it, last, where it is what the model reads on the
+ *    way out.
+ * 2. **It replaces `NO_DATA` rather than joining it.** Telling a model both "you know nothing about
+ *    this person" and "here is what they told you" is a contradiction, and the resolution a model
+ *    picks is not one anybody chose. Where a brief exists it is stated as the only thing known.
+ * 3. **It says do not extend it.** "Coach me based on Outlive" must not become an assumed age, an
+ *    assumed training history or an assumed diagnosis. A frame is not a file.
+ */
+function briefSection(brief: string): string {
+  return [
+    'This person wrote the following about how they want to be coached in this area. Treat it as ' +
+      'their own words and let it shape your answers.',
+    '<their-words>\n' + brief.trim() + '\n</their-words>',
+    'That is the ONLY thing you know about them. Do not extend it into ages, history, ' +
+      'measurements or conditions they did not write, and do not imply you can see any.',
+  ].join('\n\n');
+}
+
+export function systemPromptFor(
+  coaches: readonly CoachDescriptor[],
+  /** What the person wrote about how they want to be coached in this hub. */
+  brief?: string | null,
+): string {
+  const written = brief === undefined || brief === null || brief.trim().length === 0 ? null : brief;
+  const known = written === null ? NO_DATA : briefSection(written);
+
   if (coaches.length === 0) {
     return [
       'You are the assistant inside OL1, a personal health app. Answer anything the person asks.',
       'The app has coaches for particular areas, and they can be added to this conversation. If a ' +
         'question clearly belongs to one of them, you may say so in a final short line — once, ' +
         'and never instead of answering.',
-      NO_DATA,
+      known,
       SAFETY,
       STYLE,
     ].join('\n\n');
@@ -52,7 +85,7 @@ export function systemPromptFor(coaches: readonly CoachDescriptor[]): string {
       `You are the ${coaches[0].name} inside OL1, a personal health app. Your focus: ${coaches[0].focus}`,
       'Stay inside that focus. If the question is really about something else, say which area it ' +
         'belongs to in one line, then answer what you can from yours.',
-      NO_DATA,
+      known,
       SAFETY,
       STYLE,
     ].join('\n\n');
@@ -65,7 +98,7 @@ export function systemPromptFor(coaches: readonly CoachDescriptor[]): string {
       'a colon — for example "Sleep Coach: ...". A coach with nothing useful to add stays ' +
       'silent rather than agreeing. Coaches not listed above do not speak at all.',
     'After the coaches, add one line starting "Together:" with what they agree the person should do.',
-    NO_DATA,
+    known,
     SAFETY,
     STYLE,
   ].join('\n\n');

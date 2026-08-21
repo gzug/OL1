@@ -34,6 +34,10 @@ export type Hubs = {
   entries(hubId: string, limit?: number): Promise<readonly HubEntry[]>;
   list(): Promise<readonly StoredHub[]>;
 
+  /** How a person wants to be coached in this hub, in their own words. Empty clears it. */
+  brief(hubId: string): Promise<string | null>;
+  setBrief(hubId: string, brief: string): Promise<void>;
+
   /** Put a hub away, and bring it back. Neither one touches a single entry. */
   hide(hubId: string): Promise<void>;
   hidden(): Promise<readonly string[]>;
@@ -62,6 +66,8 @@ export function createHubs(store: HubStore = defaultStore): Hubs {
     },
 
     entries: (hubId, limit) => store.listEntries(hubId, limit),
+    brief: (hubId) => store.readBrief(hubId),
+    setBrief: (hubId, brief) => store.writeBrief(hubId, brief),
     hidden: () => store.listHiddenHubs(),
     hide: (hubId) => store.hideHub(hubId),
     unhide: (hubId) => store.unhideHub(hubId),
