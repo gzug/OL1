@@ -20,10 +20,32 @@
  * layer of a PDF), and it can be asserted against real report layouts in bare Node.
  */
 
-import { TARGET_UNIT, normUnit, toTargetUnit, type LevineMarkerKey } from './units';
+import {
+  EXTRA_TARGET_UNIT,
+  TARGET_UNIT,
+  extraToTargetUnit,
+  normUnit,
+  toTargetUnit,
+  type ExtraUnitKey,
+  type LevineMarkerKey,
+} from './units';
+
+/**
+ * Every marker this can find: the nine the formula reads, and the ones it does not.
+ *
+ * **They are one union HERE and two unions everywhere else, deliberately.** A parser reads whatever
+ * a report prints; the calculation reads exactly nine. Widening this type is what lets a lipid be
+ * found, and keeping `LevineMarkerKey` narrow is what stops one reaching `computePhenoAge`.
+ */
+export type ReadableMarkerKey = ExtraUnitKey | LevineMarkerKey;
+
+/** Whether a key is one of the nine, which decides which conversion table applies to it. */
+function isLevine(key: ReadableMarkerKey): key is LevineMarkerKey {
+  return Object.prototype.hasOwnProperty.call(TARGET_UNIT, key);
+}
 
 type Rule = {
-  readonly key: LevineMarkerKey;
+  readonly key: ReadableMarkerKey;
   /** Group 1 is the value. Group 2, when present, is the unit printed beside it. */
   readonly pattern: RegExp;
 };
@@ -54,7 +76,7 @@ const VALUE = String.raw`(\d+(?:[.,]\d+)?)`;
  */
 const GAP = String.raw`(?:\s*\([^)\n]{0,24}\))?[\s:=|.]*`;
 
-function rule(names: string, key: LevineMarkerKey): Rule {
+function rule(names: string, key: ReadableMarkerKey): Rule {
   return {
     key,
     pattern: new RegExp(`(?:${names})${GAP}${VALUE}\\s*(${UNIT})?`, 'i'),
@@ -122,7 +144,7 @@ export type Finding = {
   readonly asPrinted: number;
   /** In the unit the formula reads, or null when the unit was missing or unrecognised. */
   readonly converted: number | null;
-  readonly key: LevineMarkerKey;
+  readonly key: ReadableMarkerKey;
   /** What was matched, so a person reviewing can see where it came from. */
   readonly matched: string;
   /** The unit found beside the value, or null. **Never guessed.** */
@@ -131,7 +153,11 @@ export type Finding = {
 
 export type ParsedReport = {
   readonly findings: readonly Finding[];
-  /** Markers this could not find at all. Named, so the screen can say which rather than show blanks. */
+  /**
+   * **Only the nine the formula reads.** A lipid the report did not carry is not missing — most
+   * panels do not include one, and listing every marker this can recognise as absent would turn a
+   * complete blood count into a list of things somebody failed to have.
+   */
   readonly missing: readonly LevineMarkerKey[];
 };
 
@@ -145,14 +171,14 @@ export function parseReport(text: string): ParsedReport {
   for (const { key, pattern } of RULES) {
     const match = pattern.exec(flat);
     if (match === null || match[1] === undefined) {
-      missing.push(key);
+      if (isLevine(key)) missing.push(key);
       continue;
     }
 
     // A German report writes 4,5 where an English one writes 4.5.
     const asPrinted = Number(match[1].replace(',', '.'));
     if (!Number.isFinite(asPrinted)) {
-      missing.push(key);
+      if (isLevine(key)) missing.push(key);
       continue;
     }
 
@@ -161,8 +187,14 @@ export function parseReport(text: string): ParsedReport {
     findings.push({
       asPrinted,
       /* No unit means no conversion. Assuming the formula's unit is exactly the mistake Legacy's
-         `defaultUnit` made, and it is invisible: the number looks reasonable and is out by ten. */
-      converted: unit === null ? null : toTargetUnit(key, asPrinted, unit),
+         `defaultUnit` made, and it is invisible: the number looks reasonable and is out by ten.
+         The two tables are separate because the keys are — see `ReadableMarkerKey`. */
+      converted:
+        unit === null
+          ? null
+          : isLevine(key)
+            ? toTargetUnit(key, asPrinted, unit)
+            : extraToTargetUnit(key, asPrinted, unit),
       key,
       matched: match[0].trim(),
       unit,
@@ -184,9 +216,9 @@ export function unitQuestion(finding: Finding): string {
     : `"${finding.unit}" is not a unit this recognises for ${finding.key.replace('_', ' ')}. Pick one.`;
 }
 
-/** The unit the formula reads, for a screen that has to offer it as a choice. */
-export function formulaUnit(key: LevineMarkerKey): string {
-  return TARGET_UNIT[key];
+/** The unit a marker is stored in, for a screen that has to offer it as a choice. */
+export function formulaUnit(key: ReadableMarkerKey): string {
+  return isLevine(key) ? TARGET_UNIT[key] : EXTRA_TARGET_UNIT[key];
 }
 
 /** Exported for the test that proves the vocabulary matches what a real report prints. */
