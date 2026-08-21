@@ -33,6 +33,16 @@ export type HeatmapCell = {
 };
 
 export type Heatmap = {
+  /**
+   * True when the grid's right edge is today. False when it anchored to the last day with data,
+   * which the anchor rule does once the data is more than four weeks cold.
+   *
+   * **A screen must read this before writing the word "last".** Without it the heading claims a
+   * window ending today over a grid that ends whenever training stopped.
+   */
+  readonly anchoredToToday: boolean;
+  /** The date the grid's right edge actually falls on, `YYYY-MM-DD`. */
+  readonly endsOn: string;
   readonly hasData: boolean;
   readonly rows: readonly (readonly HeatmapCell[])[];
 };
@@ -90,7 +100,7 @@ export function buildHeatmap(
     if (parsed !== null) latest = Math.max(latest, parsed.getTime());
   }
 
-  if (!Number.isFinite(latest)) return { hasData: false, rows: empty };
+  if (!Number.isFinite(latest)) return { anchoredToToday: true, endsOn: today, hasData: false, rows: empty };
 
   // The anchor rule, and the reason it exists is in this file's header.
   const anchorDate = parseLocalDate(today);
@@ -98,6 +108,19 @@ export function buildHeatmap(
     anchorDate !== null && latest >= anchorDate.getTime() - STALE_AFTER_DAYS * MS_PER_DAY
       ? anchorDate.getTime()
       : latest;
+
+  /**
+   * **Whether the grid ends today, and on what date it actually ends.**
+   *
+   * The anchor rule above is right, and it was invisible: the screen printed "LAST TWELVE WEEKS"
+   * over the grid whichever anchor was used, with no dates anywhere on it. So after a month off,
+   * somebody was looking at a picture of a window that closed weeks ago, under a heading claiming
+   * it ended today. The word doing the damage is "LAST".
+   *
+   * The rule is not the bug. Reporting it is what was missing, so the caller can say which window
+   * it is looking at instead of guessing.
+   */
+  const anchoredToToday = anchorDate !== null && anchor === anchorDate.getTime();
 
   const lastMonday = anchor - mondayIndex(new Date(anchor)) * MS_PER_DAY;
   const firstMonday = lastMonday - (columns - 1) * 7 * MS_PER_DAY;
@@ -122,7 +145,7 @@ export function buildHeatmap(
     }
   }
 
-  return { hasData: true, rows };
+  return { anchoredToToday, endsOn: isoOf(new Date(anchor)), hasData: true, rows };
 }
 
 /** Legacy's own opacity ramp, kept so a bucket looks the same as it did there. */
@@ -163,6 +186,23 @@ export function minutesByDate(
 }
 
 /** "12 sessions, 84 km" — the one line under the grid. Empty when there is nothing to summarise. */
+/**
+ * The window a grid covers, in words, for the heading above it.
+ *
+ * "LAST TWELVE WEEKS" is only true when the grid ends today. When it does not, saying so — and
+ * saying when it does end — is the whole fix: the anchor rule was right and silent, and a silent
+ * rule reads as a claim.
+ */
+export function windowLine(grid: { anchoredToToday: boolean; endsOn: string }, weeks: number): string {
+  if (grid.anchoredToToday) return `LAST ${weeks === 12 ? 'TWELVE' : String(weeks)} WEEKS`;
+
+  const date = new Date(`${grid.endsOn}T00:00:00.000Z`);
+  if (Number.isNaN(date.getTime())) return `${weeks} WEEKS`;
+
+  const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  return `TWELVE WEEKS TO ${date.getUTCDate()} ${months[date.getUTCMonth()]?.toUpperCase()}`;
+}
+
 export function lifetimeLine(
   entries: readonly { kind: string; payload: Readonly<Record<string, unknown>> }[],
 ): string {

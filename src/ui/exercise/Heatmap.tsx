@@ -6,6 +6,7 @@ import {
   bucketOpacity,
   buildHeatmap,
   lifetimeLine,
+  windowLine,
   minutesByDate,
 } from '@/application/exercise/heatmap';
 import { hubs as defaultHubs } from '@/application/hubs/hubs';
@@ -53,7 +54,8 @@ export function Heatmap({ hubId, source = defaultHubs }: { hubId: string; source
 
   return (
     <View style={styles.block}>
-      <Text style={[styles.label, { color: colors.textSubtle }]}>LAST TWELVE WEEKS</Text>
+      {/* The heading follows the grid rather than asserting over it. See `windowLine`. */}
+      <Text style={[styles.label, { color: colors.textSubtle }]}>{windowLine(grid, WEEKS)}</Text>
 
       <View style={styles.grid}>
         <View style={styles.days}>
@@ -85,9 +87,15 @@ export function Heatmap({ hubId, source = defaultHubs }: { hubId: string; source
         </View>
       </View>
 
+      {/**
+        * **"All time" is doing real work here.** These totals count every session ever logged, and
+        * they sat under a twelve-week heading joined by a middle dot to a clause that IS about the
+        * grid — so they read as twelve weeks' worth. Importing years of history from Strava makes
+        * that gap enormous rather than merely wrong.
+        */}
       <Text style={[styles.note, { color: colors.textSubtle }]}>
-        {lifetimeLine(entries)} · darkest is your busiest day. An empty square means nothing was
-        logged, not that nothing happened.
+        All time: {lifetimeLine(entries)}. Darkest is your busiest day above — an empty square means
+        nothing was logged, not that nothing happened.
       </Text>
     </View>
   );

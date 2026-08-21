@@ -10,6 +10,7 @@ import {
   minutesByDate,
   mondayIndex,
   parseLocalDate,
+  windowLine,
 } from '../src/application/exercise/heatmap';
 
 const TODAY = '2026-08-19';
@@ -121,4 +122,45 @@ test('the summary line counts sessions, and only mentions distance when there is
   assert.equal(lifetimeLine(withDistance), '2 sessions, 13 km');
   assert.equal(lifetimeLine([{ kind: 'session', payload: {} }]), '1 session');
   assert.equal(lifetimeLine([]), '');
+});
+
+/**
+ * **The heading must follow the grid rather than assert over it.**
+ *
+ * The anchor rule was right and silent: once data is more than four weeks cold the grid ends at the
+ * last day with data instead of today. The screen printed "LAST TWELVE WEEKS" either way, over a
+ * grid carrying no dates at all — so after a month off somebody was looking at a window that closed
+ * weeks ago, under a heading claiming it ended today. The word doing the damage is "LAST".
+ *
+ * This matters more since the Strava import landed: years of history with gaps in it is exactly the
+ * shape that trips the anchor.
+ */
+test('a grid that ends today says so, and one that does not names when it ends', () => {
+  const fresh = buildHeatmap(new Map([['2026-08-19', 40]]), 12, '2026-08-21');
+  const cold = buildHeatmap(new Map([['2026-06-02', 40]]), 12, '2026-08-21');
+
+  assert.equal(fresh.anchoredToToday, true);
+  assert.equal(windowLine(fresh, 12), 'LAST TWELVE WEEKS');
+
+  assert.equal(cold.anchoredToToday, false, 'eleven weeks cold must anchor to the data');
+  assert.notEqual(windowLine(cold, 12), 'LAST TWELVE WEEKS');
+  assert.match(windowLine(cold, 12), /JUN/, 'it must name when the window actually ends');
+});
+
+/** The boundary the anchor rule draws, from both sides of it. */
+test('the anchor switches at four weeks cold, not before', () => {
+  const at27 = buildHeatmap(new Map([['2026-07-25', 30]]), 12, '2026-08-21');
+  const at60 = buildHeatmap(new Map([['2026-06-22', 30]]), 12, '2026-08-21');
+
+  assert.equal(at27.anchoredToToday, true, '27 days is still fresh');
+  assert.equal(at60.anchoredToToday, false, 'two months is not');
+  assert.equal(at60.endsOn, '2026-06-22', 'it ends on the last day with data');
+});
+
+/** An empty grid claims nothing about a window it never drew. */
+test('a grid with no data reports today and draws nothing', () => {
+  const nothing = buildHeatmap(new Map(), 12, '2026-08-21');
+
+  assert.equal(nothing.hasData, false);
+  assert.equal(nothing.endsOn, '2026-08-21');
 });
