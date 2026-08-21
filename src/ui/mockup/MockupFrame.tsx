@@ -22,6 +22,12 @@ import { banner, frame } from './tokens';
  * The half that must survive every rewrite is **"not real health data"**. That is the one this
  * exists for: nobody may mistake a fixture for their own result. "Parts are sample data" keeps it
  * and drops the claim that has gone stale.
+ *
+ * **The comma is load-bearing.** With a middle dot there — the separator this app uses for lists
+ * everywhere else, as in "Photo · meal.png · 2.3 MB" — the three clauses read as three parallel
+ * claims, and the third one then says the blood values somebody typed are not real health data.
+ * That is the same error as the sample-data marker sitting above real results, in the opposite
+ * direction: it teaches people to distrust what is true. The comma scopes it to the sample parts.
  */
 export function MockupFrame({ children }: { children: ReactNode }) {
   const { colors } = useTheme();
@@ -37,7 +43,7 @@ export function MockupFrame({ children }: { children: ReactNode }) {
         ]}>
         <View style={[styles.banner, { backgroundColor: banner.background }]}>
           <Text style={[styles.bannerText, { color: banner.ink }]}>
-            Preview · parts are sample data · not real health data
+            Preview · parts are sample data, not real health data
           </Text>
         </View>
         {children}

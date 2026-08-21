@@ -221,8 +221,18 @@ function Summary({
       <SectionLabel colors={colors} label="What this makes" />
       <Row colors={colors} label="Coach" value={preview.coachName} />
       <Row colors={colors} label="Focus" value={draft.focus.trim()} />
-      <Row colors={colors} label="Starts with" value="A coach, and notes you write by hand" />
-      <Row colors={colors} label="Data" value="Connect a source or upload a file whenever you like" />
+      {/**
+        * **Both rows used to promise things that did not exist.**
+        *
+        * "A coach, and notes you write by hand" — there is no note input anywhere in this app, for
+        * any hub. "Connect a source or upload a file whenever you like" — there is no connect
+        * screen and no upload path that reaches a hub somebody made.
+        *
+        * They now say what is actually true on the far side of the button. A promise made on the
+        * step before a decision is the worst place to keep an unmet one.
+        */}
+      <Row colors={colors} label="Starts with" value="Its coach, and a screen of its own" />
+      <Row colors={colors} label="Data" value="Nothing goes in by hand yet — that is not built" />
 
       {/* Where it is kept, which is the part still worth saying out loud. `hubStore.web.ts` says
           the same thing to developers; this says it to the person making the hub. */}
