@@ -172,3 +172,19 @@ test('a very long session still disappears after the window', () => {
   assert.deepEqual(gone.loads, {});
   assert.equal(gone.counted, 0);
 });
+
+/**
+ * A session the figure cannot place is still a session.
+ *
+ * "Something else" maps to no muscles, so `loads` comes back empty and the caption said "Nothing
+ * logged in the last seven days" — directly above its own line saying "1 session is not shown".
+ * Two contradicting sentences, one under the other.
+ */
+test('an unplaceable session leaves the figure blank but is not nothing', () => {
+  const now = '2026-08-21T09:00:00.000Z';
+  const load = muscleLoad([{ at: now, kind: 'other', minutes: 40 }], now);
+
+  assert.deepEqual(load.loads, {}, 'nothing can be drawn');
+  assert.equal(load.unplaced, 1, 'but something was logged');
+  assert.equal(load.counted, 0);
+});

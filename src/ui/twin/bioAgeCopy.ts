@@ -49,6 +49,11 @@ export function bloodWorkSource(bioAge: BioAge): {
 } {
   const label = 'Blood work';
 
+  // Same rule as the number above it: before a successful read there is nothing honest to report.
+  if (bioAge.status === 'unknown') {
+    return { detail: '', label, state: 'missing' };
+  }
+
   if (bioAge.status === 'waiting') {
     return {
       detail: bioAge.reason === 'noPanel' ? 'No panel added yet' : 'Waiting on your year of birth',

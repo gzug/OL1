@@ -257,3 +257,35 @@ test('a marker entered in another unit says which one', () => {
   assert.equal(rows.find((row) => row.key === 'albumin')?.asEntered, 'entered in g/L');
   assert.equal(rows.find((row) => row.key === 'mcv')?.asEntered, null, 'no swap, no note');
 });
+
+/**
+ * **"I have not looked" is not "you have nothing".**
+ *
+ * `useBioAge` used to start at `{reason: 'noPanel', status: 'waiting'}` and leave it standing when
+ * the read threw — so the first frame, and a store that would not open, both told a person their
+ * blood results had never been added. Shape 1 of `docs/decisions/0013`.
+ *
+ * The pure layer cannot produce `unknown` — it is only ever reached with data in hand — so what is
+ * asserted here is the contract the hook and the screens depend on: the state exists, and nothing
+ * renders a claim from it.
+ */
+test('the unknown state makes no claim about a person’s data', () => {
+  const row = bloodWorkSource({ status: 'unknown' });
+
+  assert.equal(row.detail, '', 'an unread state must not describe the panel');
+  assert.ok(!row.detail.includes('No panel'), 'that is a claim, and nothing has been read');
+});
+
+/** And every state that DOES make a claim has really been read. */
+test('every state that says something about the panel came from a read', () => {
+  const states: BioAge[] = [
+    bioAgeFrom([], 1985, TODAY),
+    bioAgeFrom([panel('2026-08-01T00:00:00.000Z')], null, TODAY),
+    bioAgeFrom([panel('2026-08-01T00:00:00.000Z')], 1985, TODAY),
+  ];
+
+  for (const state of states) {
+    assert.notEqual(state.status, 'unknown', 'a state built from data is never unknown');
+    assert.notEqual(bloodWorkSource(state).detail, '', `${state.status} said nothing at all`);
+  }
+});

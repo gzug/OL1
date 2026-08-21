@@ -33,6 +33,15 @@ export type PanelInputs = {
 };
 
 export type BioAge =
+  /**
+   * **Nothing has been looked up yet, or the lookup failed.**
+   *
+   * Distinct from `waiting`, which is a claim: *you have no panel*. This one is the absence of a
+   * claim, and it is what the hook holds before its first read and what its `catch` leaves behind.
+   * Rendering the two the same way meant a store that would not open told a person their blood
+   * results were not there — see `docs/decisions/0013`, shape 1.
+   */
+  | { readonly status: 'unknown' }
   | { readonly reason: 'noPanel' | 'noYear'; readonly status: 'waiting' }
   | {
       readonly drawnAt: string;

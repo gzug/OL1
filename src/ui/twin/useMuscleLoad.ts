@@ -23,6 +23,18 @@ import {
 
 const EMPTY: MuscleLoad = { counted: 0, loads: {}, unplaced: 0 };
 
+/**
+ * **`read` is the difference between "you logged nothing" and "I have not looked".**
+ *
+ * The figure's caption said "Nothing logged in the last seven days, so nothing is marked" from an
+ * `EMPTY` that also meant *the first render, before any query* and *the store would not open*. All
+ * three rendered the same claim about a person's training, and two of them had no business making
+ * one at all.
+ *
+ * The whole class is `docs/decisions/0013-a-sentence-that-outlived-its-truth.md`, shape 1.
+ */
+export type LoadedMuscles = MuscleLoad & { readonly read: boolean };
+
 /** The hub a session belongs to. Exercise holds everything that moves, per the ring the owner drew. */
 export const SESSION_HUB = 'exercise';
 
@@ -49,8 +61,8 @@ function toSession(entry: {
   };
 }
 
-export function useMuscleLoad(source = defaultHubs): MuscleLoad {
-  const [load, setLoad] = useState<MuscleLoad>(EMPTY);
+export function useMuscleLoad(source = defaultHubs): LoadedMuscles {
+  const [load, setLoad] = useState<LoadedMuscles>({ ...EMPTY, read: false });
 
   useFocusEffect(
     useCallback(() => {
@@ -63,7 +75,7 @@ export function useMuscleLoad(source = defaultHubs): MuscleLoad {
           const sessions = entries
             .map(toSession)
             .filter((session): session is LoggedSession => session !== null);
-          setLoad(muscleLoad(sessions, new Date().toISOString()));
+          setLoad({ ...muscleLoad(sessions, new Date().toISOString()), read: true });
         })
         .catch(() => {
           // A store that cannot be read leaves the figure unmarked, which is what "we do not know"
