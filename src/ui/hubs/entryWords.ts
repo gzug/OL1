@@ -26,6 +26,8 @@ const KINDS: Readonly<Record<string, { one: string; many: string }>> = {
   note: { many: 'notes', one: 'note' },
   panel: { many: 'panels', one: 'panel' },
   session: { many: 'sessions', one: 'session' },
+  /** A sport somebody named in the first run. It gives them a coach, not a hub. */
+  sport: { many: 'sports named', one: 'sport named' },
   weight: { many: 'weigh-ins', one: 'weigh-in' },
   /** A muscle tapped on the body figure. Not a session — see `muscleLoad`'s note on hand-marking. */
   worked: { many: 'muscles marked', one: 'muscle marked' },

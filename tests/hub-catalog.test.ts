@@ -4,6 +4,7 @@ import test from 'node:test';
 import {
   COACHES,
   SEED_HUBS,
+  SPORT_COACH_IDS,
   childHubs,
   coachForHub,
   findCoach,
@@ -67,28 +68,31 @@ test('the orbit is the six built-in places, in ring order', () => {
   );
 });
 
-test('exercise types live inside Exercise, not on the ring', () => {
-  const inside = childHubs('exercise').map((hub) => hub.id);
-  assert.deepEqual(inside, ['running', 'gym', 'cycling', 'swimming', 'golf']);
-  for (const id of inside) {
-    assert.ok(
-      !orbitHubs().some((hub) => hub.id === id),
-      `"${id}" is on the ring; Running and Gym were kept inside Exercise deliberately`,
-    );
+/**
+ * **Sports are coaches, not hubs — the owner's call, 2026-08-21.**
+ *
+ * Running, Gym, Cycling, Swimming and Golf used to ship as hubs inside Exercise and this test
+ * asserted they were there. They were empty rooms: every session goes to `exercise` with the sport
+ * as a field on the payload, and a sport hub had never received one.
+ *
+ * What replaces the assertion is the rule underneath it — nothing is inside Exercise that ships,
+ * and the ring holds domains rather than activities. `docs/decisions/0014` is the reasoning.
+ */
+test('no sport ships as a hub, and Exercise holds no children of its own', () => {
+  assert.deepEqual(childHubs('exercise'), [], 'a sport hub is an empty room with a coach attached');
+
+  for (const id of ['running', 'gym', 'cycling', 'swimming', 'golf']) {
+    assert.equal(findHub(id), undefined, `"${id}" is still shipping as a hub`);
   }
 });
 
-/**
- * Labs moved inside Medical condition on 2026-08-19 and everything built for panels still routes
- * through the hub id `labs` — `/add-panel`, the verification gate, and the PhenoAge feed. If this
- * fails, those are reaching for a hub that is no longer where they think it is.
- */
-test('Labs lives inside Medical condition, keeping its id and its coach', () => {
-  assert.deepEqual(childHubs('medical').map((hub) => hub.id), ['labs']);
-  assert.ok(!orbitHubs().some((hub) => hub.id === 'labs'), 'Labs is back on the ring');
-  assert.equal(coachForHub('labs')?.id, 'longevity');
-  assert.ok(hubStateFor('labs') !== undefined, 'Labs lost its cockpit in the move');
+/** Their coaches survive, because a sport is a voice. */
+test('every sport still has a coach to talk to', () => {
+  for (const id of SPORT_COACH_IDS) {
+    assert.ok(findCoach(id) !== undefined, `the ${id} coach went with its hub`);
+  }
 });
+
 
 /**
  * A hub circle is 64 pixels across and its label is one line, so about ten characters is the whole
