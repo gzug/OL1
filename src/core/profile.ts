@@ -16,8 +16,8 @@
  *
  * That is the test for anything proposed here later: does it stop changing, and does a screen use
  * it today? Legacy's `chronicDiseases` and `allergies` fail both, and they are exactly the growth
- * that turns a profile into a medical record. If those are ever wanted they belong in the Medical
- * condition hub as entries a person chose to make, not as columns on an identity.
+ * that turns a profile into a medical record. If those are ever wanted they belong in the Health
+ * record hub as entries a person chose to make, not as columns on an identity.
  *
  * **Nothing here is health data.** A birth year and a sex are the two inputs a published formula
  * takes; a height is a number somebody typed about themselves.

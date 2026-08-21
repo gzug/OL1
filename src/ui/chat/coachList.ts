@@ -40,7 +40,7 @@ export type NestedCoachGroup = {
 /**
  * The coaches that live inside another hub, grouped by the hub they live in.
  *
- * Two parents now, not one — Exercise holds the sports, Medical condition holds Labs — and the
+ * Two parents now, not one — Exercise holds the sports, Health record holds Labs — and the
  * selector needs a heading per parent rather than the single "INSIDE ACTIVITY" it used to print.
  *
  * Derived by sweeping the ring for hubs that have children, not by listing the two parents here. A
