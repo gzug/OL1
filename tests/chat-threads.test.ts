@@ -11,8 +11,8 @@ import {
   tableKey,
   toggleCoach,
 } from '../src/application/chat/threads';
-import { coachesAtTable, hubCoaches, nestedCoaches } from '../src/ui/chat/coachList';
-import { COACHES, SEED_HUBS, findCoach, isDomainHub, orbitHubs } from '../src/ui/hubs/catalog';
+import { coachesAtTable, hubCoaches, nestedCoaches, selectableCoaches, sportCoaches } from '../src/ui/chat/coachList';
+import { COACHES, SEED_HUBS, SPORT_COACH_IDS, findCoach, isDomainHub, orbitHubs } from '../src/ui/hubs/catalog';
 
 /** Which conversation a selection lands in, who may be in it, and where the list comes from. */
 
@@ -264,4 +264,33 @@ test('no brief leaves the prompt exactly as it was', () => {
   for (const empty of [undefined, null, '', '   ']) {
     assert.equal(systemPromptFor(coachesAtTable(['sleep']), empty), plain, `"${String(empty)}" changed it`);
   }
+});
+
+/**
+ * **Every coach in the catalog must be reachable from somewhere.**
+ *
+ * When the sports stopped being hubs on 2026-08-21, `nestedCoaches` derived its list from child
+ * hubs — so five coaches stayed in the catalog and fell out of `selectableCoaches` at the same
+ * moment. Nothing failed. Typecheck passed, every test passed, and five coaches simply could not be
+ * reached from anywhere in the app.
+ *
+ * This is the guard for that shape: a coach that exists and cannot be picked is a coach that is
+ * gone, and the only thing that notices is a person looking for it.
+ */
+test('no coach exists in the catalog without a way to reach it', () => {
+  const reachable = new Set(selectableCoaches().map((coach) => coach.id));
+
+  for (const coach of COACHES) {
+    assert.ok(reachable.has(coach.id), `"${coach.name}" is in the catalog and cannot be picked`);
+  }
+});
+
+/** And the sports specifically, since they are the ones that were derived from something else. */
+test('every sport coach is selectable, hub or no hub', () => {
+  const reachable = new Set(selectableCoaches().map((coach) => coach.id));
+
+  for (const id of SPORT_COACH_IDS) {
+    assert.ok(reachable.has(id), `the ${id} coach is unreachable`);
+  }
+  assert.equal(sportCoaches().length, SPORT_COACH_IDS.length, 'a sport coach is missing from the catalog');
 });
