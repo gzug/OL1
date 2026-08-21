@@ -55,6 +55,7 @@
     "check:boundaries": "node scripts/check-boundaries.mjs",
     "check:durations": "node scripts/check-duration-formatters.mjs",
     "check:dates": "node scripts/check-frozen-dates.mjs",
+    "check:provenance": "node scripts/check-provenance.mjs",
     "check:sensitive": "tsx scripts/check-sensitive-content.ts",
     "check:rationale": "tsx scripts/check-change-rationale.ts",
     "export:web": "APP_VARIANT=preview expo export --platform web --output-dir dist",

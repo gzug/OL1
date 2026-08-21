@@ -74,7 +74,20 @@ export function LogMealFlow() {
   async function save() {
     setState('saving');
     try {
-      await hubs.add('nutrition', 'meal', mealPayload(entries, note), { source: way });
+      /**
+       * **`source` is how the numbers actually arrived, and every one of them is typed.**
+       *
+       * It used to be `way`, so choosing "Take a photo" filed the meal as `camera` and both
+       * `StoredEntries` and the Twin's ledger reported it as "photographed" — under a heading that
+       * reads "How it got here. Shown, never guessed at." There is no camera anywhere in this app;
+       * the button sets a label and moves to the next step, which then asks for the numbers.
+       *
+       * The route is not thrown away — `chosenWay` keeps it in the payload, where it is a record of
+       * what somebody wanted rather than a claim about what happened.
+       */
+      await hubs.add('nutrition', 'meal', { ...mealPayload(entries, note), chosenWay: way }, {
+        source: 'manual',
+      });
       setState('saved');
     } catch {
       // Everything typed is still on screen and the button can be pressed again. Navigating away
@@ -145,14 +158,19 @@ export function LogMealFlow() {
 
         {step === 'note' && (
           <>
+            {/* The photo wording only where a photo was chosen. On the described path the person
+                has explicitly said there is no picture, and asking what it cannot see is the app
+                not listening to the answer it just took. */}
             <Text style={[styles.question, { color: colors.text }]}>
-              What can the photo not see?
+              {way === 'described' ? 'Anything the numbers miss?' : 'What can the photo not see?'}
             </Text>
             {/* Asked BEFORE the estimate, not after. Legacy's prompt makes the note override what
                 the picture shows, which only works if it exists by the time anything is read. */}
             <Text style={[styles.hint, { color: colors.textMuted }]}>
-              Oil, butter, sugar in the sauce, how big the portion really was. This overrides the
-              picture — a photo is bad at exactly these.
+              Oil, butter, sugar in the sauce, how big the portion really was.
+              {way === 'described'
+                ? ' Easy to leave out, and they change the numbers most.'
+                : ' This overrides the picture — a photo is bad at exactly these.'}
             </Text>
             <TextInput
               accessibilityLabel="What the photo cannot see"
