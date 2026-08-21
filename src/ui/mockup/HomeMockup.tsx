@@ -143,14 +143,22 @@ export function HomeMockup() {
           * only overwritten if somebody answers again. Walking through and leaving costs nothing.
           */}
         <View style={styles.topSideLeft}>
-          <Link asChild href="/welcome">
-            <Pressable
-              accessibilityLabel="Show the first-run flow again"
-              accessibilityRole="link"
-              style={({ pressed }) => [styles.onboarding, pressed && styles.pressed]}>
-              <Text style={[styles.earlierText, { color: colors.textMuted }]}>Onboarding</Text>
-            </Pressable>
-          </Link>
+          {/**
+            * A plain `Pressable`, not a `Link asChild` — and that is not a preference.
+            *
+            * Wrapped in `Link asChild`, this Pressable's `style` never applied: no padding, so the
+            * "O" sat one pixel from the frame's rounded edge and read as clipped, and no pressed
+            * state either, which is the half nobody would have noticed. "Earlier" opposite has
+            * always been a plain Pressable, and matching it is what makes the two sides symmetrical
+            * in behaviour as well as in spacing.
+            */}
+          <Pressable
+            accessibilityLabel="Show the first-run flow again"
+            accessibilityRole="button"
+            onPress={() => router.push('/welcome')}
+            style={({ pressed }) => [styles.onboarding, pressed && styles.pressed]}>
+            <Text style={[styles.earlierText, { color: colors.textMuted }]}>Onboarding</Text>
+          </Pressable>
         </View>
         <Link asChild href="/twin">
           <Pressable accessibilityRole="link" style={styles.twinLink}>
