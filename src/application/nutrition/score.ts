@@ -36,6 +36,19 @@ export type NutritionScore = {
   /** 0–100, or null when there is not enough logging to say anything at all. */
   readonly quality: number | null;
   readonly subScores: SubScores;
+  /**
+   * WHY there is no score, when there is none.
+   *
+   * **The screen used to know only one of the two reasons**, and said it in both cases: "Not enough
+   * yet to score. 3 meals is where it starts — you have 5." A sentence that contradicts itself
+   * inside itself, which is how it was eventually noticed.
+   *
+   * The second reason is different in kind and needs a different answer: every sub-score needs
+   * calories recorded ALONGSIDE protein or fibre in the same meal, and the flow happily saves a
+   * meal with only one of them. Telling that person to log more meals sends them to do the one
+   * thing that will never produce a score.
+   */
+  readonly withheld: 'noPairedMacros' | 'tooFewMeals' | null;
 };
 
 /** Legacy's own numbers. Not medical guidance — the reference points its score was written against. */
@@ -143,13 +156,22 @@ export function nutritionScore(meals: readonly ScoredMeal[]): NutritionScore {
   }
 
   const quality = weight > 0 ? clamp(weighted / weight) : null;
+  const enoughMeals = meals.length >= MIN_MEALS;
+
+  /**
+   * Too few meals is reported first, because it is the more basic gap and it is the one a person
+   * fixes by doing the obvious thing. Only once there are enough meals does the missing pairing
+   * become the answer worth giving.
+   */
+  const withheld = !enoughMeals ? 'tooFewMeals' : quality === null ? 'noPairedMacros' : null;
 
   return {
     confidence: confidenceFor(meals.length, loggedDays),
     loggedDays,
     loggedMeals: meals.length,
-    quality: meals.length >= MIN_MEALS ? quality : null,
+    quality: enoughMeals ? quality : null,
     subScores,
+    withheld,
   };
 }
 

@@ -94,3 +94,46 @@ test('nothing logged scores nothing, and does not divide by zero', () => {
   assert.equal(score.subScores.protein, null);
   assert.deepEqual(partsUsed(score), []);
 });
+
+/**
+ * **The score is withheld for two different reasons, and the screen has to know which.**
+ *
+ * It used to say "Not enough yet to score. 3 meals is where it starts — you have 5" in both cases —
+ * a sentence contradicting itself inside itself, which is how it was noticed. The worse half is
+ * behavioural: it sent somebody off to log more meals when logging more the same way could never
+ * produce a score.
+ */
+test('too few meals and unusable meals are different refusals', () => {
+  const paired = (day: string) => ({
+    payload: { macros: { calories: 600, fiberGrams: 8, proteinGrams: 35 } },
+    recordedAt: `2026-08-${day}T12:00:00.000Z`,
+  });
+  const caloriesOnly = (day: string) => ({
+    payload: { macros: { calories: 600 } },
+    recordedAt: `2026-08-${day}T12:00:00.000Z`,
+  });
+
+  assert.equal(nutritionScore([paired('18'), paired('19')]).withheld, 'tooFewMeals');
+
+  const unusable = nutritionScore(['17', '18', '19', '20', '21'].map(caloriesOnly));
+  assert.equal(unusable.quality, null, 'calories alone cannot make a score');
+  assert.equal(unusable.loggedMeals, 5, 'and the meal count is plainly enough');
+  assert.equal(
+    unusable.withheld,
+    'noPairedMacros',
+    'blaming the meal count here sends somebody to do the one thing that cannot help',
+  );
+
+  assert.equal(nutritionScore(['17', '18', '19'].map(paired)).withheld, null);
+});
+
+/** Calories in one meal and protein in another is still not a pair. The pairing is per meal. */
+test('the pairing has to be inside one meal, not across the week', () => {
+  const split = nutritionScore([
+    { payload: { macros: { calories: 600 } }, recordedAt: '2026-08-19T12:00:00.000Z' },
+    { payload: { macros: { proteinGrams: 40 } }, recordedAt: '2026-08-20T12:00:00.000Z' },
+    { payload: { macros: { fiberGrams: 9 } }, recordedAt: '2026-08-21T12:00:00.000Z' },
+  ]);
+
+  assert.equal(split.withheld, 'noPairedMacros');
+});
