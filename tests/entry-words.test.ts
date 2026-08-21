@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 
-import { day, kindWords, sourceWords } from '../src/ui/hubs/entryWords';
+import { answerId, day, kindWords, sourceWords } from '../src/ui/hubs/entryWords';
 
 /**
  * The words two screens both use for a stored entry.
@@ -48,4 +48,40 @@ test('a date is a day and a month, and an unreadable one says so', () => {
   assert.equal(day('2026-08-21T06:03:54.255Z'), '21 Aug');
   assert.equal(day('2026-01-01T00:00:00.000Z'), '1 Jan');
   assert.equal(day('not a date'), 'undated');
+});
+
+/**
+ * **An answer converges; an event accumulates.**
+ *
+ * A meal, a session and a blood panel each happened once and belong in a list. A goal and a named
+ * sport are answers to a question — and toggling "Sleep better" four times used to write four rows,
+ * so the Sleep hub read **"4 goals"** to somebody holding none. Found by tapping one chip four
+ * times on the deployed screen.
+ *
+ * Every store replaces by id, so an answer carrying a stable one converges in place. Both the first
+ * run and the settings screen must derive it here, or each writes its own row and believes it wrote
+ * the only copy.
+ */
+test('the same answer is the same id, however it is typed', () => {
+  const once = answerId('goal', 'sleep', 'Sleep better');
+
+  assert.equal(answerId('goal', 'sleep', 'Sleep better'), once);
+  assert.equal(answerId('goal', 'sleep', '  sleep better  '), once, 'case and spacing are not new answers');
+});
+
+test('different answers, hubs and kinds never collide', () => {
+  const ids = [
+    answerId('goal', 'sleep', 'Sleep better'),
+    answerId('goal', 'sleep', 'Live longer'),
+    answerId('goal', 'labs', 'Sleep better'),
+    answerId('sport', 'exercise', 'golf'),
+    answerId('sport', 'exercise', 'running'),
+  ];
+
+  assert.equal(new Set(ids).size, ids.length, 'two different answers share one row');
+});
+
+/** And it must not look like an event id, or a fresh entry could collide with an answer. */
+test('an answer id is recognisable as one', () => {
+  assert.match(answerId('goal', 'sleep', 'Sleep better'), /^answer:/);
 });

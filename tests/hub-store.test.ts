@@ -94,3 +94,35 @@ test('two entries made in the same millisecond are still two entries', async () 
   assert.notEqual(first.id, second.id);
   assert.equal((await hubs.entries('exercise')).length, 2);
 });
+
+/**
+ * **All three stores must replace by id, or the tests run against behaviour the app does not have.**
+ *
+ * Native does `INSERT OR REPLACE`; web filters the id out and appends. The in-memory store — the one
+ * every test here uses, and the one `tsc` sees — pushed unconditionally. So writing the same id
+ * twice converged in the app and accumulated in the tests, and a bug in either direction was
+ * invisible from the other.
+ *
+ * That matters now because an ANSWER is written under a stable id so that changing your mind
+ * replaces the row. Toggling one goal four times read as "4 goals" on a hub until it did.
+ */
+test('writing the same id twice replaces, and does not accumulate', async () => {
+  const hubs = createHubs(createMemoryHubStore());
+
+  await hubs.add('sleep', 'goal', { label: 'Sleep better' }, { id: 'answer:goal:sleep:sleep better' });
+  await hubs.add('sleep', 'goal', { held: false, label: 'Sleep better' }, { id: 'answer:goal:sleep:sleep better' });
+
+  const entries = await hubs.entries('sleep');
+  assert.equal(entries.length, 1, 'one answer, changed once, is one row');
+  assert.equal(entries[0]?.payload.held, false, 'the newest answer is the one kept');
+});
+
+/** An event keeps a fresh id every time, because each one really happened. */
+test('an entry with no id given still accumulates', async () => {
+  const hubs = createHubs(createMemoryHubStore());
+
+  await hubs.add('exercise', 'session', { activity: 'running', minutes: 30 });
+  await hubs.add('exercise', 'session', { activity: 'running', minutes: 30 });
+
+  assert.equal((await hubs.entries('exercise')).length, 2, 'two runs are two runs');
+});

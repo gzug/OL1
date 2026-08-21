@@ -6,6 +6,8 @@ import { draftId, draftProblem, problemMessage } from '@/ui/hubs/newHub';
 import { COPY as FIRST_RUN } from '@/ui/onboarding/firstRun';
 import { fontFamily, spacing, typography, useTheme } from '@/ui/theme';
 
+import { answerId } from '@/ui/hubs/entryWords';
+
 import { Chip, Chips, Field, Problem, Section, styles } from './parts';
 import { COPY, goalPayload, goalsFrom, type GoalChoice } from './settings';
 import type { SettingsData } from './useSettings';
@@ -48,7 +50,11 @@ export function GoalsSection({
   async function toggle(goal: GoalChoice) {
     setFailed(false);
     try {
-      await source.add(goal.hubId, 'goal', goalPayload(goal.label, !goal.held));
+      /* An answer, not an event: the same id every time, so changing your mind replaces the row
+         rather than adding one. See `answerId`. */
+      await source.add(goal.hubId, 'goal', goalPayload(goal.label, !goal.held), {
+        id: answerId('goal', goal.hubId, goal.label),
+      });
       onChanged();
     } catch {
       setFailed(true);
@@ -69,7 +75,7 @@ export function GoalsSection({
     try {
       const id = draftId(name);
       await source.create({ coachId: id, id, label: name });
-      await source.add(id, 'goal', goalPayload(name, true));
+      await source.add(id, 'goal', goalPayload(name, true), { id: answerId('goal', id, name) });
       setTyped('');
       onChanged();
     } catch {

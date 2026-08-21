@@ -8,6 +8,7 @@ import { fontFamily, lineHeights, typography, useTheme } from '@/ui/theme';
 import { Chip, Chips, Field, Problem, Section } from './parts';
 import { COPY, sportPayload, sportsFrom, type SportChoice } from './settings';
 import type { SettingsData } from './useSettings';
+import { answerId } from '@/ui/hubs/entryWords';
 
 /**
  * What you train, asked again.
@@ -45,7 +46,10 @@ export function TrainingSection({
   async function name(sport: SportChoice) {
     setFailed(false);
     try {
-      await source.add(SPORT_HUB, 'sport', sportPayload(sport));
+      /* An answer, not an event — the same id every time. See `answerId`. */
+      await source.add(SPORT_HUB, 'sport', sportPayload(sport), {
+        id: answerId('sport', SPORT_HUB, sport.coachId),
+      });
       onChanged();
     } catch {
       setFailed(true);
