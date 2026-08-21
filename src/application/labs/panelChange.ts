@@ -16,6 +16,7 @@
 
 import { REQUIRED_MARKERS } from './phenoAge';
 import {
+  EXTRA_MARKER_ORDER,
   EXTRA_TARGET_UNIT,
   TARGET_UNIT,
   type ExtraUnitKey,
@@ -35,7 +36,7 @@ import {
  */
 const COMPARABLE: readonly (ExtraUnitKey | LevineMarkerKey)[] = [
   ...REQUIRED_MARKERS,
-  ...(Object.keys(EXTRA_TARGET_UNIT) as ExtraUnitKey[]),
+  ...EXTRA_MARKER_ORDER,
 ];
 
 /** The unit a marker is stored in, whichever table owns it. */
