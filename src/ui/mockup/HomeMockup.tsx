@@ -6,6 +6,7 @@ import { holdForHandoff, toRef } from '@/application/chat/attachments';
 import { coachChat } from '@/application/chat/coachChat';
 import { toggleCoach } from '@/application/chat/threads';
 import { ChatBar } from '@/ui/chat/ChatBar';
+import { ChatsDrawer } from '@/ui/chat/ChatsDrawer';
 import { CoachSelector } from '@/ui/chat/CoachSelector';
 import { ThreadList } from '@/ui/chat/ThreadList';
 import { coachesAtTable } from '@/ui/chat/coachList';
@@ -69,7 +70,11 @@ function figureScale(boxHeight: number): number {
  * colour from the accent too — which is the thing to watch when reviewing this rendered, because
  * the drift number and the send button now compete for the same channel from opposite ends.
  */
-type Sheet = 'coaches' | 'history' | null;
+/**
+ * `chats` is the full-screen drawer; the other two are sheets that sit above the bar. They share
+ * one piece of state because only one of them may ever be open.
+ */
+type Sheet = 'chats' | 'coaches' | 'history' | null;
 
 export function HomeMockup() {
   const { colors } = useTheme();
@@ -143,20 +148,20 @@ export function HomeMockup() {
           */}
         <View style={styles.topSideLeft}>
           {/**
-            * A plain `Pressable`, not a `Link asChild` — and that is not a preference.
+            * **A word, not three lines.** A hamburger says "app with a menu"; this says what is
+            * behind it and leaves the ring the loudest thing on the screen — the owner's call on
+            * 2026-08-21, and the reason the drawer opens by button rather than by swipe is that on
+            * Android a swipe from the left edge is the system Back gesture.
             *
-            * Wrapped in `Link asChild`, this Pressable's `style` never applied: no padding, so the
-            * "O" sat one pixel from the frame's rounded edge and read as clipped, and no pressed
-            * state either, which is the half nobody would have noticed. "Earlier" opposite has
-            * always been a plain Pressable, and matching it is what makes the two sides symmetrical
-            * in behaviour as well as in spacing.
+            * A plain `Pressable`, not a `Link asChild`: wrapped that way the style never applies,
+            * which cost this button its padding and its pressed state once already.
             */}
           <Pressable
-            accessibilityLabel="Show the first-run flow again"
+            accessibilityLabel="Your conversations"
             accessibilityRole="button"
-            onPress={() => router.push('/welcome')}
+            onPress={() => setSheet('chats')}
             style={({ pressed }) => [styles.onboarding, pressed && styles.pressed]}>
-            <Text style={[styles.earlierText, { color: colors.textMuted }]}>Onboarding</Text>
+            <Text style={[styles.earlierText, { color: colors.textMuted }]}>Chats</Text>
           </Pressable>
         </View>
         <Link asChild href="/twin">
@@ -175,13 +180,21 @@ export function HomeMockup() {
         </View>
       </View>
 
-      {sheet !== null && (
+      {sheet !== null && sheet !== 'chats' && (
         <Pressable
           accessibilityLabel="Close"
           accessibilityRole="button"
           onPress={() => setSheet(null)}
           style={[styles.scrim, { backgroundColor: colors.scrim }]}
         />
+      )}
+
+      {/* Full screen, over everything including the bar. A partial drawer would leave the ring
+          half-visible behind it, which reads as an accident rather than as a place. */}
+      {sheet === 'chats' && (
+        <View style={styles.drawerLayer}>
+          <ChatsDrawer onClose={() => setSheet(null)} />
+        </View>
       )}
 
       <View style={styles.stageWrapper}>
@@ -328,6 +341,14 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     /** Room for the pinned bar, so the ring centres against what is left rather than under it. */
     paddingBottom: 74,
+  },
+  drawerLayer: {
+    bottom: 0,
+    left: 0,
+    position: 'absolute',
+    right: 0,
+    top: 0,
+    zIndex: 10,
   },
   scrim: {
     bottom: 0,
