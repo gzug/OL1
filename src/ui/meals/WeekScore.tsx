@@ -74,11 +74,18 @@ export function WeekScore({ source = defaultHubs }: { source?: typeof defaultHub
       <Text style={[styles.label, { color: colors.textSubtle }]}>THIS WEEK’S LOGGING</Text>
 
       {score.quality === null ? (
-        /* The floor `0004` asked for, and it is a refusal rather than a placeholder: below three
-           meals there is no number, and the screen says what would change that. */
+        /**
+         * A refusal rather than a placeholder — and it now gives the RIGHT refusal.
+         *
+         * This said "Not enough yet to score. 3 meals is where it starts — you have 5" whenever
+         * there was no number, including when the meal count was fine. It contradicted itself
+         * inside one sentence, and worse, it sent somebody off to log more meals when logging more
+         * the same way could never produce a score.
+         */
         <Text style={[styles.withheld, { color: colors.text }]}>
-          Not enough yet to score. {MIN_MEALS} meals is where it starts — you have{' '}
-          {score.loggedMeals}.
+          {score.withheld === 'tooFewMeals'
+            ? `Not enough yet to score. ${MIN_MEALS} meals is where it starts — you have ${score.loggedMeals}.`
+            : 'No score yet. Every one of your meals is missing either its calories or its protein and fibre — the score needs them recorded together in the same meal.'}
         </Text>
       ) : (
         <>
