@@ -353,34 +353,37 @@ export function HubScreen({
           </>
         )}
 
-        <SectionLabel colors={colors} label="Coverage" />
-        <View>
-          {state.facets.map((facet, index) => (
-            <View
-              key={facet.label}
-              style={[
-                styles.facetRow,
-                index > 0 && {
-                  borderTopColor: colors.borderSubtle,
-                  borderTopWidth: StyleSheet.hairlineWidth,
-                },
-              ]}>
-              <Dot colors={colors} state={facet.state} />
-              <Text style={[styles.facetLabel, { color: colors.text }]}>{facet.label}</Text>
-              <Text
-                numberOfLines={1}
-                style={[styles.facetDetail, { color: colors.textMuted }, tabularNums]}>
-                {facet.detail}
-              </Text>
+        {/* A heading over nothing is its own small false claim — it says a section exists.
+            Hubs the app ships have coverage facets; a hub somebody made has none. */}
+        {state.facets.length > 0 && (
+          <>
+            <SectionLabel colors={colors} label="Coverage" />
+            <View>
+            {state.facets.map((facet, index) => (
+              <View
+                key={facet.label}
+                style={[
+                  styles.facetRow,
+                  index > 0 && {
+                    borderTopColor: colors.borderSubtle,
+                    borderTopWidth: StyleSheet.hairlineWidth,
+                  },
+                ]}>
+                <Dot colors={colors} state={facet.state} />
+                <Text style={[styles.facetLabel, { color: colors.text }]}>{facet.label}</Text>
+                <Text
+                  numberOfLines={1}
+                  style={[styles.facetDetail, { color: colors.textMuted }, tabularNums]}>
+                  {facet.detail}
+                </Text>
+              </View>
+            ))}
             </View>
-          ))}
-        </View>
-
+          </>
+        )}
 
         {/* Last on the screen, under the fixtures. Putting a hub away is a rare, considered act;
-
             putting it in the header would make it the second most prominent thing on a hub. */}
-
         <HideHub entryCount={entryCount} hub={hub} hubs={allHubs} />
 
 
