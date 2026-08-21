@@ -81,6 +81,20 @@ export function answerId(kind: string, hubId: string, label: string): string {
   return `answer:${kind}:${hubId}:${label.trim().toLowerCase()}`;
 }
 
+/**
+ * The id a MEASUREMENT taken on a given day is written under.
+ *
+ * A weigh-in really is an event — it has a date, and two of them a week apart are two readings. But
+ * two on the SAME day, from walking the first run twice, are one reading recorded twice. Keyed by
+ * day, re-answering replaces and next week's is genuinely new.
+ *
+ * Found by walking the first run twice on the deployed preview: the goals and the sports converged
+ * and the weigh-in did not, so Nutrition read "2 weigh-ins" for one weight given once.
+ */
+export function dailyId(kind: string, hubId: string, isoDate: string): string {
+  return `daily:${kind}:${hubId}:${isoDate.slice(0, 10)}`;
+}
+
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
 /**
