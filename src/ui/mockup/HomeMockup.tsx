@@ -23,7 +23,6 @@ import {
   useTheme,
 } from '@/ui/theme';
 
-import { centre } from './fixtures';
 import { CENTRE, STAGE, stackBox } from './geometry';
 import { Orbit } from './Orbit';
 
@@ -230,16 +229,24 @@ export function HomeMockup() {
         </View>
       </View>
 
-      <View style={styles.readout}>
-        <Text numberOfLines={2} style={[styles.insight, { color: colors.text }]}>
-          {centre.insight}
-        </Text>
-        <View style={[styles.focusPill, { backgroundColor: colors.accentSoft }]}>
-          <Text numberOfLines={1} style={[styles.focusText, { color: colors.accent }]}>
-            {centre.focus}
-          </Text>
-        </View>
-      </View>
+      {/**
+        * **Two fixtures used to sit here and they are gone.**
+        *
+        * "Your later nights landed on evening training days." and a pill reading "Today · the
+        * evening walk". Neither was computed; nothing in the app could compute them. The only
+        * health metric the port defines is `steps`, its adapter reports `unavailable` on every
+        * device, and there is no bedtime anywhere for a pattern to be drawn from. The sentence
+        * began with "Your". The pill said "Today" and said the identical thing tomorrow, and to
+        * somebody who had logged nothing at all.
+        *
+        * They were the worst-placed fixtures in the app: directly under a body figure drawn from
+        * the person's own logged sessions, above a working chat bar, and on the one screen with no
+        * sample-data line — so they sat inside the same visual block as real output.
+        *
+        * Home is the ring and the bar until something real belongs between them. Adding a
+        * sample-data line to this screen purely to keep two invented sentences would have been the
+        * worse of the two answers. `docs/decisions/0013` is the class this belongs to.
+        */}
 
       <View style={styles.bottom}>
         {sheet === 'coaches' && (
@@ -290,11 +297,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     position: 'absolute',
   },
-  readout: {
-    alignItems: 'center',
-    paddingHorizontal: spacing.xl,
-    zIndex: 2,
-  },
   twinName: {
     fontFamily: fontFamily.display,
     /* Sized against the figure above it rather than against the screen. At 26 the two words were
@@ -304,25 +306,7 @@ const styles = StyleSheet.create({
     marginTop: TWIN_NAME_GAP,
     textAlign: 'center',
   },
-  focusPill: {
-    borderRadius: 13,
-    marginTop: spacing.md,
-    maxWidth: 210,
-    paddingHorizontal: spacing.md,
-    paddingVertical: 5,
-  },
-  focusText: {
-    fontFamily: fontFamily.medium,
-    fontSize: 11.5,
-  },
   /** The loudest thing on the screen, by contrast rather than by size. */
-  insight: {
-    fontFamily: fontFamily.body,
-    fontSize: typography.bodySmall,
-    lineHeight: lineHeights.bodySmall,
-    marginTop: spacing.md,
-    textAlign: 'center',
-  },
   earlier: {
     paddingHorizontal: spacing.lg,
     paddingVertical: spacing.xs,
