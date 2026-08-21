@@ -312,7 +312,7 @@ export const COPY = {
   replayTitle: 'THE FIRST RUN',
   saveFailed: 'That did not save, so nothing changed. Try again.',
   storedNote:
-    'Everything OL1 has written down, including answers you later changed. Nothing here is ever deleted.',
+    'Everything One L1fe has written down, including answers you later changed. Nothing here is ever deleted.',
   /**
    * The storage line, and NOT the first run's.
    *
@@ -330,5 +330,5 @@ export const COPY = {
     'Naming one gives you its coach. Turning a sport off is not built yet, so nothing here pretends to.',
   trainingNamed: 'NAMED',
   trainingTitle: 'WHAT YOU TRAIN',
-  unread: 'OL1 could not read that. Nothing is lost — try opening this screen again.',
+  unread: 'One L1fe could not read that. Nothing is lost — try opening this screen again.',
 } as const;

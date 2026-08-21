@@ -8,7 +8,7 @@ export default function Root({ children }: PropsWithChildren) {
         <meta charSet="utf-8" />
         <meta content="width=device-width, initial-scale=1" name="viewport" />
         <meta content="noindex,nofollow,noarchive" name="robots" />
-        <title>OL1 Preview</title>
+        <title>One L1fe Preview</title>
         <ScrollViewStyleReset />
       </head>
       <body>{children}</body>

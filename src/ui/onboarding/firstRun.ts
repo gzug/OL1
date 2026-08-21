@@ -127,13 +127,13 @@ export const RECORD_KINDS: readonly RecordKind[] = [
   {
     id: 'microbiome',
     label: 'Microbiome test',
-    note: 'Noted, not read — OL1 cannot read one of these yet.',
+    note: 'Noted, not read — One L1fe cannot read one of these yet.',
     readable: false,
   },
   {
     id: 'genetics',
     label: 'Genetic test',
-    note: 'Noted, not read — OL1 cannot read one of these yet.',
+    note: 'Noted, not read — One L1fe cannot read one of these yet.',
     readable: false,
   },
 ];
@@ -208,7 +208,7 @@ export const COPY = {
   heightLabel: 'HEIGHT IN CM',
   heightWrong: 'Centimetres — somewhere between 50 and 250.',
   noAccount: 'No account, no sign-up. Nothing here is sent anywhere.',
-  ready: 'Open OL1',
+  ready: 'Open One L1fe',
   recordsHint:
     'Anything you already have. Only the blood panel can be read today; the other two are noted so the app knows to ask later.',
   recordsHeld: 'WHAT YOU ALREADY HAVE',

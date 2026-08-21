@@ -49,7 +49,7 @@ export default function BootstrapRoute() {
         <View style={[styles.environmentBadge, { backgroundColor: colors.accent }]}>
           <Text style={[styles.environmentText, { color: colors.onAccent }]}>{environment}</Text>
         </View>
-        <Text style={[styles.title, { color: colors.text }]}>OL1</Text>
+        <Text style={[styles.title, { color: colors.text }]}>One L1fe</Text>
         <Text style={[styles.subtitle, { color: colors.textMuted }]}>
           Bootstrap compatibility surface
         </Text>
