@@ -4,7 +4,7 @@ import { StyleSheet, Text, View } from 'react-native';
 
 import { hubs as defaultHubs } from '@/application/hubs/hubs';
 import type { HubEntry } from '@/core/hubs';
-import { day, kindWords, sourceWords } from '@/ui/hubs/entryWords';
+import { day, isHeld, kindWords, sourceWords } from '@/ui/hubs/entryWords';
 import { fontFamily, lineHeights, spacing, typography, useTheme } from '@/ui/theme';
 
 /**
@@ -27,7 +27,10 @@ const SHOWN = 5;
 
 function countLine(entries: readonly HubEntry[]): string {
   const byKind = new Map<string, number>();
-  for (const entry of entries) byKind.set(entry.kind, (byKind.get(entry.kind) ?? 0) + 1);
+  // A goal somebody turned off is written down and is not something they have. See `isHeld`.
+  for (const entry of entries.filter(isHeld)) {
+    byKind.set(entry.kind, (byKind.get(entry.kind) ?? 0) + 1);
+  }
 
   return [...byKind.entries()]
     .map(([kind, count]) => `${count} ${kindWords(kind, count)}`)

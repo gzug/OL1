@@ -44,6 +44,20 @@ const SOURCES: Readonly<Record<string, string>> = {
   photo: 'photographed',
 };
 
+/**
+ * Whether an entry is a thing somebody HAS, rather than a question they answered "no" to.
+ *
+ * A goal turned off is still written down — nothing in OL1 deletes, so declining is recorded rather
+ * than erased. But it is not something a person has, and counting it as one is how the Sleep hub
+ * came to say **"1 goal"** to somebody who had just turned their only goal off.
+ *
+ * That is the same defect as "4 goals" one layer up: the rows converged, and the count still spoke
+ * for a person who had said no.
+ */
+export function isHeld(entry: { payload: Readonly<Record<string, unknown>> }): boolean {
+  return entry.payload.held !== false;
+}
+
 export function kindWords(kind: string, count: number): string {
   const words = KINDS[kind] ?? { many: `${kind} entries`, one: `${kind} entry` };
   return count === 1 ? words.one : words.many;
