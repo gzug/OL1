@@ -21,7 +21,7 @@ import { StubScreen } from '@/ui/mockup/StubScreen';
  */
 export default function HubRoute() {
   const { id } = useLocalSearchParams<{ id: string }>();
-  const hubs = useHubs();
+  const { hubs } = useHubs();
   const hub = findHub(id, hubs);
 
   /**

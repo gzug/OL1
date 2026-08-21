@@ -12,6 +12,7 @@ import type { HubEntry, HubStore, StoredHub } from '@/core/hubs';
 export function createMemoryHubStore(): HubStore {
   const hubs = new Map<string, StoredHub>();
   const entries: HubEntry[] = [];
+  const hidden = new Set<string>();
 
   return {
     async addEntry(entry) {
@@ -33,6 +34,19 @@ export function createMemoryHubStore(): HubStore {
 
     async listHubs() {
       return [...hubs.values()].sort((a, b) => a.createdAt.localeCompare(b.createdAt));
+    },
+
+    // Hiding never touches `entries`. That is the whole contract — see migration 7.
+    async hideHub(hubId) {
+      hidden.add(hubId);
+    },
+
+    async listHiddenHubs() {
+      return [...hidden];
+    },
+
+    async unhideHub(hubId) {
+      hidden.delete(hubId);
     },
   };
 }

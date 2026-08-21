@@ -25,7 +25,9 @@ const SHOWN = 8;
 
 export function Ledger({ source = defaultHubs }: { source?: typeof defaultHubs }) {
   const { colors } = useTheme();
-  const hubs = useHubs();
+  /* Every hub, hidden ones included: putting a hub away is a statement about the ring, not an
+     erasure of what was logged in it. */
+  const { hubs } = useHubs();
   const [state, setState] = useState<{ lines: readonly LedgerLine[]; total: number } | null>(null);
 
   useFocusEffect(

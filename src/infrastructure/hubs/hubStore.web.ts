@@ -19,6 +19,7 @@ import type { HubEntry, HubStore, StoredHub } from '@/core/hubs';
 
 const HUBS_KEY = 'ol1.hubs';
 const ENTRIES_PREFIX = 'ol1.hub.entries.';
+const HIDDEN_KEY = 'ol1.hubs.hidden';
 
 function storage(): Storage | null {
   try {
@@ -75,5 +76,23 @@ export const hubStore: HubStore = {
 
   async listHubs() {
     return read<StoredHub[]>(HUBS_KEY, []).sort((a, b) => a.createdAt.localeCompare(b.createdAt));
+  },
+
+  /** Hiding writes an id and nothing else. No entry key is read, let alone written. */
+  async hideHub(hubId) {
+    const hidden = read<string[]>(HIDDEN_KEY, []);
+    if (hidden.includes(hubId)) return;
+    write(HIDDEN_KEY, [...hidden, hubId]);
+  },
+
+  async listHiddenHubs() {
+    return read<string[]>(HIDDEN_KEY, []);
+  },
+
+  async unhideHub(hubId) {
+    write(
+      HIDDEN_KEY,
+      read<string[]>(HIDDEN_KEY, []).filter((id) => id !== hubId),
+    );
   },
 };

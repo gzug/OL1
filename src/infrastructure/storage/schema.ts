@@ -1,4 +1,4 @@
-export const CURRENT_SCHEMA_VERSION = 6;
+export const CURRENT_SCHEMA_VERSION = 7;
 
 export const CREATE_MIGRATION_TABLE_SQL = `
   CREATE TABLE IF NOT EXISTS schema_migrations (
@@ -145,5 +145,27 @@ export const MIGRATIONS = [
      */
     version: 6,
     sql: `ALTER TABLE profile ADD COLUMN height_cm INTEGER;`,
+  },
+  {
+    /**
+     * Hubs a person has put away.
+     *
+     * **A table of ids, not a column on `hub`.** The six seeded hubs live in `catalog.ts` as code
+     * and have no row in `hub` at all — migration 4 says so — and `mergeHubs` refuses to let a
+     * stored row override a seeded one. So a flag on `hub` could never hide Sleep, which is exactly
+     * the case this feature exists for. A separate table hides any hub, shipped or made.
+     *
+     * **Nothing here deletes anything, and that is the owner's decision on 2026-08-21.** Asked
+     * whether hubs should be removable he chose hideable. A hub holds meals, sessions and blood
+     * panels; hiding is reversible and deleting is a decision made once, at speed, that cannot be
+     * taken back. Unhiding is `DELETE FROM hidden_hub` — the row here is the only thing destroyed.
+     */
+    version: 7,
+    sql: `
+      CREATE TABLE IF NOT EXISTS hidden_hub (
+        hub_id TEXT PRIMARY KEY NOT NULL,
+        hidden_at TEXT NOT NULL
+      );
+    `,
   },
 ] as const;

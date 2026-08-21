@@ -51,4 +51,14 @@ export interface HubStore {
   /** Newest first. `limit` is the cockpit's concern; absent means all of them. */
   listEntries(hubId: string, limit?: number): Promise<readonly HubEntry[]>;
   listHubs(): Promise<readonly StoredHub[]>;
+
+  /**
+   * Put a hub away, and bring it back. **Neither one touches an entry.**
+   *
+   * `hide` is idempotent, because a screen that hides an already-hidden hub should do nothing
+   * rather than fail. So is `unhide`.
+   */
+  hideHub(hubId: string): Promise<void>;
+  listHiddenHubs(): Promise<readonly string[]>;
+  unhideHub(hubId: string): Promise<void>;
 }

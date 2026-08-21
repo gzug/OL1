@@ -11,6 +11,7 @@ import {
 
 import { hubs } from '@/application/hubs/hubs';
 import { findHub, type HubId } from '@/ui/hubs/catalog';
+import { HiddenHubs } from '@/ui/hubs/HiddenHubs';
 import { useHubs } from '@/ui/hubs/useHubs';
 import {
   FOCUS_MAX,
@@ -60,7 +61,7 @@ export function NewHubFlow({ parentId }: { parentId?: HubId }) {
    * Every hub that exists, not just the seeded ones — otherwise the second hub you name "Reading"
    * is accepted, and the ring quietly carries two of them.
    */
-  const existing = useHubs();
+  const { hubs: existing } = useHubs();
   const parent = parentId === undefined ? undefined : findHub(parentId, existing);
   const draft = { focus, name, parentId };
   const problem = draftProblem(draft, existing);
@@ -166,6 +167,11 @@ export function NewHubFlow({ parentId }: { parentId?: HubId }) {
             onCreated={() => router.push('/')}
           />
         )}
+
+        {/* "Add one" and "bring one back" are the same question asked twice, and somebody looking
+            for a hub they hid will look where hubs come from. Renders nothing when nothing is
+            hidden. */}
+        <HiddenHubs />
       </ScrollView>
     </View>
   );

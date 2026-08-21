@@ -79,7 +79,7 @@ export function HomeMockup() {
   const [sheet, setSheet] = useState<Sheet>(null);
   const [selected, setSelected] = useState<readonly string[]>([]);
   /** Seeded plus whatever the user has made. Re-read whenever Home comes back into focus. */
-  const hubs = useHubs();
+  const { visible: hubs } = useHubs();
   /** The same reading the Twin screen draws, from the same sessions. Never a second calculation. */
   const load = useMuscleLoad();
   const centreBox = stackBox(ringPlaceCount(hubs));
