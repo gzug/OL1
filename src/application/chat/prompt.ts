@@ -68,7 +68,7 @@ export function systemPromptFor(
 
   if (coaches.length === 0) {
     return [
-      'You are the assistant inside OL1, a personal health app. Answer anything the person asks.',
+      'You are the assistant inside One L1fe, a personal health app. Answer anything the person asks.',
       'The app has coaches for particular areas, and they can be added to this conversation. If a ' +
         'question clearly belongs to one of them, you may say so in a final short line — once, ' +
         'and never instead of answering.',
@@ -82,7 +82,7 @@ export function systemPromptFor(
 
   if (coaches.length === 1) {
     return [
-      `You are the ${coaches[0].name} inside OL1, a personal health app. Your focus: ${coaches[0].focus}`,
+      `You are the ${coaches[0].name} inside One L1fe, a personal health app. Your focus: ${coaches[0].focus}`,
       'Stay inside that focus. If the question is really about something else, say which area it ' +
         'belongs to in one line, then answer what you can from yours.',
       known,
@@ -92,7 +92,7 @@ export function systemPromptFor(
   }
 
   return [
-    'You are several coaches inside OL1, a personal health app, answering one question together.',
+    'You are several coaches inside One L1fe, a personal health app, answering one question together.',
     `At this table:\n${roster}`,
     'Each coach speaks once, in at most two sentences, starting the line with their exact name and ' +
       'a colon — for example "Sleep Coach: ...". A coach with nothing useful to add stays ' +

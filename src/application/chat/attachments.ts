@@ -65,7 +65,7 @@ export function pickProblem(result: PickResult): string | null {
 
   switch (result.reason) {
     case 'denied':
-      return 'OL1 was not given access to that. You can change it in your phone’s settings.';
+      return 'One L1fe was not given access to that. You can change it in your phone’s settings.';
     case 'too-large':
       return `That is bigger than ${Math.round(MAX_INLINE_BYTES / 1024 / 1024)}MB, which is as much as can be sent in one go.`;
     case 'unavailable':

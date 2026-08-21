@@ -229,7 +229,7 @@ export function FirstRunFlow({ source = defaultProfiles }: { source?: typeof def
       const kind = RECORD_KINDS.find((entry) => entry.id === id);
       if (kind !== undefined) {
         await hubs.add('medical', 'note', {
-          text: `Has a ${kind.label.toLowerCase()} result. OL1 cannot read one yet.`,
+          text: `Has a ${kind.label.toLowerCase()} result. One L1fe cannot read one yet.`,
         });
       }
     }
