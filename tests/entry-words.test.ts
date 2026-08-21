@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 
-import { answerId, day, isHeld, kindWords, sourceWords } from '../src/ui/hubs/entryWords';
+import { answerId, dailyId, day, isHeld, kindWords, sourceWords } from '../src/ui/hubs/entryWords';
 
 /**
  * The words two screens both use for a stored entry.
@@ -104,4 +104,25 @@ test('an entry that never had the idea of being held still counts', () => {
   for (const payload of [{}, { macros: { calories: 520 } }, { activity: 'running', minutes: 30 }]) {
     assert.equal(isHeld({ payload }), true, `${JSON.stringify(payload)} was dropped`);
   }
+});
+
+/**
+ * **One weigh-in a day.**
+ *
+ * A weigh-in really is an event — two a week apart are two readings. But two on the same day, from
+ * walking the first run twice, are one reading recorded twice. Found by walking the first run twice
+ * on the deployed preview: the goals and the sports converged and the weigh-in did not, so
+ * Nutrition read "2 weigh-ins" for one weight given once.
+ */
+test('the same day is the same reading; another day is another one', () => {
+  const monday = dailyId('weight', 'nutrition', '2026-08-21T09:00:00.000Z');
+
+  assert.equal(dailyId('weight', 'nutrition', '2026-08-21T21:45:00.000Z'), monday, 'the hour is not a new day');
+  assert.notEqual(dailyId('weight', 'nutrition', '2026-08-22T09:00:00.000Z'), monday, 'tomorrow is a new reading');
+});
+
+/** A measurement id is not an answer id, so the two can never collide. */
+test('a daily id and an answer id are distinguishable', () => {
+  assert.match(dailyId('weight', 'nutrition', '2026-08-21'), /^daily:/);
+  assert.notEqual(dailyId('weight', 'nutrition', '2026-08-21'), answerId('weight', 'nutrition', '2026-08-21'));
 });

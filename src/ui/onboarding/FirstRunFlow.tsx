@@ -3,7 +3,7 @@ import { useState, type ReactNode } from 'react';
 import { Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 
 import { hubs } from '@/application/hubs/hubs';
-import { answerId } from '@/ui/hubs/entryWords';
+import { answerId, dailyId } from '@/ui/hubs/entryWords';
 import {
   plausibleBirthYear,
   plausibleHeightCm,
@@ -167,7 +167,16 @@ export function FirstRunFlow({ source = defaultProfiles }: { source?: typeof def
      */
     const kg = Number(weight.trim());
     if (weight.trim().length > 0 && Number.isFinite(kg) && kg > 20 && kg < 400) {
-      await hubs.add('nutrition', 'weight', { kg: Math.round(kg * 10) / 10 });
+      /**
+       * One weigh-in a day. Walking the first run twice is not two readings of the same weight —
+       * it is one, given twice — and it read as "2 weigh-ins" in Nutrition until this was keyed by
+       * day. Next week's is genuinely new, because the day is part of the id.
+       */
+      const today = new Date().toISOString();
+      await hubs.add('nutrition', 'weight', { kg: Math.round(kg * 10) / 10 }, {
+        id: dailyId('weight', 'nutrition', today),
+        recordedAt: today,
+      });
     }
   }
 
