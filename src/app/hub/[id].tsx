@@ -3,6 +3,7 @@ import { Redirect, useLocalSearchParams } from 'expo-router';
 import { coachForHub, findHub, isDomainHub } from '@/ui/hubs/catalog';
 import { HubScreen } from '@/ui/hubs/HubScreen';
 import { coachFor } from '@/ui/hubs/mergeHubs';
+import { emptyHubState } from '@/ui/hubs/hubState';
 import { hubStateFor } from '@/ui/hubs/states';
 import { useHubs } from '@/ui/hubs/useHubs';
 import { MockupScreen } from '@/ui/mockup/MockupScreen';
@@ -34,28 +35,31 @@ export default function HubRoute() {
     return <Redirect href="/table" />;
   }
 
-  const state = hub === undefined ? undefined : hubStateFor(hub.id);
-
-  if (hub !== undefined && state !== undefined) {
+  if (hub === undefined) {
     return (
       <MockupScreen>
-        <HubScreen coach={coachForHub(hub.id, hubs)} hub={hub} state={state} />
+        <StubScreen detail="No hub by that name." title="Hub" />
       </MockupScreen>
     );
   }
 
+  /**
+   * **A hub somebody made gets the real screen, not a stub.**
+   *
+   * It used to render `StubScreen` saying "Its coach is here. Nothing has been recorded in this hub
+   * yet." — **without reading the store.** Meanwhile the first-run flow files goals into exactly
+   * these hubs and the Twin's ledger prints them, so the app showed a person their own goal on one
+   * screen and denied it existed on another.
+   *
+   * `HubScreen` already renders everything that is real from the store — the entries, the week, the
+   * chat bar — and `emptyHubState` gives it a state with no fixtures at all, so nothing below the
+   * fold is invented and the sample-data marker correctly does not appear.
+   */
+  const state = hubStateFor(hub.id) ?? emptyHubState();
+
   return (
     <MockupScreen>
-      <StubScreen
-        detail={
-          hub === undefined
-            ? 'No hub by that name.'
-            : /* A hub the user made has a coach from the moment it exists, and nothing else yet.
-                 Naming the coach is what makes the difference between "not built" and "empty". */
-              `${coachFor(hub)?.name ?? 'Its coach'} is here. Nothing has been recorded in this hub yet.`
-        }
-        title={hub?.label ?? 'Hub'}
-      />
+      <HubScreen coach={coachForHub(hub.id, hubs) ?? coachFor(hub)} hub={hub} state={state} />
     </MockupScreen>
   );
 }

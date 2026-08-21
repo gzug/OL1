@@ -102,7 +102,27 @@ export function HubScreen({
   const [entryCount, setEntryCount] = useState(0);
   const [contributeNoted, setContributeNoted] = useState(false);
   const [selecting, setSelecting] = useState(false);
-  const inside = childHubs(hub.id);
+  /**
+   * From the MERGED list, not the catalog.
+   *
+   * `childHubs(hub.id)` defaulted to `SEED_HUBS`, so a hub created inside Exercise was saved
+   * correctly, told "it lives inside exercise, not on the orbit" on the step before the button —
+   * and then appeared on no screen in the app. It existed and was unreachable.
+   */
+  const inside = childHubs(hub.id, allHubs);
+
+  /**
+   * Whether anything below the boundary is invented. A hub the app ships has an observation, a
+   * basis line and a cockpit full of sample periods; a hub somebody made has none of that, and the
+   * marker must not appear over an empty space.
+   */
+  const hasFixtures =
+    state.observation !== undefined ||
+    state.basis !== undefined ||
+    state.facets.length > 0 ||
+    state.cockpit.periods.length > 0 ||
+    state.cockpit.week !== undefined ||
+    state.cockpit.empty !== undefined;
   const contributeHref = state.contribute?.href;
 
   /** This hub's coach, already at the table. A hub with no coach still gets the bar, unpointed. */
@@ -200,46 +220,9 @@ export function HubScreen({
         {hub.id === 'labs' && <YourMarkers />}
         {hub.id === 'labs' && <WhatChanged />}
 
-        {/**
-          * The boundary, and it is drawn here because here is where it is. Everything above is the
-          * person's own; everything below is invented for layout review.
-          *
-          * It lived at the bottom of `StoredEntries` until real blocks started appearing beneath
-          * that — the logged week, the panel's age, kidney function, the marker list — at which
-          * point it was labelling real results as sample data. A boundary marker has to sit at the
-          * boundary or it is worse than none: it teaches people to distrust the true half.
-          */}
-        <Text style={[styles.sampleLine, { color: colors.textSubtle }]}>{SAMPLE_DATA_LINE}</Text>
-
-        {state.observation !== undefined && (
-          <Text style={[styles.observation, { color: colors.text }]}>{state.observation}</Text>
-        )}
-        {state.basis !== undefined && (
-          <Text style={[styles.basis, { color: colors.textMuted }, tabularNums]}>{state.basis}</Text>
-        )}
-
-        {/* Door two, and it is the screen rather than a link to one. */}
-        {state.cockpit.empty !== undefined ? (
-          <>
-            <SectionLabel colors={colors} label="Cockpit" />
-            <Text style={[styles.empty, { color: colors.textMuted }]}>{state.cockpit.empty}</Text>
-          </>
-        ) : (
-          state.cockpit.periods.map((period) => (
-            <Period colors={colors} key={period.label} period={period} />
-          ))
-        )}
-
-        {state.cockpit.week !== undefined && (
-          <>
-            <SectionLabel colors={colors} label="Last seven days" />
-            <WeekStrip colors={colors} days={state.cockpit.week.days} />
-            <Text style={[styles.caption, { color: colors.textMuted }]}>
-              {state.cockpit.week.caption}
-            </Text>
-          </>
-        )}
-
+        {/* Real, both of them, so they belong above the line. The button genuinely adds a
+            panel or a meal, and the chips genuinely lead to hubs that hold your entries —
+            they had drifted below the marker as it moved. */}
         {state.contribute !== undefined && (
           <>
             {/* Above coverage, not below it. On Labs the whole point of the hub is putting a
@@ -323,6 +306,50 @@ export function HubScreen({
                 <Text style={[styles.chipText, { color: colors.accent }]}>+ Add</Text>
               </Pressable>
             </View>
+          </>
+        )}
+
+        {/**
+          * The boundary, and it is drawn here because here is where it is. Everything above is the
+          * person's own; everything below is invented for layout review.
+          *
+          * It lived at the bottom of `StoredEntries` until real blocks started appearing beneath
+          * that — the logged week, the panel's age, kidney function, the marker list — at which
+          * point it was labelling real results as sample data. A boundary marker has to sit at the
+          * boundary or it is worse than none: it teaches people to distrust the true half.
+          */}
+        {/* Only where there is actually a fixture below it. A hub somebody made has none, and a
+            marker over nothing is the same drift in the other direction. */}
+        {hasFixtures && (
+          <Text style={[styles.sampleLine, { color: colors.textSubtle }]}>{SAMPLE_DATA_LINE}</Text>
+        )}
+
+        {state.observation !== undefined && (
+          <Text style={[styles.observation, { color: colors.text }]}>{state.observation}</Text>
+        )}
+        {state.basis !== undefined && (
+          <Text style={[styles.basis, { color: colors.textMuted }, tabularNums]}>{state.basis}</Text>
+        )}
+
+        {/* Door two, and it is the screen rather than a link to one. */}
+        {state.cockpit.empty !== undefined ? (
+          <>
+            <SectionLabel colors={colors} label="Cockpit" />
+            <Text style={[styles.empty, { color: colors.textMuted }]}>{state.cockpit.empty}</Text>
+          </>
+        ) : (
+          state.cockpit.periods.map((period) => (
+            <Period colors={colors} key={period.label} period={period} />
+          ))
+        )}
+
+        {state.cockpit.week !== undefined && (
+          <>
+            <SectionLabel colors={colors} label="Last seven days" />
+            <WeekStrip colors={colors} days={state.cockpit.week.days} />
+            <Text style={[styles.caption, { color: colors.textMuted }]}>
+              {state.cockpit.week.caption}
+            </Text>
           </>
         )}
 
