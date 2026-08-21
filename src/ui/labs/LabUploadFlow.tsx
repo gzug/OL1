@@ -6,6 +6,8 @@ import { hubs } from '@/application/hubs/hubs';
 import { ALTERNATE_UNIT, boundsIn } from '@/application/labs/units';
 import {
   LEVINE_MARKERS,
+  alternateUnitFor,
+  boundsFor,
   filledCount,
   isValidTestDate,
   markerProblem,

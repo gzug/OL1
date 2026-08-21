@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 
-import { LEVINE_MARKERS, filledCount, isValidTestDate, markerProblem, panelProblems } from '../src/ui/labs/levine';
+import { LEVINE_MARKERS, filledCount, isValidTestDate, markerProblem, panelProblems, type MarkerEntry } from '../src/ui/labs/levine';
 import { EXTRA_MARKERS } from '../src/ui/labs/lipids';
 
 /**
@@ -95,7 +95,7 @@ test('filled markers are counted, blanks are not', () => {
  * types a lipid, which is a label describing a screen that changed underneath it.
  */
 test('filling a lipid does not count towards the nine', () => {
-  const entries = [
+  const entries: readonly MarkerEntry[] = [
     { key: 'albumin', text: '4.4' },
     { key: 'creatinine', text: '0.9' },
     { key: 'ldl', text: '120' },

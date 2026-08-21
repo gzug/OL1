@@ -63,8 +63,19 @@ export type MarkerDefinition = {
   readonly unit: string;
 };
 
+/**
+ * The nine, typed as the nine.
+ *
+ * `MarkerDefinition` is widened so one row can render a lipid too, but THIS list is not — it
+ * genuinely holds nine Levine keys, and saying so is what lets everything iterating it keep passing
+ * `marker.key` to `toTargetUnit`, `markerContext` and `TARGET_UNIT` without a cast.
+ *
+ * The widening belongs on what a row ACCEPTS, never on what a list contains.
+ */
+export type LevineMarkerDefinition = MarkerDefinition & { readonly key: LevineMarkerKey };
+
 /** Order is Legacy's own, and it is the order a panel is reviewed in. */
-export const LEVINE_MARKERS: readonly MarkerDefinition[] = [
+export const LEVINE_MARKERS: readonly LevineMarkerDefinition[] = [
   { key: 'albumin', label: 'Albumin', sane: { max: 7, min: 1 }, unit: TARGET_UNIT.albumin },
   { key: 'creatinine', label: 'Creatinine', sane: { max: 15, min: 0.1 }, unit: TARGET_UNIT.creatinine },
   { key: 'glucose', label: 'Glucose', sane: { max: 600, min: 20 }, unit: TARGET_UNIT.glucose },
