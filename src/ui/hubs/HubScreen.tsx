@@ -272,6 +272,19 @@ export function HubScreen({
                 {state.contribute.note}
               </Text>
             )}
+            {/* A second way in, quieter than the first. Exercise has two that are both real —
+                one session by hand, or a whole history from a Strava export — and one button
+                cannot be both. */}
+            {state.contribute.also !== undefined && (
+              <Pressable
+                accessibilityRole="button"
+                onPress={() => router.push(state.contribute?.also?.href ?? '/')}
+                style={({ pressed }) => [styles.secondary, pressed && styles.pressed]}>
+                <Text style={[styles.secondaryText, { color: colors.accent }]}>
+                  {state.contribute.also.label}
+                </Text>
+              </Pressable>
+            )}
           </>
         )}
 

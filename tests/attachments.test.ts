@@ -9,7 +9,7 @@ import {
   toRef,
 } from '../src/application/chat/attachments';
 import { MAX_INLINE_BYTES, type Attachment } from '../src/core/attachments';
-import { kindOf, toBase64 } from '../src/infrastructure/attachments/base64';
+import { kindOf, textOf, toBase64 } from '../src/infrastructure/attachments/base64';
 
 const PHOTO: Attachment = {
   bytes: 'AAAA',
@@ -94,4 +94,39 @@ test('the handoff hands over exactly once', () => {
 
 test('nothing held is not an error', () => {
   assert.equal(takeHeld(), undefined);
+});
+
+/**
+ * Base64 back to text, which is what a picked file actually says.
+ *
+ * The first thing this reads is a Strava export whose headers are `Aktivitätsdatum` and
+ * `Aktivitätsart` and whose activity names carry emoji. Decoded byte-by-byte as Latin-1 the header
+ * is corrupted, the column lookup finds nothing, and the file is rejected as "not a Strava export"
+ * — a failure that looks like a bad file rather than a bad decoder.
+ */
+test('a decoded file survives umlauts, emoji, and every padding length', () => {
+  const roundTrip = (text: string) => textOf(toBase64(new TextEncoder().encode(text)));
+
+  for (const text of [
+    'Aktivitätsdatum',
+    'Aktivitäts-ID',
+    'Max. Herzfrequenz',
+    'Lauf am Morgen 🏃',
+    'a',
+    'ab',
+    'abc',
+    'abcd',
+    'a,b\n"c,d"',
+    '',
+  ]) {
+    assert.equal(roundTrip(text), text, `"${text}" did not survive the round trip`);
+  }
+});
+
+/** A byte sequence that is not valid UTF-8 must not throw on a real file. */
+test('a malformed byte becomes a replacement character rather than an exception', () => {
+  const broken = toBase64(new Uint8Array([0x41, 0xff, 0x42]));
+
+  assert.doesNotThrow(() => textOf(broken));
+  assert.match(textOf(broken), /^A.B$/u);
 });

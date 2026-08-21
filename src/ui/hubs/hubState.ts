@@ -84,7 +84,15 @@ export type HubState = {
      * Where the primary way in leads, when it leads anywhere yet. Absent means the button is still
      * a placeholder and says so on press — which is most of them, and saying so beats a dead tap.
      */
-    readonly href?: '/add-panel' | '/log-meal' | '/log-session';
+    readonly href?: '/add-panel' | '/from-strava' | '/log-meal' | '/log-session';
+    /**
+     * A second way in, quieter than the first.
+     *
+     * Exercise has two that are both real — logging one session by hand, and bringing a whole
+     * history in from a Strava export — and one button cannot be both. Optional, because most hubs
+     * have exactly one honest way to put something in and a second slot would invite filling.
+     */
+    readonly also?: { readonly href: '/add-panel' | '/from-strava' | '/log-meal' | '/log-session'; readonly label: string };
     readonly note: string;
     readonly primary: string;
     readonly secondary?: string;

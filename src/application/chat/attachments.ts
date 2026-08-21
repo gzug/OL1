@@ -11,11 +11,14 @@ import {
   type AttachmentRef,
   type PickResult,
 } from '@/core/attachments';
+import { textOf } from '@/infrastructure/attachments/base64';
 import { attachmentPicker } from '@/infrastructure/attachments/picker';
 import { voiceRecorder } from '@/infrastructure/attachments/recorder';
 
 export const attachments = {
   canRecord: () => voiceRecorder.isAvailable(),
+  /** What a picked file actually says. The Strava import is the first thing that needs the text. */
+  textOf: (base64: string) => textOf(base64),
   pickDocument: () => attachmentPicker.pickDocument(),
   pickMedia: () => attachmentPicker.pickMedia(),
   startRecording: () => voiceRecorder.start(),
