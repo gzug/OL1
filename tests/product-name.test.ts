@@ -18,6 +18,12 @@ import test from 'node:test';
  * allowed to disagree because one is read and the other is a foreign key.
  *
  * Comments are skipped: a note about the repository is documentation, not a product surface.
+ *
+ * **One exemption, and it is a true sentence rather than an escape hatch.** The About screen names
+ * where One L1fe is built, and that address is `github.com/gzug/OL1` — the repository really is
+ * called that. Tuning the guard for it in a visible diff is what `AGENTS.md` asks for when a check
+ * fires on something harmless; the alternative was deleting a useful, accurate line to keep a regex
+ * happy.
  */
 
 const ROOT = new URL('../', import.meta.url).pathname;
@@ -31,9 +37,16 @@ function files(dir: string): string[] {
   });
 }
 
-/** A line with its comments taken out, so documentation about the repo is left alone. */
+/** The repository's own address, which is allowed to say OL1 because that is its name. */
+const REPO = 'github.com/gzug/OL1';
+
+/** A line with its comments and the repo address taken out, so only real claims are left. */
 function code(line: string): string {
-  return line.replace(/\/\*.*?\*\//g, ' ').replace(/^\s*(\*|\/\/).*$/, '');
+  return line
+    .replace(/\/\*.*?\*\//g, ' ')
+    .replace(/^\s*(\*|\/\/).*$/, '')
+    .split(REPO)
+    .join(' ');
 }
 
 test('nothing a person can read calls the product OL1', () => {
