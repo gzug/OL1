@@ -2,12 +2,12 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 
 import { MACROS, mealPayload } from '../src/ui/meals/nutrition';
-import { LEVINE_MARKERS, panelPayload } from '../src/ui/labs/levine';
+import { LEVINE_MARKERS, panelPayload, type MarkerEntry } from '../src/ui/labs/levine';
 
 const meal = (values: Record<string, string>) =>
   MACROS.map((macro) => ({ key: macro.key, text: values[macro.key] ?? '' }));
 
-const panel = (values: Record<string, string>) =>
+const panel = (values: Record<string, string>): readonly MarkerEntry[] =>
   LEVINE_MARKERS.map((marker) => ({ key: marker.key, text: values[marker.key] ?? '' }));
 
 /**

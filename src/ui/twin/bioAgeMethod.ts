@@ -17,7 +17,7 @@
 import { CRP_FLOOR_MGL, crpAsModelled } from '@/application/labs/phenoAge';
 import { TARGET_UNIT, normUnit } from '@/application/labs/units';
 import type { PanelInputs } from '@/application/twin/bioAge';
-import { LEVINE_MARKERS } from '@/ui/labs/levine';
+import { LEVINE_MARKERS, isLevineKey } from '@/ui/labs/levine';
 
 export type MethodRow = {
   /** What the formula actually read, already in `unit`. */
@@ -40,8 +40,10 @@ export function methodRows(used: PanelInputs): readonly MethodRow[] {
   return LEVINE_MARKERS.filter((marker) => used.markers[marker.key] !== undefined).map((marker) => {
     const stored = used.markers[marker.key] as number;
     const entered = used.unitsAsEntered[marker.key];
-    const swapped =
-      entered !== undefined && normUnit(entered) !== normUnit(TARGET_UNIT[marker.key]);
+    /* `LEVINE_MARKERS` is the nine, so this key is always in `TARGET_UNIT`. The narrowing is here
+       rather than a cast because the day a tenth marker joins the formula, this must not compile. */
+    const target = isLevineKey(marker.key) ? TARGET_UNIT[marker.key] : marker.unit;
+    const swapped = entered !== undefined && normUnit(entered) !== normUnit(target);
 
     /**
      * CRP is the one place the formula deliberately reads something other than what was measured.

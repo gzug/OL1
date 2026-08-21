@@ -3,7 +3,7 @@ import { Fragment, useCallback, useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { hubs as defaultHubs } from '@/application/hubs/hubs';
-import { LEVINE_MARKERS } from '@/ui/labs/levine';
+import { LEVINE_MARKERS, isLevineKey } from '@/ui/labs/levine';
 import { markerContext } from '@/ui/labs/markerContext';
 import { fontFamily, lineHeights, radius, spacing, tracking, typography, useTheme } from '@/ui/theme';
 
@@ -65,7 +65,9 @@ export function YourMarkers({ source = defaultHubs }: { source?: typeof defaultH
       <Text style={[styles.heading, { color: colors.textSubtle }]}>YOUR MARKERS</Text>
       <View style={[styles.card, { backgroundColor: colors.surface }]}>
         {present.map((marker, index) => {
-          const context = markerContext(marker.key);
+          /* Context is written for the nine. A lipid carries its own `what` instead — see
+             `lipids.ts` — and a marker with neither simply does not expand. */
+          const context = isLevineKey(marker.key) ? markerContext(marker.key) : undefined;
           const isOpen = open === marker.key;
 
           return (

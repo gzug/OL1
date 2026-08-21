@@ -6,6 +6,8 @@ import { hubs } from '@/application/hubs/hubs';
 import { ALTERNATE_UNIT, boundsIn } from '@/application/labs/units';
 import {
   LEVINE_MARKERS,
+  alternateUnitFor,
+  boundsFor,
   filledCount,
   isValidTestDate,
   markerProblem,
@@ -26,6 +28,7 @@ import {
   useTheme,
   type ThemeColors,
 } from '@/ui/theme';
+import { EXTRA_MARKERS } from '@/ui/labs/lipids';
 
 /**
  * Getting a lab report in, the way Legacy does it.
@@ -66,14 +69,25 @@ export function LabUploadFlow() {
   const [source, setSource] = useState<LabSource | null>(null);
   const [testDate, setTestDate] = useState('');
   const [entries, setEntries] = useState<readonly MarkerEntry[]>(
-    LEVINE_MARKERS.map((marker) => ({ key: marker.key, text: '' })),
+    [...LEVINE_MARKERS, ...EXTRA_MARKERS].map((marker) => ({ key: marker.key, text: '' })),
   );
+  /**
+   * The extra markers are folded away until asked for.
+   *
+   * A panel screen that opens with seventeen fields is a form, and the nine are the ones the
+   * biological age needs — putting a lipid profile beside them at equal weight would suggest a
+   * fuller panel produces a more certain number. It does not: `computePhenoAgeRange` reads exactly
+   * nine keys and ignores the rest.
+   */
+  const [showExtra, setShowExtra] = useState(false);
   const [state, setState] = useState<'approved' | 'failed' | 'idle' | 'saving'>('idle');
   /** Which unit each marker is being typed in. Defaults to the one the formula reads. */
   const [units, setUnits] = useState<Record<string, string>>({});
 
-  const problems = panelProblems(entries, units);
+  const problems = panelProblems(entries, units, [...LEVINE_MARKERS, ...EXTRA_MARKERS]);
+  /* The nine only — the label beside it says "of 9", and a lipid filled in is not one of them. */
   const filled = filledCount(entries);
+  const extrasFilled = filledCount(entries, EXTRA_MARKERS);
   /**
    * **The draw date is required, and the blank escape is gone.**
    *
@@ -111,10 +125,18 @@ export function LabUploadFlow() {
        * typed. `panelPayload` already keeps the route as `readBy`, which is the honest place for
        * it: what somebody chose, not what the app did.
        */
-      await hubs.add('labs', 'panel', panelPayload(entries, source, new Date().toISOString(), units), {
-        recordedAt: drawn,
-        source: 'manual',
-      });
+      await hubs.add(
+        'labs',
+        'panel',
+        panelPayload(entries, source, new Date().toISOString(), units, [
+          ...LEVINE_MARKERS,
+          ...EXTRA_MARKERS,
+        ]),
+        {
+          recordedAt: drawn,
+          source: 'manual',
+        },
+      );
       setState('approved');
     } catch {
       // Every value is still on screen. Losing a hand-typed panel to a failed write would be the
@@ -221,6 +243,50 @@ export function LabUploadFlow() {
               />
             ))}
 
+            {/**
+              * Everything else the report carries.
+              *
+              * **Folded away, and the sentence says why rather than leaving it to be inferred.** A
+              * panel with a full lipid profile on it does not make the biological age more certain
+              * — the formula reads exactly nine keys — and a screen that put seventeen fields at
+              * equal weight would quietly claim otherwise.
+              */}
+            {!showExtra && (
+              <Pressable
+                accessibilityRole="button"
+                onPress={() => setShowExtra(true)}
+                style={({ pressed }) => [styles.more, pressed && styles.pressed]}>
+                <Text style={[styles.moreText, { color: colors.accent }]}>
+                  {extrasFilled > 0
+                    ? `Also on your report · ${extrasFilled} filled`
+                    : 'Add the rest of your panel'}
+                </Text>
+              </Pressable>
+            )}
+
+            {showExtra && (
+              <>
+                <SectionLabel colors={colors} label="Also on your report" />
+                <Text style={[styles.note, { color: colors.textSubtle }]}>
+                  Recorded and shown, and not part of the biological age — that reads the nine
+                  above and nothing else.
+                </Text>
+                {EXTRA_MARKERS.map((marker) => (
+                  <MarkerRow
+                    colors={colors}
+                    key={marker.key}
+                    marker={marker}
+                    onChange={(text) => setEntry(marker.key, text)}
+                    onUnitChange={(unit) =>
+                      setUnits((current) => ({ ...current, [marker.key]: unit }))
+                    }
+                    text={entries.find((entry) => entry.key === marker.key)?.text ?? ''}
+                    unit={units[marker.key] ?? marker.unit}
+                  />
+                ))}
+              </>
+            )}
+
             {/* The gate. Legacy stores a panel `isApproved = false` and lets it reach nothing until
                 this is pressed — the reviewer is the feature, not the extractor. */}
             <Pressable
@@ -308,8 +374,9 @@ function MarkerRow({
   unit: string;
 }) {
   const problem = markerProblem(marker, text, unit);
-  const alternate = ALTERNATE_UNIT[marker.key];
-  const shown = boundsIn(marker.key, marker.sane, unit) ?? marker.sane;
+  /* Whichever table owns this marker. A row does not care which side of the split it is on. */
+  const alternate = alternateUnitFor(marker.key);
+  const shown = boundsFor(marker, unit) ?? marker.sane;
 
   return (
     <View style={[styles.markerRow, { borderTopColor: colors.borderSubtle }]}>
@@ -507,6 +574,14 @@ const styles = StyleSheet.create({
     fontFamily: fontFamily.body,
     fontSize: typography.micro,
     marginTop: 1,
+  },
+  more: {
+    alignSelf: 'flex-start',
+    paddingVertical: spacing.md,
+  },
+  moreText: {
+    fontFamily: fontFamily.medium,
+    fontSize: typography.bodySmall,
   },
   note: {
     fontFamily: fontFamily.body,
