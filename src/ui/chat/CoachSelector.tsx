@@ -68,7 +68,7 @@ export function CoachSelector({
         ))}
 
         {/* One heading per parent hub, rather than the single "INSIDE ACTIVITY" this printed until
-            2026-08-19. Two hubs hold others now — Exercise holds the sports, Medical condition holds
+            2026-08-19. Two hubs hold others now — Exercise holds the sports, Health record holds
             Labs — and a user can nest a hub they create, so the headings are derived rather than
             written. The parent's full label is used here, not its `ringLabel`: this is a list with
             room, and "INSIDE MEDICAL" would lose the word that makes it clear. */}

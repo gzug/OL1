@@ -116,7 +116,7 @@ export const MIGRATIONS = [
      *
      * Deliberately NOT here: name, allergies, conditions, medications. Legacy's profile carried
      * those and it turned an identity into a medical record. Anything of that kind belongs in the
-     * Medical condition hub as an entry somebody chose to make.
+     * Health record hub as an entry somebody chose to make.
      */
     version: 5,
     sql: `

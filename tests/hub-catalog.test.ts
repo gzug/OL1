@@ -142,3 +142,52 @@ test('an unknown hub resolves to nothing, never to a default', () => {
   assert.equal(coachForHub('not-a-hub'), undefined);
   assert.equal(findCoach('not-a-coach'), undefined);
 });
+
+/**
+ * **A label is what a person reads. An id is what their data is attached to.**
+ *
+ * `hub_entry.hub_id` is the only link between a stored condition, medication or blood panel and the
+ * hub it belongs to, and migration 4 deliberately declares no foreign key — so renaming a hub id
+ * fails no build, no test and no migration. It silently orphans everything a person ever saved, and
+ * they open the hub to find it empty.
+ *
+ * The two are allowed to disagree, and twice now they have: Labs kept its id when it moved inside
+ * another hub on 2026-08-19, and Health record kept `medical` when it was renamed on 2026-08-21.
+ * This test is what makes the third time safe.
+ */
+test('the ids that already have stored data behind them never move', () => {
+  const frozen: Readonly<Record<string, string>> = {
+    /** Renamed from "Medical condition" on 2026-08-21. Its id did not follow, and must not. */
+    medical: 'Health record',
+    /** Renamed from Activity BEFORE anything was stored, which is why that id was free to move. */
+    exercise: 'Exercise',
+    labs: 'Labs',
+    nutrition: 'Nutrition',
+    'open-table': 'Open Table',
+    resilience: 'Resilience',
+    sleep: 'Sleep',
+  };
+
+  for (const [id, label] of Object.entries(frozen)) {
+    const hub = SEED_HUBS.find((seeded) => seeded.id === id);
+    assert.ok(hub !== undefined, `the hub id "${id}" has vanished — every entry stored under it is now orphaned`);
+    assert.equal(hub?.label, label, `"${id}" is labelled differently; if that is deliberate, update this test and NOT the id`);
+  }
+});
+
+/**
+ * The rename has to be complete on screen, or two names for one hub are in front of the same
+ * person on two different screens.
+ */
+test('nothing user-facing still calls it Medical', () => {
+  const medical = SEED_HUBS.find((hub) => hub.id === 'medical');
+
+  assert.ok(!medical?.label.includes('Medical'));
+  assert.ok(!(medical?.ringLabel ?? '').includes('Medical'));
+
+  const coach = COACHES.find((entry) => entry.id === 'medical');
+  assert.ok(
+    !coach?.name.includes('Medical'),
+    'a coach named "Medical" implies the clinical authority the hub was renamed to disclaim',
+  );
+});

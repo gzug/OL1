@@ -59,7 +59,7 @@ export type HubDefinition = {
   readonly ringLabel?: string;
   /**
    * Set when this hub lives inside another. Two seeded parents: Exercise holds the five exercise
-   * types, and Medical condition holds Labs. The relation is deliberately flat rather than a nested
+   * types, and Health record holds Labs. The relation is deliberately flat rather than a nested
    * tree — a user adding a hub writes one row, and a flat list is what a store can hold without a
    * migration when nesting goes deeper.
    */
@@ -95,7 +95,20 @@ export type HubDefinition = {
 export const COACHES: readonly Coach[] = [
   { focus: 'Movement across everything you do.', id: 'exercise', name: 'Exercise Coach' },
   { focus: 'Nutrition, weight, and metabolic context.', id: 'nutrition', name: 'Nutrition Expert' },
-  { focus: 'Conditions, medications, and symptoms over time.', id: 'medical', name: 'Medical Coach' },
+  {
+    focus: 'Conditions, medications, and symptoms over time.',
+    id: 'medical',
+    /**
+     * **Not "Medical Coach", deliberately.** The hub was renamed to Health record on 2026-08-21 so
+     * that nothing here claims a clinical function the app refuses to perform — `egfr.ts` and
+     * `markerContext.ts` both have guards that fail the build if the copy diagnoses. A coach called
+     * "Medical" undoes that from the other end: a person asking it a question would reasonably read
+     * the answer as medical advice, which is the one thing it must never be taken for.
+     *
+     * "Guide" follows `longevity`, which made the same choice first.
+     */
+    name: 'Health Record Guide',
+  },
   { focus: 'Recovery, and what your body has left in the tank.', id: 'resilience', name: 'Resilience Coach' },
   { focus: 'Long-term health patterns.', id: 'longevity', name: 'Longevity Guide' },
   { focus: 'Sleep rhythm and recovery habits.', id: 'sleep', name: 'Sleep Coach' },
@@ -112,7 +125,7 @@ export const COACHES: readonly Coach[] = [
  * The first five are the orbit, in ring order starting at the right and going clockwise — that order
  * is load-bearing for `src/ui/mockup/geometry.ts`.
  *
- * The rest live inside one of them: Labs inside Medical condition, and the five exercise types
+ * The rest live inside one of them: Labs inside Health record, and the five exercise types
  * inside Exercise. They are hubs like any other, not a special case — the owner asked to be able to
  * add exercise types the same way as hubs, so modelling them as anything else would mean writing the
  * creation flow twice.
@@ -125,7 +138,11 @@ export const COACHES: readonly Coach[] = [
  * - **Medical condition is new**, and **Labs sits inside it** rather than beside it. Everything
  *   built for panels still runs through the hub id `labs`: `/add-panel`, the verification gate, and
  *   the PhenoAge number the Twin leads with. It is one tap further in, which is the price of the
- *   ring saying "medical" rather than "labs" to someone who has never uploaded a panel.
+ *   ring naming the domain rather than "labs" to someone who has never uploaded a panel.
+ *
+ *   **Renamed to "Health record" on 2026-08-21.** The label above is the name it was given on the
+ *   day, kept here because that is what this section records. The hub id is still `medical` and
+ *   always will be — see the note on it in `SEED_HUBS`.
  * - **Body is gone.** He did not name it, twice. Its weigh-in row moved into Nutrition, which is
  *   where weight sits next to what you eat; nothing real was lost, because every number in it was
  *   invented for layout review.
@@ -140,10 +157,21 @@ export const SEED_HUBS: readonly HubDefinition[] = [
   { coachId: 'nutrition', id: 'nutrition', label: 'Nutrition', origin: 'builtIn' },
   {
     coachId: 'medical',
+    /**
+     * **The id stays `medical` and must never change.** It is the foreign key every stored entry
+     * carries — `hub_entry.hub_id` — and there is deliberately no database constraint tying the two
+     * together (see migration 4). Renaming this string would not fail a build, a test, or a
+     * migration; it would silently orphan every condition, medication and blood panel a person had
+     * ever saved, and they would open the hub to find it empty.
+     *
+     * A label is what a person reads. An id is what their data is attached to. The two are allowed
+     * to disagree, and this is the second time they have — Labs kept its id when it moved inside
+     * this hub on 2026-08-19 for exactly the same reason.
+     */
     id: 'medical',
-    label: 'Medical condition',
+    label: 'Health record',
     origin: 'builtIn',
-    ringLabel: 'Medical',
+    ringLabel: 'Health',
   },
   { coachId: 'resilience', id: 'resilience', label: 'Resilience', origin: 'builtIn' },
   { coachId: 'sleep', id: 'sleep', label: 'Sleep', origin: 'builtIn' },
@@ -160,7 +188,7 @@ export const SEED_HUBS: readonly HubDefinition[] = [
   { id: 'open-table', label: 'Open Table', origin: 'builtIn', role: 'table' },
 
   /**
-   * Blood panels, inside Medical condition. The nesting is the only thing that changed about Labs —
+   * Blood panels, inside Health record. The nesting is the only thing that changed about Labs —
    * its id, its coach, its cockpit and `/add-panel` are all untouched, which is what keeps the
    * PhenoAge number on the Twin screen working through this move.
    */

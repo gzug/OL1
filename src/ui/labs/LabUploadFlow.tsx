@@ -208,7 +208,7 @@ export function LabUploadFlow() {
 
             {state === 'approved' && (
               <Text style={[styles.note, { color: colors.textSubtle }]}>
-                Kept in Labs, inside Medical condition. Markers you left blank stay unknown — which
+                Kept in Labs, inside Health record. Markers you left blank stay unknown — which
                 is what lets the age calculation give a range instead of a number it cannot stand
                 behind.
               </Text>

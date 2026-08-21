@@ -16,7 +16,7 @@ import { fontFamily, lineHeights, radius, spacing, tracking, typography, useThem
  *
  * **Two questions, and both may be skipped.** Legacy's profile grew a display name, a timezone,
  * four unit preferences, allergies, chronic diseases and supplements — an identity that became a
- * medical record. Anything of that kind belongs in the Medical condition hub as an entry somebody
+ * medical record. Anything of that kind belongs in the Health record hub as an entry somebody
  * chose to make, not as a field on a form nobody asked to fill in.
  *
  * It sits on the Twin rather than behind a settings screen because this is the only place either
