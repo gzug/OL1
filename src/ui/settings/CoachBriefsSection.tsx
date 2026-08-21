@@ -1,30 +1,34 @@
-import { Fragment } from 'react';
+import { Fragment, useState } from 'react';
 
 import { HubBrief } from '@/ui/hubs/HubBrief';
 import { coachForHub } from '@/ui/hubs/catalog';
 import { coachFor } from '@/ui/hubs/mergeHubs';
 
-import { Rule, Section } from './parts';
+import { Row, Rule, Section } from './parts';
 import { COPY } from './settings';
 import type { SettingsData } from './useSettings';
 
 /**
  * How each coach works, in your own words.
  *
- * **This renders `HubBrief` itself, once per coach — it does not summarise one.** The obvious
- * version of this section was a row per hub showing the first line of its brief, which tapped open
- * an editor. That is two copies of the same sentence: the row would go stale the moment the box
- * beside it was edited, and a screen showing a person yesterday's words under a heading saying how
- * their coach works is `docs/decisions/0013` with extra steps.
+ * **This opens `HubBrief` itself — it does not summarise one.** The obvious version was a row per
+ * coach showing the first line of its brief; that is two copies of the same sentence, and the row
+ * goes stale the moment the box beside it is edited. A screen showing yesterday's words under a
+ * heading saying how a coach works is `docs/decisions/0013` with extra steps. So the row carries
+ * the coach's name and nothing about the person, and the real component underneath carries the
+ * truth. Nothing here can be out of date, because nothing here is a claim.
  *
- * Rendering the real component instead means one reader, one writer, and nothing to keep in sync.
- * `HubBrief` already collapses to a single line when a brief is set and to an invitation naming the
- * coach when it is not, so each block labels itself and this file adds no vocabulary of its own.
+ * **The rows exist because rendering all six briefs at once was unreadable.** Walked on the deployed
+ * screen, `HOW EACH COACH WORKS` was six near-identical accent-green sentences — *Tell Exercise
+ * Coach how to work with you*, six times — with the only word that differed buried in the middle of
+ * each. Invisible to every check in this repository, and obvious in one look at the screen. One
+ * name per row puts the difference at the start of the line, where it can be scanned.
  *
  * **Hidden hubs are left out.** Their coaches are not reachable from the ring, and a brief for one
  * would be a setting for something a person has put away.
  */
 export function CoachBriefsSection({ data }: { data: SettingsData }) {
+  const [open, setOpen] = useState<string | null>(null);
   const away = new Set(data.hidden);
 
   /**
@@ -34,8 +38,10 @@ export function CoachBriefsSection({ data }: { data: SettingsData }) {
    */
   const coached = data.hubs
     .filter((hub) => !away.has(hub.id))
-    .map((hub) => ({ coach: coachForHub(hub.id, data.hubs) ?? coachFor(hub), hub }))
-    .filter((entry) => entry.coach !== undefined);
+    .flatMap((hub) => {
+      const coach = coachForHub(hub.id, data.hubs) ?? coachFor(hub);
+      return coach === undefined ? [] : [{ coach, hub }];
+    });
 
   if (coached.length === 0) return null;
 
@@ -44,7 +50,12 @@ export function CoachBriefsSection({ data }: { data: SettingsData }) {
       {coached.map((entry, index) => (
         <Fragment key={entry.hub.id}>
           {index > 0 && <Rule />}
-          <HubBrief coach={entry.coach} hubId={entry.hub.id} />
+          <Row
+            action={open === entry.hub.id ? '⌃' : '›'}
+            label={entry.coach.name}
+            onPress={() => setOpen((current) => (current === entry.hub.id ? null : entry.hub.id))}
+          />
+          {open === entry.hub.id && <HubBrief coach={entry.coach} hubId={entry.hub.id} />}
         </Fragment>
       ))}
     </Section>
