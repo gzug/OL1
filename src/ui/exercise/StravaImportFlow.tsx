@@ -2,7 +2,7 @@ import { Link, useRouter } from 'expo-router';
 import { useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
-import { attachments } from '@/application/chat/attachments';
+import { attachments, pickProblem } from '@/application/chat/attachments';
 import {
   parseStravaCsv,
   sessionPayloadOf,
@@ -39,23 +39,29 @@ export function StravaImportFlow() {
   const router = useRouter();
   const [found, setFound] = useState<StravaImport | null>(null);
   const [fileName, setFileName] = useState('');
+  const [pickNote, setPickNote] = useState<string | null>(null);
   const [state, setState] = useState<'failed' | 'idle' | 'importing' | 'imported' | 'reading'>('idle');
 
   async function choose() {
     setState('reading');
-    try {
-      const result = await attachments.pickDocument();
-      if (result.attachment === undefined) {
-        setState('idle');
-        return;
-      }
+    setPickNote(null);
 
-      setFileName(result.attachment.name);
-      setFound(parseStravaCsv(attachments.textOf(result.attachment.bytes)));
+    /**
+     * The picker never rejects — a cancelled dialog and a denied permission are ordinary outcomes,
+     * and `pickProblem` already turns each into a sentence. Reusing it means this screen says the
+     * same thing the chat bar does about the same failure.
+     */
+    const result = await attachments.pickDocument();
+
+    if (result.status !== 'ok') {
       setState('idle');
-    } catch {
-      setState('failed');
+      setPickNote(pickProblem(result));
+      return;
     }
+
+    setFileName(result.attachment.name);
+    setFound(parseStravaCsv(attachments.textOf(result.attachment.bytes)));
+    setState('idle');
   }
 
   async function bringIn() {
@@ -124,6 +130,10 @@ export function StravaImportFlow() {
             {state === 'reading' ? 'Reading…' : 'Choose activities.csv'}
           </Text>
         </Pressable>
+
+        {pickNote !== null && (
+          <Text style={[styles.warn, { color: colors.warning }]}>{pickNote}</Text>
+        )}
 
         {found !== null && found.problem !== null && (
           <Text style={[styles.warn, { color: colors.danger }]}>{found.problem}</Text>
