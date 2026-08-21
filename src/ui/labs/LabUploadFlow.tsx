@@ -101,9 +101,19 @@ export function LabUploadFlow() {
        */
       // `canApprove` already required it, so this is always a real draw date and never a default.
       const drawn = `${testDate.trim()}T00:00:00.000Z`;
+      /**
+       * **`source: 'manual'`, because every value on this panel was typed.**
+       *
+       * It used to pass `source` — the route chosen on the first step — so a panel reached through
+       * "Take a photo" was filed as `photo` and reported as "photographed" in `StoredEntries` and
+       * in the Twin's ledger. Nothing in this app reads an image; the next step says so itself
+       * ("Reading the report is not built yet, so the fields start empty") and then the numbers are
+       * typed. `panelPayload` already keeps the route as `readBy`, which is the honest place for
+       * it: what somebody chose, not what the app did.
+       */
       await hubs.add('labs', 'panel', panelPayload(entries, source, new Date().toISOString(), units), {
         recordedAt: drawn,
-        source,
+        source: 'manual',
       });
       setState('approved');
     } catch {
