@@ -192,11 +192,23 @@ export function ChatsDrawer({
       </ScrollView>
 
       {/**
-       * The foot. Settings joins this the moment `/settings` exists — it is being built in another
-       * session, and linking a route that is not there yet would be the app claiming a screen it
-       * does not have.
+       * The foot, as the owner drew it: a gear at the bottom left, the way Claude puts settings
+       * under its chats. `/settings` landed in a parallel session, so the link is real now — it was
+       * deliberately absent while the route was not there, because a menu item leading nowhere is
+       * the app claiming a screen it does not have.
+       *
+       * Showing the first run again lives INSIDE settings too, and stays here as well: it is the
+       * one thing a person wants to reach without reading a settings screen first, and the owner
+       * asked for it to be reachable for demonstrating the app.
        */}
       <View style={[styles.foot, { borderTopColor: colors.hairline }]}>
+        <Pressable
+          accessibilityRole="button"
+          onPress={() => go('/settings')}
+          style={({ pressed }) => [styles.footRow, styles.gearRow, pressed && styles.pressed]}>
+          <View style={[styles.gear, { borderColor: colors.textMuted }]} />
+          <Text style={[styles.footText, { color: colors.text }]}>Settings</Text>
+        </Pressable>
         <Pressable
           accessibilityRole="button"
           onPress={() => go('/welcome')}
@@ -281,6 +293,13 @@ const styles = StyleSheet.create({
   first: { borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: 'transparent' },
   foot: { borderTopWidth: StyleSheet.hairlineWidth, paddingHorizontal: spacing.lg },
   footRow: { paddingVertical: spacing.md },
+  gear: {
+    borderRadius: 999,
+    borderWidth: 1.5,
+    height: 15,
+    width: 15,
+  },
+  gearRow: { alignItems: 'center', flexDirection: 'row', gap: spacing.sm },
   footText: { fontFamily: fontFamily.medium, fontSize: typography.bodySmall },
   head: {
     fontFamily: fontFamily.medium,
