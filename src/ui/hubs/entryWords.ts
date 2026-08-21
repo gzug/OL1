@@ -11,7 +11,19 @@
  */
 
 const KINDS: Readonly<Record<string, { one: string; many: string }>> = {
+  /**
+   * `goal` and `note` arrive from the first-run flow, which was built in a parallel session while
+   * this vocabulary was being written in another. Without words they fell through to the plain
+   * fallback and the Twin's ledger read "Goal entry · Labs" and "Note entry · Gym" — understandable,
+   * and nothing a person would ever write.
+   *
+   * Worth keeping as a note about the fallback rather than only about these two: it is doing its job
+   * when an unknown kind still renders, and it is also the signal that a kind has become real enough
+   * to deserve a word.
+   */
+  goal: { many: 'goals', one: 'goal' },
   meal: { many: 'meals', one: 'meal' },
+  note: { many: 'notes', one: 'note' },
   panel: { many: 'panels', one: 'panel' },
   session: { many: 'sessions', one: 'session' },
   weight: { many: 'weigh-ins', one: 'weigh-in' },
