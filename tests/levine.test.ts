@@ -112,7 +112,15 @@ test('a lipid typed in mmol/L is accepted, and an impossible one is not', () => 
   assert.ok(ldl !== undefined);
 
   assert.equal(markerProblem(ldl, '3.1', 'mmol/L'), null, '3.1 mmol/L is an ordinary LDL');
-  assert.equal(markerProblem(ldl, '3.1', 'mg/dL'), null, 'and so is a low one in mg/dL');
+  assert.equal(markerProblem(ldl, '120', 'mg/dL'), null, 'and 120 mg/dL is the same reading');
+
+  /**
+   * **The same digits in the other unit are refused**, which is the sane range doing its only job:
+   * 3.1 is an ordinary LDL in mmol/L and an impossible one in mg/dL, and the check happens after
+   * the conversion so the unit decides. My first version of this test asserted the opposite and
+   * was simply wrong.
+   */
+  assert.equal(markerProblem(ldl, '3.1', 'mg/dL'), 'outsideSane');
   assert.equal(markerProblem(ldl, '9999', 'mg/dL'), 'outsideSane');
   assert.equal(markerProblem(ldl, 'x', 'mg/dL'), 'notANumber');
 });
