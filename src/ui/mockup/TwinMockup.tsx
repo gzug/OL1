@@ -74,6 +74,7 @@ export function TwinMockup() {
         <BodyFigure
           loads={load.loads}
           onMusclePress={(slug) => void markWorked(slug)}
+          read={load.read}
           unplaced={load.unplaced}
         />
 
@@ -93,7 +94,9 @@ export function TwinMockup() {
           {/* The one source that feeds the number, from the number's own state. It was a fixture
               claiming nine of nine markers, which contradicted the line above it the moment that
               line became real. */}
-          <SourceRow source={bloodWorkSource(bioAge)} />
+          {/* Nothing before a successful read: an empty detail is the state saying it has no claim
+              to make, not a row with a missing value. */}
+          {bioAge.status !== 'unknown' && <SourceRow source={bloodWorkSource(bioAge)} />}
           {/* Only once there IS a reading. Under an empty state it promised a second panel would
               improve a number that did not exist yet. */}
           {bioAge.status === 'ready' && (

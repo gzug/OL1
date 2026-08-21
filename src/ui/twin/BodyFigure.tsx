@@ -65,6 +65,7 @@ const DRAWN_PARTS: readonly Slug[] = [
 export function BodyFigure({
   loads,
   onMusclePress,
+  read = true,
   scale = 1,
   showCaption = true,
   unplaced = 0,
@@ -72,6 +73,12 @@ export function BodyFigure({
   loads: Readonly<Partial<Record<MuscleSlug, Intensity>>>;
   /** Tapping a muscle marks it worked. Absent on Home, where the figure is a picture, not a control. */
   onMusclePress?: (slug: MuscleSlug) => void;
+  /**
+   * Whether the store was actually read. **A grey figure means one of three things** — you logged
+   * nothing, the query has not run yet, or it failed — and only the first of those is something the
+   * caption may say out loud.
+   */
+  read?: boolean;
   scale?: number;
   showCaption?: boolean;
   /** Sessions in the window whose kind nobody has mapped. Said out loud rather than absorbed. */
@@ -219,11 +226,26 @@ export function BodyFigure({
 
           {/* The legend says what the colour is, in the words the owner chose. "Worked most" is a
               reading; "needs rest" would be advice, and this is not the surface that gives it. */}
-          <Text style={[styles.legend, { color: colors.textSubtle }]}>
-            {worked.length === 0
-              ? 'Nothing logged in the last seven days, so nothing is marked.'
-              : 'Darker means worked more in the last seven days, compared with the rest of your week.'}
-          </Text>
+          {/**
+            * Three states, and only one of them is a claim about the person.
+            *
+            * `!read` says nothing at all: the figure is grey because nothing has been looked up
+            * yet, or the store would not open, and neither is a fact about anybody's training.
+            *
+            * `unplaced > 0` matters too. This used to print "Nothing logged in the last seven
+            * days" directly above "1 session is not shown", because a session logged as "Something
+            * else" maps to no muscles and leaves `worked` empty. Something WAS logged; the figure
+            * just cannot place it, and the line below already says so.
+            */}
+          {read && (
+            <Text style={[styles.legend, { color: colors.textSubtle }]}>
+              {worked.length === 0 && unplaced === 0
+                ? 'Nothing logged in the last seven days, so nothing is marked.'
+                : worked.length === 0
+                  ? 'Nothing here can be placed on the figure yet.'
+                  : 'Darker means worked more in the last seven days, compared with the rest of your week.'}
+            </Text>
+          )}
 
           {unplaced > 0 && (
             <Text style={[styles.legend, { color: colors.textSubtle }]}>

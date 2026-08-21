@@ -23,7 +23,8 @@ import { bioAgeFrom, type BioAge } from '@/application/twin/bioAge';
 export type { BioAge };
 
 export function useBioAge(hubSource = defaultHubs, profileSource = defaultProfiles): BioAge {
-  const [state, setState] = useState<BioAge>({ reason: 'noPanel', status: 'waiting' });
+  // Not `noPanel`. Before the first read this app knows nothing, and saying otherwise is a claim.
+  const [state, setState] = useState<BioAge>({ status: 'unknown' });
 
   useFocusEffect(
     useCallback(() => {
@@ -37,8 +38,9 @@ export function useBioAge(hubSource = defaultHubs, profileSource = defaultProfil
         if (cancelled) return;
         setState(bioAgeFrom(entries, profile?.birthYear ?? null, new Date()));
       })().catch(() => {
-        /* An unreadable store waits rather than showing a number. There is no safe fallback here:
-           a biological age is the last thing in this app that may be approximated. */
+        /* An unreadable store says nothing at all. It used to leave `noPanel` standing, so a
+           database error told a person their blood results had never been added. */
+        if (!cancelled) setState({ status: 'unknown' });
       });
 
       return () => {

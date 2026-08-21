@@ -39,6 +39,9 @@ export function BioAgeBlock({ bioAge }: { bioAge: BioAge }) {
    * horizontal rule rather than as an absent value; it went out on the deployed preview looking
    * exactly like a divider. There is no number, so there is no number-shaped thing.
    */
+  /** Nothing looked up yet, or the lookup failed. Neither is something to tell somebody. */
+  if (bioAge.status === 'unknown') return null;
+
   if (bioAge.status === 'waiting') {
     return (
       <View style={styles.block}>
