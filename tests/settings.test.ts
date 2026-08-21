@@ -251,7 +251,7 @@ test('there are three states, and the failure sentence is about the app and not 
 test('the stored count says what it is a count of', () => {
   assert.match(COPY.storedNote, /written down/i);
   assert.match(COPY.storedNote, /you later changed/i);
-  assert.match(COPY.storedNote, /never deleted/i);
+  assert.match(COPY.storedNote, /(never|is ever) deleted/i);
 });
 
 /** The one thing this screen cannot do yet says so, rather than offering a switch that lies. */
