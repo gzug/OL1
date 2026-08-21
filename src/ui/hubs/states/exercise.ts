@@ -42,10 +42,14 @@ export const exercise: HubState = {
     },
   },
   contribute: {
+    /**
+     * Two real ways in. Strava is an IMPORT rather than a connection — a file you request from
+     * their website and this reads on your device — so it sits beside the by-hand button rather
+     * than replacing it. Connecting a watch live still waits for the phone, which the note says.
+     */
+    also: { href: '/from-strava', label: 'Bring your history in from Strava' },
     href: '/log-session',
-    /* Strava is an import rather than a connection, and the phone is deferred — so the honest note
-       names what the button does and what it does not. */
-    note: 'Connecting a watch waits for the phone.',
+    note: 'Connecting a watch live waits for the phone. The Strava import needs no connection.',
     primary: 'Log a session by hand',
     secondary: 'What, how long, and how far if you measured it',
   },
