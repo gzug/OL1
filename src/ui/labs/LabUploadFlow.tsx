@@ -45,7 +45,21 @@ import {
  * about whether a value is healthy.
  */
 
-const TODAY = '2026-08-03';
+/**
+ * Today, from the device rather than from this file.
+ *
+ * **It used to be the string `'2026-08-03'`**, which was true on the day it was typed and wrong
+ * every day after. By 21 August any genuine draw date from the 4th onward was rejected as being in
+ * the future, the Approve button went dead with nothing on screen connecting it to the date field,
+ * and a person's only way forward was to clear the date — which is exactly the state that used to
+ * stamp the panel with the moment they pressed the button.
+ *
+ * A frozen clock is not a small bug in a lab form. It gets worse by one day, every day, and it
+ * pushes people into the failure below it.
+ */
+function today(): string {
+  return new Date().toISOString().slice(0, 10);
+}
 
 export function LabUploadFlow() {
   const { colors } = useTheme();
@@ -60,7 +74,20 @@ export function LabUploadFlow() {
 
   const problems = panelProblems(entries, units);
   const filled = filledCount(entries);
-  const dateOk = testDate.trim().length === 0 || isValidTestDate(testDate.trim(), TODAY);
+  /**
+   * **The draw date is required, and the blank escape is gone.**
+   *
+   * It used to read `testDate.trim().length === 0 || …`, so a panel could be approved with no date
+   * at all — and `approve()` then omitted `recordedAt`, which the store defaults to now. The
+   * comment inside `approve()` states the rule this broke: a panel is dated by when the blood was
+   * DRAWN, not by when it was typed in.
+   *
+   * That default was not a caption problem. Panels are sorted by this date, and three screens read
+   * whichever is newest — so a panel from March, entered this afternoon, silently became "your
+   * latest results" and the biological age was computed against it.
+   */
+  const dateGiven = testDate.trim().length > 0;
+  const dateOk = dateGiven && isValidTestDate(testDate.trim(), today());
   const canApprove = filled > 0 && problems.length === 0 && dateOk;
 
   async function approve() {
@@ -72,9 +99,10 @@ export function LabUploadFlow() {
        * entered months later belongs to the day it was taken — the drift number and every "since
        * your last panel" line read this field, and both would be wrong the other way round.
        */
-      const drawn = testDate.trim().length > 0 ? `${testDate.trim()}T00:00:00.000Z` : undefined;
+      // `canApprove` already required it, so this is always a real draw date and never a default.
+      const drawn = `${testDate.trim()}T00:00:00.000Z`;
       await hubs.add('labs', 'panel', panelPayload(entries, source, new Date().toISOString(), units), {
-        ...(drawn === undefined ? {} : { recordedAt: drawn }),
+        recordedAt: drawn,
         source,
       });
       setState('approved');
@@ -150,12 +178,21 @@ export function LabUploadFlow() {
               accessibilityLabel="Date the panel was drawn"
               keyboardType="numbers-and-punctuation"
               onChangeText={setTestDate}
-              placeholder="2026-03-12"
+              placeholder="YYYY-MM-DD"
               placeholderTextColor={colors.textSubtle}
               style={[styles.input, { borderColor: colors.hairline, color: colors.text }]}
               value={testDate}
             />
-            {!dateOk && (
+            {/* Two different problems, said differently. A blank field is not a malformed one, and
+                telling somebody their empty box is badly formatted is how a form stops being
+                answerable. */}
+            {!dateGiven && (
+              <Text style={[styles.problem, { color: colors.textSubtle }]}>
+                Needed. Every screen that shows this panel says when the blood was taken, so it
+                cannot be guessed.
+              </Text>
+            )}
+            {dateGiven && !dateOk && (
               <Text style={[styles.problem, { color: colors.danger }]}>
                 Use YYYY-MM-DD, and not a date in the future.
               </Text>

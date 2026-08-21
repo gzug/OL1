@@ -19,6 +19,7 @@ const STAGES = [
   'test',
   'check:boundaries',
   'check:durations',
+  'check:dates',
   'check:sensitive',
   'export:web',
 ];
