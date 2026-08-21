@@ -28,9 +28,16 @@
  * exactly like a result, which is the most expensive kind of placeholder, because nobody reports it
  * as broken.
  */
+/**
+ * `insight` is gone with Home's readout — nothing computed it and nothing could, and it sat in the
+ * same visual block as the body figure, which is drawn from real sessions.
+ *
+ * `focus` survives for the Twin ALONE, where it renders below the sample-data line and is therefore
+ * marked as what it is. It is deliberately not re-used on Home: the same string is honest on one
+ * screen and a lie on the other, and the difference is entirely whether a line above it says so.
+ */
 export const centre = {
   focus: 'Today · the evening walk',
-  insight: 'Your later nights landed on evening training days.',
 } as const;
 
 /**
