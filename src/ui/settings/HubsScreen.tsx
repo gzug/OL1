@@ -50,8 +50,16 @@ export function HubsScreen({ source = defaultHubs }: { source?: typeof defaultHu
     );
   }
 
-  const rows = hubRows(data.value.hubs, data.value.hidden);
-  const away = new Set(data.value.hidden);
+  /**
+   * Held as a plain value, not read through `data` inside the handler below.
+   *
+   * `put` is a function declaration, so it is hoisted above the guards that narrowed `data` — and
+   * TypeScript will not carry a narrowing across that. Capturing the value here is what makes the
+   * narrowing survive into the closure, and it is one line rather than a cast.
+   */
+  const loaded = data.value;
+  const rows = hubRows(loaded.hubs, loaded.hidden);
+  const away = new Set(loaded.hidden);
 
   async function put(hubId: string, back: boolean) {
     setBusy(hubId);
@@ -59,7 +67,7 @@ export function HubsScreen({ source = defaultHubs }: { source?: typeof defaultHu
     try {
       // The hub and everything only reachable through it, in one go — the same set either way, so
       // putting one away and bringing it back are exact opposites rather than nearly.
-      for (const id of withDescendants(data.value.hubs, hubId)) {
+      for (const id of withDescendants(loaded.hubs, hubId)) {
         if (back) await source.unhide(id);
         else await source.hide(id);
       }
@@ -113,11 +121,7 @@ export function HubsScreen({ source = defaultHubs }: { source?: typeof defaultHu
               {asking === row.hub.id && (
                 <View style={local.asking}>
                   <Text style={[local.warning, { color: colors.textMuted }]}>
-                    {hideWarning(
-                      data.value.hubs,
-                      row.hub.id,
-                      (data.value.entries[row.hub.id] ?? []).length,
-                    )}
+                    {hideWarning(loaded.hubs, row.hub.id, (loaded.entries[row.hub.id] ?? []).length)}
                   </Text>
                   <View style={local.actions}>
                     <Pressable
