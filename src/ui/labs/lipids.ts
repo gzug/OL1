@@ -38,6 +38,16 @@ export type ExtraMarker = {
   readonly unit: string;
   /** What it is, in plain language. Same four rules as `markerContext`: no diagnosis, no advice. */
   readonly what: string;
+  /**
+   * Why it is on the panel at all.
+   *
+   * **The nine have a `why` that says they are read by a formula.** These have a different one, and
+   * it has to be different or the screen implies they feed the biological age: they are here
+   * because a person chose to measure them. That is the whole answer, and it is an honest one.
+   */
+  readonly why: string;
+  /** What it is usually read next to. Never a rule about what to do. */
+  readonly alongside: string;
 };
 
 /**
@@ -48,60 +58,76 @@ export type ExtraMarker = {
  */
 export const EXTRA_MARKERS: readonly ExtraMarker[] = [
   {
+    alongside: 'LDL, HDL and triglycerides, which are the parts it adds up.',
     key: 'total_cholesterol',
     label: 'Total Cholesterol',
     sane: { max: 800, min: 20 },
     unit: 'mg/dL',
     what: 'All the cholesterol carried in the blood, added together.',
+    why: 'Nothing calculates with it here — it is on your report and you chose to track it.',
   },
   {
+    alongside: 'HDL and triglycerides, and ApoB where a panel carries one.',
     key: 'ldl',
     label: 'LDL Cholesterol',
     sane: { max: 600, min: 5 },
     unit: 'mg/dL',
     what: 'Cholesterol carried by low-density particles. Usually calculated rather than measured directly.',
+    why: 'Recorded because you measure it. The biological age does not read it.',
   },
   {
+    alongside: 'LDL and triglycerides on the same panel.',
     key: 'hdl',
     label: 'HDL Cholesterol',
     sane: { max: 200, min: 5 },
     unit: 'mg/dL',
     what: 'Cholesterol carried by high-density particles.',
+    why: 'Recorded because you measure it. The biological age does not read it.',
   },
   {
+    alongside: 'Glucose, and how long before the draw somebody last ate.',
     key: 'triglycerides',
     label: 'Triglycerides',
     sane: { max: 2000, min: 10 },
     unit: 'mg/dL',
     what: 'Fat carried in the blood. It rises after eating, which is why panels ask for a fast.',
+    why: 'Recorded because you measure it. The biological age does not read it.',
   },
   {
+    alongside: 'LDL, which counts cholesterol rather than particles.',
     key: 'apob',
     label: 'Apolipoprotein B',
     sane: { max: 400, min: 10 },
     unit: 'mg/dL',
     what: 'One molecule sits on each particle that carries cholesterol, so this counts the particles rather than the cholesterol in them.',
+    why: 'Kept because you track it. Nothing in this app calculates with it yet.',
   },
   {
+    alongside: 'The rest of the lipid panel, though it moves independently of them.',
     key: 'lpa',
     label: 'Lipoprotein(a)',
     sane: { max: 500, min: 0.1 },
     unit: 'nmol/L',
     what: 'A particle type that is largely set by inheritance and changes very little over a life.',
+    why: 'Kept because you track it. It is usually measured once rather than followed.',
   },
   {
+    alongside: 'Glucose, which is this morning rather than the last three months.',
     key: 'hba1c',
     label: 'HbA1c',
     sane: { max: 20, min: 2 },
     unit: '%',
     what: 'The share of haemoglobin with glucose attached. It reflects roughly the last three months rather than this morning.',
+    why: 'Kept because you track it. The biological age reads a single glucose instead.',
   },
   {
+    alongside: 'Calcium, and the time of year the blood was drawn.',
     key: 'vitamin_d',
     label: 'Vitamin D',
     sane: { max: 400, min: 1 },
     unit: 'ng/mL',
     what: '25-hydroxyvitamin D, the form measured to describe how much of it the body is holding.',
+    why: 'Kept because you track it. Nothing in this app calculates with it.',
   },
 ];
 

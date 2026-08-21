@@ -9,6 +9,7 @@ import {
 } from '../src/application/labs/units';
 import { EXTRA_MARKERS, EXTRA_MARKER_KEYS } from '../src/ui/labs/lipids';
 import { LEVINE_MARKERS } from '../src/ui/labs/levine';
+import { MARKER_CONTEXT } from '../src/ui/labs/markerContext';
 
 /**
  * The markers a panel holds that the age calculation does not read.
@@ -109,5 +110,33 @@ test('every extra marker is described, and none of them diagnoses', () => {
     for (const claim of claims) {
       assert.ok(!claim.test(marker.what), `${marker.key} makes a claim it must not: "${marker.what}"`);
     }
+  }
+});
+
+/**
+ * Every extra marker carries the same three sentences the nine do — what it is, why it is on the
+ * panel, and what it is read beside — and none of them may claim it feeds the age calculation.
+ */
+test('every extra marker says why it is there, and does not claim to feed the number', () => {
+  const claimsToFeed = /biological age (?:reads|uses|includes) it|feeds (?:the|your) (?:number|age)/i;
+
+  for (const marker of EXTRA_MARKERS) {
+    assert.ok(marker.why.length > 20, `${marker.key} has no reason to be on the panel`);
+    assert.ok(marker.alongside.length > 15, `${marker.key} says nothing about what it sits beside`);
+    assert.ok(!claimsToFeed.test(marker.why), `${marker.key} claims to feed the age: "${marker.why}"`);
+  }
+});
+
+/**
+ * The nine and the rest must not describe themselves the same way.
+ *
+ * If a lipid's reason read like a Levine marker's, a person scanning the screen would take the two
+ * blocks for one list — which is precisely what separating them is for.
+ */
+test('an extra marker does not borrow the nine’s reason for being there', () => {
+  const nine = new Set(MARKER_CONTEXT.map((entry) => entry.why));
+
+  for (const marker of EXTRA_MARKERS) {
+    assert.ok(!nine.has(marker.why), `${marker.key} reuses a Levine marker's reason`);
   }
 });
