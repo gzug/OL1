@@ -5,7 +5,7 @@ import { StyleSheet, Text, View } from 'react-native';
 import { hubs as defaultHubs } from '@/application/hubs/hubs';
 import { ledgerFooter, ledgerLines, type LedgerLine } from '@/application/hubs/ledger';
 import type { HubEntry } from '@/core/hubs';
-import { day, kindWords, sourceWords } from '@/ui/hubs/entryWords';
+import { day, isHeld, kindWords, sourceWords } from '@/ui/hubs/entryWords';
 import { useHubs } from '@/ui/hubs/useHubs';
 import { fontFamily, lineHeights, spacing, typography, useTheme } from '@/ui/theme';
 
@@ -47,7 +47,9 @@ export function Ledger({ source = defaultHubs }: { source?: typeof defaultHubs }
         );
         if (cancelled) return;
 
-        const all = perHub.flat();
+        /* A goal somebody turned off is recorded and is not something they did. The ledger is what
+           happened, so a declined answer does not belong in it — see `isHeld`. */
+        const all = perHub.flat().filter(isHeld);
         setState({ lines: ledgerLines(all, SHOWN), total: all.length });
       })().catch(() => {
         // A store that cannot be read shows no ledger rather than an empty one. "You have logged

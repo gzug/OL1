@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 
-import { answerId, day, kindWords, sourceWords } from '../src/ui/hubs/entryWords';
+import { answerId, day, isHeld, kindWords, sourceWords } from '../src/ui/hubs/entryWords';
 
 /**
  * The words two screens both use for a stored entry.
@@ -84,4 +84,24 @@ test('different answers, hubs and kinds never collide', () => {
 /** And it must not look like an event id, or a fresh entry could collide with an answer. */
 test('an answer id is recognisable as one', () => {
   assert.match(answerId('goal', 'sleep', 'Sleep better'), /^answer:/);
+});
+
+/**
+ * **A goal you turned off is written down and is not one you have.**
+ *
+ * Nothing in OL1 deletes, so declining is recorded rather than erased. Counting that as something
+ * held is how the Sleep hub came to say "1 goal" to somebody who had just turned their only goal
+ * off — the same defect as "4 goals" one layer up, where the rows converged and the count still
+ * spoke for a person who had said no.
+ */
+test('a declined answer is recorded, and is not something a person has', () => {
+  assert.equal(isHeld({ payload: { label: 'Sleep better' } }), true);
+  assert.equal(isHeld({ payload: { held: false, label: 'Sleep better' } }), false);
+});
+
+/** Everything that is not an answer is held by default — a meal is not something you declined. */
+test('an entry that never had the idea of being held still counts', () => {
+  for (const payload of [{}, { macros: { calories: 520 } }, { activity: 'running', minutes: 30 }]) {
+    assert.equal(isHeld({ payload }), true, `${JSON.stringify(payload)} was dropped`);
+  }
 });
