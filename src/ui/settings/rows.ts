@@ -14,13 +14,23 @@
  * - **Account splits in two**, because Profile already holds personal information. The line: a
  *   profile is about your body, because the app reasons with it; an account is about you as a
  *   customer. Same kind of fact, two different reasons for holding it.
- * - **Four rows are waiting on something that does not exist**, and they stay, marked. A person
+ * - **Three rows are waiting on something that does not exist**, and they stay, marked. A person
  *   seeing where plans will live beats plans appearing one day where nobody expects them. What a
  *   waiting row must never do is look available — Legacy shipped a wearable row badged
  *   `Connected ✓` with no wearable behind it, and that is the whole of `docs/decisions/0013`.
  */
 
 import type { Sex } from '@/core/profile';
+
+/**
+ * Where feedback goes. The owner's own address, given on 2026-08-21 for this purpose.
+ *
+ * **It is in a public repository and will be scraped.** He was told and chose it anyway, which is
+ * his to choose — and swapping it for a forwarding alias later is this one line. It is written here
+ * rather than obfuscated: a mangled address in source is theatre, and it breaks the one thing this
+ * constant is for, which is being correct.
+ */
+export const FEEDBACK_TO = 'maximilian.opp@hotmail.com';
 
 /**
  * Whether a row leads anywhere yet.
@@ -81,7 +91,7 @@ export const ROWS: readonly SettingsRow[] = [
   { group: 'General', id: 'onboarding', label: 'Onboarding', state: 'ready' },
   { group: 'General', id: 'notifications', label: 'Notifications', state: 'waiting' },
   { group: 'General', id: 'privacy', label: 'Privacy', state: 'ready' },
-  { group: 'General', id: 'feedback', label: 'Give feedback', state: 'waiting' },
+  { group: 'General', id: 'feedback', label: 'Give feedback', state: 'ready' },
   { group: 'General', id: 'about', label: 'About', state: 'ready' },
 ];
 
@@ -217,10 +227,14 @@ export const COPY = {
   contactWaiting:
     'One L1fe has no accounts and no server, so there is nowhere to send an email and nothing to attach a phone number to. Everything you have given it is on this device.',
 
+  feedbackNoMailApp:
+    'This device has no mail app set up, so nothing opened. The address is above — copy it wherever you write email.',
+  feedbackBody:
+    'Anything at all — what is confusing, what is missing, what is wrong. There is no form and no ticket number; it goes straight to a person.',
+  feedbackOpen: 'Write an email',
+  feedbackSubject: 'One L1fe feedback',
   feedbackTitle: 'Give feedback',
-  feedbackUnder: 'Nowhere to send it yet',
-  feedbackWaiting:
-    'This will open your mail app with the address already in it. There is no address to send to yet, and putting the wrong one here would be worse than waiting.',
+  feedbackUnder: 'Opens your mail app',
 
   goalsAdd: 'Add a goal',
   goalsEmpty: 'None set',

@@ -25,7 +25,7 @@ import { factsFrom, useSettings } from './useSettings';
  * opening its own screen — his call on 2026-08-21, once it became clear that a subscription layer
  * and everything around it could not sit on one scrolling page.
  *
- * **Four rows are waiting on something that does not exist yet**, and they are here anyway, marked.
+ * **Three rows are waiting on something that does not exist yet**, and they are here anyway, marked.
  * A person seeing where plans will live beats plans appearing one day where nobody expects them.
  * What a waiting row must never do is look available: Legacy shipped a wearable row badged
  * `Connected ✓` with no wearable behind it, and that is what `docs/decisions/0013` is about.
