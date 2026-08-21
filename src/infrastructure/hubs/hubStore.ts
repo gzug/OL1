@@ -16,8 +16,18 @@ export function createMemoryHubStore(): HubStore {
   const briefs = new Map<string, string>();
 
   return {
+    /**
+     * **Replaces by id**, matching `INSERT OR REPLACE` on native and the filter-then-append on web.
+     *
+     * It used to push unconditionally, so this store accumulated where both shipping stores
+     * converged. That is worse than either behaviour on its own: every test ran against a store
+     * that behaved differently from the app, so a bug in writing the same id twice was invisible
+     * here and real there.
+     */
     async addEntry(entry) {
-      entries.push(entry);
+      const at = entries.findIndex((existing) => existing.id === entry.id);
+      if (at === -1) entries.push(entry);
+      else entries[at] = entry;
     },
 
     async createHub(hub) {

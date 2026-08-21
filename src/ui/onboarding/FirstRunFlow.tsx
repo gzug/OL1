@@ -3,6 +3,7 @@ import { useState, type ReactNode } from 'react';
 import { Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 
 import { hubs } from '@/application/hubs/hubs';
+import { answerId } from '@/ui/hubs/entryWords';
 import {
   plausibleBirthYear,
   plausibleHeightCm,
@@ -172,13 +173,19 @@ export function FirstRunFlow({ source = defaultProfiles }: { source?: typeof def
 
   async function commitGoals() {
     for (const goal of GOALS.filter((entry) => goals.includes(entry.id))) {
-      if (goal.hubId !== undefined) await hubs.add(goal.hubId, 'goal', { label: goal.label });
+      /* The same id the settings screen writes, so walking the first run again — or changing the
+         answer there — replaces this row rather than adding a second copy of one answer. */
+      if (goal.hubId !== undefined) {
+        await hubs.add(goal.hubId, 'goal', { label: goal.label }, {
+          id: answerId('goal', goal.hubId, goal.label),
+        });
+      }
     }
 
     const name = otherGoal.trim();
     if (name.length > 0) {
       const id = await createFrom(name);
-      if (id !== null) await hubs.add(id, 'goal', { label: name });
+      if (id !== null) await hubs.add(id, 'goal', { label: name }, { id: answerId('goal', id, name) });
     }
   }
 
@@ -192,7 +199,9 @@ export function FirstRunFlow({ source = defaultProfiles }: { source?: typeof def
      * `sportCoachesFor` reads these entries to know which ones you have.
      */
     for (const sport of SPORTS.filter((entry) => sports.includes(entry.id))) {
-      await hubs.add('exercise', 'sport', { coachId: sport.coachId, label: sport.label });
+      await hubs.add('exercise', 'sport', { coachId: sport.coachId, label: sport.label }, {
+        id: answerId('sport', 'exercise', sport.coachId),
+      });
     }
 
     const name = otherSport.trim();

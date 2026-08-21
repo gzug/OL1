@@ -53,6 +53,20 @@ export function sourceWords(source: string): string {
   return SOURCES[source] ?? source;
 }
 
+/**
+ * The id an ANSWER is written under, so writing it again replaces it.
+ *
+ * An event keeps a fresh id and accumulates; an answer keeps this one and converges. Toggling
+ * "Sleep better" four times is one answer changed three times, not four goals — and it read as
+ * "4 goals" on the Sleep hub until this existed.
+ *
+ * **Both screens that write an answer must use this**, or the first run and the settings screen
+ * produce two rows for one answer and each believes it wrote the only copy.
+ */
+export function answerId(kind: string, hubId: string, label: string): string {
+  return `answer:${kind}:${hubId}:${label.trim().toLowerCase()}`;
+}
+
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
 /**

@@ -28,7 +28,7 @@ export type Hubs = {
     hubId: string,
     kind: string,
     payload: Readonly<Record<string, unknown>>,
-    options?: { recordedAt?: string; source?: string },
+    options?: { id?: string; recordedAt?: string; source?: string },
   ): Promise<HubEntry>;
   create(hub: Omit<StoredHub, 'createdAt'>): Promise<StoredHub>;
   entries(hubId: string, limit?: number): Promise<readonly HubEntry[]>;
@@ -49,7 +49,18 @@ export function createHubs(store: HubStore = defaultStore): Hubs {
     async add(hubId, kind, payload, options) {
       const entry: HubEntry = {
         hubId,
-        id: entryId(),
+        /**
+         * **A stable id makes writing the same thing twice replace rather than append.**
+         *
+         * Every store replaces by id — `INSERT OR REPLACE` on native, filter-then-append on web —
+         * so an ANSWER can carry one and converge, while an EVENT keeps a fresh id and accumulates.
+         *
+         * That distinction is the whole of it. A meal, a session and a blood panel each happened
+         * once and belong in a list. A goal and a named sport are answers to a question: toggling
+         * "Sleep better" four times is one answer changed three times, not four goals — and it read
+         * as "4 goals" on the Sleep hub until this existed.
+         */
+        id: options?.id ?? entryId(),
         kind,
         payload,
         recordedAt: options?.recordedAt ?? new Date().toISOString(),
