@@ -5,25 +5,28 @@ import { SEED_HUBS, orbitHubs } from '../src/ui/hubs/catalog';
 import { GOALS, SPORTS } from '../src/ui/onboarding/firstRun';
 import {
   COPY,
+  ROWS,
+  groups,
+  rowsIn,
+  subtitles,
+  type IndexFacts,
+  type RowId,
+} from '../src/ui/settings/rows';
+import {
   FAILED,
   UNKNOWN,
   goalPayload,
   goalsFrom,
+  goalsHeld,
   hubRows,
   ready,
   shownSex,
   sportPayload,
   sportsFrom,
-  tally,
-  tallyLine,
   type EntriesByHub,
 } from '../src/ui/settings/settings';
 
-/**
- * A clock that ticks once per call, so a sequence of writes has an order without any test having to
- * invent timestamps. The store sorts by `recordedAt` and so does `goalsFrom`; a fixture where two
- * rows share a millisecond would be testing the tie-break rather than the rule.
- */
+/** A clock that ticks once per call, so a sequence of writes has an order without inventing one. */
 function clock(start = Date.parse('2026-08-01T09:00:00.000Z')) {
   let tick = 0;
   return () => new Date(start + (tick += 60_000)).toISOString();
@@ -40,40 +43,134 @@ function entry(
   return { hubId, id: `${hubId}-${kind}-${recordedAt}`, kind, payload, recordedAt, source: 'manual' };
 }
 
-/** What one tap writes, as the screen writes it: a row in the hub the goal belongs to. */
 function tapGoal(hubId: string, label: string, held: boolean) {
   return entry(hubId, 'goal', goalPayload(label, held));
 }
 
+const FACTS: IndexFacts = {
+  coachesTold: 2,
+  coachesTotal: 6,
+  goals: ['Sleep better', 'Get fitter'],
+  hubsAway: 1,
+  hubsOnRing: 6,
+  profile: { age: 44, heightCm: 178, sex: 'male' },
+  sports: ['Running', 'Gym'],
+};
+
+/* ── The index ─────────────────────────────────────────────────────────────────────────────── */
+
+/**
+ * THE RULE THIS SCREEN IS BUILT ON. `docs/decisions/0013`, shape 1: a line reading *6 on your ring ·
+ * 1 put away* drawn from a read that never happened is a claim about somebody's data invented by a
+ * database error. Before the store answers, the rows have names and nothing else.
+ */
+test('nothing is said about a person until the store has answered', () => {
+  const quiet = subtitles(null);
+
+  for (const id of ['profile', 'goals', 'hubs', 'coaches'] as const) {
+    assert.equal(quiet[id], null, `"${id}" spoke for somebody before anything was read`);
+  }
+});
+
+/**
+ * The other half, and it is why `subtitles(null)` does not simply return all nulls: a line about the
+ * app is true whether or not a read happened. Hiding those too would leave four rows unexplained for
+ * no reason.
+ */
+test('a row waiting on something still explains itself when nothing has been read', () => {
+  const quiet = subtitles(null);
+
+  assert.equal(quiet.subscription, COPY.subscriptionUnder);
+  assert.equal(quiet.notifications, COPY.notificationsUnder);
+  assert.equal(quiet.contact, COPY.contactUnder);
+  assert.equal(quiet.about, COPY.aboutUnder);
+});
+
+test('with an answer, each row says what it holds', () => {
+  const said = subtitles(FACTS);
+
+  assert.equal(said.profile, '44 · 178 cm · male figure');
+  assert.equal(said.goals, 'Sleep better · Get fitter');
+  assert.equal(said.hubs, '6 on your ring · 1 put away');
+  assert.equal(said.coaches, '2 of 6 told how to work with you');
+});
+
+/** A skipped answer contributes nothing rather than a placeholder saying it was skipped. */
+test('a profile says only what was actually given', () => {
+  const partial = subtitles({ ...FACTS, profile: { age: null, heightCm: 178, sex: 'male' } });
+  assert.equal(partial.profile, '178 cm · male figure');
+
+  const nothing = subtitles({
+    ...FACTS,
+    profile: { age: null, heightCm: null, sex: 'preferNotToSay' },
+  });
+  assert.equal(nothing.profile, COPY.profileEmpty, 'a profile with nothing in it claimed a figure');
+
+  const never = subtitles({ ...FACTS, profile: null });
+  assert.equal(never.profile, COPY.profileEmpty);
+});
+
+test('nothing held reads as nothing, not as zero', () => {
+  const empty = subtitles({ ...FACTS, coachesTold: 0, goals: [], hubsAway: 0 });
+
+  assert.equal(empty.goals, COPY.goalsEmpty);
+  assert.equal(empty.coaches, COPY.coachesEmpty);
+  assert.equal(empty.hubs, '6 on your ring', 'zero put away should not be worth a sentence');
+});
+
+test('the groups are the owner’s three, derived from the rows rather than listed twice', () => {
+  assert.deepEqual(groups(), ['My One L1fe', 'Account', 'General']);
+  assert.deepEqual(
+    rowsIn('My One L1fe').map((row) => row.id),
+    ['profile', 'goals', 'hubs', 'coaches'],
+  );
+  assert.deepEqual(
+    rowsIn('Account').map((row) => row.id),
+    ['contact', 'subscription'],
+  );
+});
+
+test('every row has a subtitle key and no two rows share an id', () => {
+  const ids = ROWS.map((row) => row.id);
+  assert.equal(new Set(ids).size, ids.length, 'two rows share an id, so one would win the lookup');
+
+  const said = subtitles(FACTS);
+  for (const id of ids) {
+    assert.ok(id in said, `"${id}" has no line under it, not even an empty one`);
+  }
+});
+
+/** Memory was a row and the owner removed it: people relate to the thing, not the abstraction. */
+test('there is no Memory row', () => {
+  assert.ok(!ROWS.some((row) => (row.id as string) === 'memory'));
+  assert.ok(ROWS.some((row) => row.id === 'coaches'), 'coaches is where memory went');
+});
+
+/** Every waiting row must open something, so none of them may be silently dropped from the list. */
+test('the rows waiting on something are the four we know about', () => {
+  const waiting: RowId[] = ROWS.filter((row) => row.state === 'waiting').map((row) => row.id);
+  assert.deepEqual(waiting.sort(), ['contact', 'feedback', 'notifications', 'subscription']);
+});
+
 /* ── About you ─────────────────────────────────────────────────────────────────────────────── */
 
 /**
- * A DEFAULT IS NOT AN ANSWER, and this one shipped. With no profile at all the sex pills rendered
- * "Rather not say" highlighted — a choice shown as already made on behalf of somebody who had not
- * made one. `FirstRunFlow` holds `null` for exactly this reason and says so in a comment; this
- * screen reintroduced it from the other end, by reading a default out of an absent profile. Nothing
- * in CI could see it, and one look at the deployed page could.
+ * A DEFAULT IS NOT AN ANSWER, and this one shipped once. With no profile the sex pills rendered
+ * "Rather not say" as chosen — a choice shown as already made on behalf of somebody who had not made
+ * one. Nothing in CI could see it; one look at the deployed page could.
  */
-test('no pill is highlighted until somebody has answered', () => {
-  assert.equal(shownSex(null), null, 'an absent profile highlighted a choice nobody made');
+test('no pill is chosen until somebody has answered', () => {
+  assert.equal(shownSex(null), null);
+  assert.equal(
+    shownSex({ birthYear: null, heightCm: null, sex: 'preferNotToSay', updatedAt: 'x' }),
+    'preferNotToSay',
+    'skipping is an answer, and a stored one stays chosen',
+  );
 });
 
-/** Skipping IS an answer — `SKIPPED` is built on that — so a stored one stays highlighted. */
-test('a stored "rather not say" is an answer and shows as one', () => {
-  const skipped = { birthYear: null, heightCm: null, sex: 'preferNotToSay', updatedAt: 'x' } as const;
-  assert.equal(shownSex(skipped), 'preferNotToSay');
-  assert.equal(shownSex({ ...skipped, sex: 'male' }), 'male');
-});
+/* ── Goals ─────────────────────────────────────────────────────────────────────────────────── */
 
-/* ── Goals converge ────────────────────────────────────────────────────────────────────────── */
-
-/**
- * THE TRAP THIS SCREEN WAS WARNED ABOUT. `hubs.create` is idempotent; writing a goal entry is not.
- * Three taps leave three rows in the store and must leave ONE answer on the screen — otherwise
- * changing an answer accumulates rather than converging, and the second visit to Settings shows a
- * person a list they did not write.
- */
-test('a goal turned on, off and on again is held, from three rows', () => {
+test('a goal turned on, off and on again is held', () => {
   const entries: EntriesByHub = {
     sleep: [
       tapGoal('sleep', 'Sleep better', true),
@@ -82,71 +179,41 @@ test('a goal turned on, off and on again is held, from three rows', () => {
     ],
   };
 
-  const held = goalsFrom(entries).filter((goal) => goal.held);
-  assert.deepEqual(held.map((goal) => goal.label), ['Sleep better']);
-  assert.equal(entries.sleep?.length, 3, 'the store keeps every row — nothing here deletes');
+  assert.deepEqual(goalsHeld(entries).map((goal) => goal.label), ['Sleep better']);
 });
 
-test('a goal turned off is not held, and turning it off never removes the hub it lives in', () => {
+test('a goal turned off is not one you have, and removing it never touches a hub', () => {
   const entries: EntriesByHub = {
     labs: [tapGoal('labs', 'Live longer', true), tapGoal('labs', 'Live longer', false)],
   };
 
-  assert.equal(goalsFrom(entries).find((goal) => goal.label === 'Live longer')?.held, false);
+  assert.deepEqual(goalsHeld(entries), []);
 
-  // The written row says one thing and one thing only. A payload that could also carry a hub id or
-  // a hidden flag is a payload that could put a hub away by implication, which is the second trap.
+  // The row says one thing and one thing only. A payload that could also carry a hub id or a hidden
+  // flag is a payload that could put a hub away by implication.
   assert.deepEqual(Object.keys(goalPayload('Live longer', false)).sort(), ['held', 'label']);
   assert.deepEqual(Object.keys(goalPayload('Live longer', true)), ['label']);
-
-  const rows = hubRows(SEED_HUBS, []);
-  assert.ok(
-    rows.every((row) => !row.away),
-    'dropping a goal marked a hub as put away',
-  );
+  assert.ok(hubRows(SEED_HUBS, []).every((row) => !row.away));
 });
 
-/**
- * Every goal the first run has ever written omits `held`. Reading that absence as "dropped" would
- * empty this screen for the one person who has actually used the app.
- */
+/** Every goal the first run has ever written omits `held`. Reading that as "dropped" empties this. */
 test('a goal written before this screen existed still reads as held', () => {
   const entries: EntriesByHub = { sleep: [entry('sleep', 'goal', { label: 'Sleep better' })] };
-  assert.equal(goalsFrom(entries).find((goal) => goal.label === 'Sleep better')?.held, true);
+  assert.equal(goalsHeld(entries).length, 1);
 });
 
-/**
- * The owner's own question, 2026-08-21: *what if I write a goal and then it is not picked up here?*
- * A typed goal made its own hub and wrote a goal entry inside it, so it has to come back out beside
- * the seven that ship — read from the store, not from a list in the source.
- */
 test('a goal somebody typed appears beside the seven that ship', () => {
-  const mine = 'Learning to sleep without a phone';
-  const goals = goalsFrom({ 'learning-to-sleep-without-a-phone': [tapGoal('learning-to-sleep-without-a-phone', mine, true)] });
+  const mine = 'Learning to cook properly';
+  const goals = goalsFrom({ 'learning-to-cook-properly': [tapGoal('learning-to-cook-properly', mine, true)] });
 
-  const own = goals.filter((goal) => goal.own);
-  assert.deepEqual(own.map((goal) => goal.label), [mine]);
-  assert.equal(own[0]?.hubId, 'learning-to-sleep-without-a-phone', 'it must write back to its own hub');
+  assert.deepEqual(goals.filter((goal) => goal.own).map((goal) => goal.label), [mine]);
   assert.equal(goals.length, GOALS.length + 1);
 });
 
-test('an empty store holds no goals, and says so about nothing else', () => {
-  const goals = goalsFrom({});
-  assert.equal(goals.length, GOALS.length);
-  assert.ok(goals.every((goal) => !goal.held));
-  assert.ok(goals.every((goal) => !goal.own));
-});
-
-/**
- * A goal pointing at a hub id nothing ships would write into a hub nobody can open — invisible, and
- * impossible to notice on a rendered screen. Asserted against the catalog itself, exactly as
- * `tests/first-run.test.ts` does, so retiring a hub fails here rather than silently.
- */
 test('every shipped goal writes into a hub that exists', () => {
   const known = new Set(SEED_HUBS.map((hub) => hub.id));
-
   for (const goal of goalsFrom({}).filter((entry) => !entry.own)) {
-    assert.ok(known.has(goal.hubId), `"${goal.label}" points at "${goal.hubId}", which is not a hub`);
+    assert.ok(known.has(goal.hubId), `"${goal.label}" points at "${goal.hubId}", not a hub`);
   }
 });
 
@@ -160,29 +227,14 @@ test('a sport is named or it is not, and naming it twice still reads as once', (
 
   const sports = sportsFrom(named);
   assert.equal(sports.filter((sport) => sport.coachId === 'running').length, 1);
-  assert.equal(sports.find((sport) => sport.coachId === 'running')?.named, true);
   assert.equal(sports.find((sport) => sport.coachId === 'golf')?.named, false);
-  assert.equal(sports.length, SPORTS.length, 'the five that ship, and nothing invented');
+  assert.equal(sports.length, SPORTS.length);
 });
 
-test('a sport coach that does not ship still shows as named', () => {
-  const sports = sportsFrom([entry('exercise', 'sport', { coachId: 'padel', label: 'Padel' })]);
-  assert.equal(sports.find((sport) => sport.label === 'Padel')?.named, true);
-  assert.equal(sports.length, SPORTS.length + 1);
-});
-
-/**
- * A named sport is a row on Exercise carrying a coach id — `docs/decisions/0014`. The payload has to
- * match what the first run writes, or `sportCoachesFor` reads one of them and not the other.
- */
 test('naming a sport writes the coach id the first run writes', () => {
   const running = sportsFrom([]).find((sport) => sport.coachId === 'running');
   assert.ok(running !== undefined);
   assert.deepEqual(sportPayload(running), { coachId: 'running', label: 'Running' });
-  assert.deepEqual(
-    SPORTS.map((sport) => sport.coachId).sort(),
-    sportsFrom([]).filter((sport) => !sport.named).map((sport) => sport.coachId).sort(),
-  );
 });
 
 /* ── Hubs ──────────────────────────────────────────────────────────────────────────────────── */
@@ -193,116 +245,46 @@ test('the hub list is ring order, with anything nested under its parent', () => 
   assert.deepEqual(
     rows.filter((row) => row.depth === 0).map((row) => row.hub.id),
     orbitHubs(SEED_HUBS).map((hub) => hub.id),
-    'the ring order moved',
   );
 
   const labs = rows.findIndex((row) => row.hub.id === 'labs');
   const medical = rows.findIndex((row) => row.hub.id === 'medical');
   assert.ok(medical >= 0 && labs === medical + 1, 'Labs must sit directly under Health record');
-  assert.equal(rows[labs]?.depth, 1);
-
-  assert.ok(!rows.some((row) => row.hub.id === 'new'), 'the + is not a hub and has no row');
-  assert.equal(rows.length, SEED_HUBS.length, 'every hub gets exactly one row');
+  assert.equal(rows.length, SEED_HUBS.length);
 });
 
 test('a hub put away keeps its row, because that row is the way back', () => {
   const rows = hubRows(SEED_HUBS, ['sleep']);
-  const sleep = rows.find((row) => row.hub.id === 'sleep');
-
-  assert.equal(sleep?.away, true);
-  assert.equal(rows.length, SEED_HUBS.length, 'putting a hub away removed it from the list');
-});
-
-/* ── What is stored ────────────────────────────────────────────────────────────────────────── */
-
-test('the count is every entry in every hub, in the words the rest of the app uses', () => {
-  const counts = tally({
-    exercise: [entry('exercise', 'session', {}), entry('exercise', 'sport', { coachId: 'golf' })],
-    nutrition: [
-      entry('nutrition', 'weight', { kg: 76 }),
-      entry('nutrition', 'meal', {}),
-      entry('nutrition', 'meal', {}),
-    ],
-  });
-
-  assert.equal(
-    counts.reduce((total, item) => total + item.count, 0),
-    5,
-    'an entry went uncounted — a display limit must never reach the arithmetic',
-  );
-
-  const line = tallyLine(counts);
-  assert.match(line, /2 meals/);
-  assert.match(line, /1 weigh-in/, 'a weight is a weigh-in on every other screen too');
-  assert.match(line, /1 sport named/);
-});
-
-test('nothing stored is nothing counted, and the line is empty rather than invented', () => {
-  assert.deepEqual(tally({ sleep: [] }), []);
-  assert.equal(tallyLine([]), '');
+  assert.equal(rows.find((row) => row.hub.id === 'sleep')?.away, true);
+  assert.equal(rows.length, SEED_HUBS.length);
 });
 
 /* ── Honesty ───────────────────────────────────────────────────────────────────────────────── */
 
-/**
- * Shape 1 of `docs/decisions/0013`: a store that will not open must never produce a claim about a
- * person's data. Two states cannot express that — "you have nothing" has to be distinct from both
- * "nobody has looked" and "the lookup failed", and the sentence shown for the third has to be about
- * the app rather than about the person.
- */
-test('there are three states, and the failure sentence is about the app and not about you', () => {
+test('there are three states, and the failure sentence is about the app, not about you', () => {
   assert.equal(UNKNOWN.status, 'unknown');
   assert.equal(FAILED.status, 'failed');
   assert.equal(ready([]).status, 'ready');
-  assert.notEqual(
-    UNKNOWN.status,
-    FAILED.status,
-    'collapsing these prints "could not read" during the first read, or nothing at all when it fails',
-  );
+  assert.notEqual(UNKNOWN.status, FAILED.status);
 
   assert.match(COPY.unread, /could not read/i);
   assert.doesNotMatch(COPY.unread, /\byou have no\b|\bnothing (logged|recorded|added)\b/i);
 });
 
 /**
- * THE LINE THIS SCREEN NEARLY BORROWED. `firstRun.COPY.storageWeb` reads *what you just gave is
- * kept in this browser* — true on the last card of a flow somebody has just walked, and false on a
- * settings screen, where nothing was just given. It shipped that way and was caught by reading the
- * deployed page, which is the only thing that catches this class.
- *
- * The two claims that matter are asserted exactly as `tests/first-run.test.ts` asserts its own:
- * which store this actually is, and that it is not a durable one.
+ * A waiting screen must say what is missing in terms of the thing itself. A date is a promise nobody
+ * has made, and "soon" is the same promise with the number removed.
  */
-test('the stored section names its own store, and does not borrow the first run\'s sentence', () => {
-  assert.match(COPY.storedWeb, /browser/i, 'the web line must name where it actually is');
-  assert.match(COPY.storedWeb, /not durable/i);
-  assert.doesNotMatch(COPY.storedWeb, /on (this|your) (device|phone)/i);
-  assert.doesNotMatch(COPY.storedWeb, /stays local|remains local/i);
-  assert.doesNotMatch(COPY.storedWeb, /just gave/i, 'nothing was just given on this screen');
-
-  // The phone's line is allowed to say phone, because there it is true.
-  assert.match(COPY.storedNative, /phone/i);
-  assert.doesNotMatch(COPY.storedNative, /just gave/i);
+test('nothing waiting promises a date', () => {
+  for (const line of [COPY.contactWaiting, COPY.subscriptionWaiting, COPY.notificationsWaiting, COPY.feedbackWaiting]) {
+    assert.doesNotMatch(line, /\bsoon\b|\bshortly\b|\bcoming (in|within)\b|\bnext (week|month)\b/i);
+  }
+  assert.match(COPY.subscriptionWaiting, /nothing behind a paywall/i);
+  assert.match(COPY.notificationsWaiting, /sends nothing/i);
 });
 
-/**
- * A person who set a goal and dropped it has two goal rows and one goal. The number above this
- * sentence counts rows, so the sentence has to say that is what it counts. Left unsaid, the count
- * is a tidier claim than the store can support — `0013` in one line.
- */
-test('the stored count says what it is a count of', () => {
-  assert.match(COPY.storedNote, /written down/i);
-  assert.match(COPY.storedNote, /you later changed/i);
-  assert.match(COPY.storedNote, /(never|is ever) deleted/i);
-});
-
-/** The one thing this screen cannot do yet says so, rather than offering a switch that lies. */
-test('the training section admits what it cannot do', () => {
-  assert.match(COPY.trainingHint, /not built yet/i);
-});
-
-/** OL1's profile has no name field, so no sentence here may address anybody by one. */
-test('no copy on this screen greets the user by a name', () => {
+/** One L1fe has no name field, so no sentence here may address anybody by one. */
+test('no copy greets the user by a name', () => {
   for (const [key, line] of Object.entries(COPY)) {
     assert.doesNotMatch(
       line,

@@ -1,66 +1,59 @@
 /**
- * Everything the settings screen reads, in one pass, with a third state for "not read yet".
+ * Everything the settings screens read, in one pass, with a third state for "not read yet".
  *
  * **Why this does not call `useHubs`.** That hook is written for the ring, and when the store will
  * not open it leaves the seeded hubs on screen — the right answer there, because an empty ring says
- * *you have no hubs*. Here the same fallback would be a lie of a different shape: this screen also
- * prints which hubs are PUT AWAY, and a failed read of the hidden list would render as *nothing is
+ * *you have no hubs*. Here the same fallback would be a lie of a different shape: these screens also
+ * print which hubs are put away, and a failed read of the hidden list would render as *nothing is
  * put away*, which is a claim about a person made out of a database error. So the read is done here
  * and its failure is a state rather than a default. `docs/decisions/0013`, shape 1.
  *
- * The hook only loads. Every judgement about what may be said lives in `settings.ts`, which is pure
- * and asserted in bare Node — the split `useBioAge` and `bioAge.ts` already make, for the same
- * reason: a decision inside a React effect is a decision nothing can test.
+ * The hook only loads. Every judgement about what may be said lives in `settings.ts` and `rows.ts`,
+ * which are pure and asserted in bare Node — the split `useBioAge` and `bioAge.ts` already make.
  *
- * `useFocusEffect` rather than `useEffect`: adding a hub from here leaves the screen and comes back
- * to it, and the row for the hub just made has to be there when it does.
- *
- * **Briefs are deliberately not read here.** `HubBrief` reads and writes its own, and rendering it
- * is what the coach section does — so a summary loaded here would be a second copy of the same
- * sentence, going stale the moment somebody edited the box beside it.
+ * `useFocusEffect` rather than `useEffect`: the index is returned to after every detail screen, and
+ * the line under each row has to be right when it is.
  */
 
 import { useFocusEffect } from 'expo-router';
 import { useCallback, useRef, useState } from 'react';
 
+import { SPORT_HUB } from '@/application/exercise/sportCoaches';
 import { hubs as defaultHubs } from '@/application/hubs/hubs';
-import { profiles as defaultProfiles } from '@/application/profile/profile';
+import { ageFrom, profiles as defaultProfiles } from '@/application/profile/profile';
 import type { HubEntry } from '@/core/hubs';
 import type { Profile } from '@/core/profile';
-import type { HubDefinition } from '@/ui/hubs/catalog';
-import { mergeHubs } from '@/ui/hubs/mergeHubs';
+import { coachForHub, type HubDefinition } from '@/ui/hubs/catalog';
+import { coachFor, mergeHubs } from '@/ui/hubs/mergeHubs';
 
-import { FAILED, UNKNOWN, ready, type EntriesByHub, type Loaded } from './settings';
+import type { IndexFacts } from './rows';
+import { FAILED, UNKNOWN, goalsHeld, hubRows, ready, sportsFrom, type EntriesByHub, type Loaded } from './settings';
 
 export type SettingsData = {
+  /** Only the briefs that are set. An absent key means no brief, never an unread one. */
+  readonly briefs: Readonly<Record<string, string>>;
   readonly entries: EntriesByHub;
   readonly hidden: readonly string[];
   readonly hubs: readonly HubDefinition[];
+  readonly profile: Profile | null;
 };
 
 export type Settings = {
   readonly data: Loaded<SettingsData>;
   /**
    * Read it all again. Called after every write rather than patching state in place — a screen that
-   * updates its own copy of the store is a screen that can disagree with the store, and these reads
-   * are cheap enough that being right is worth more than being instant.
+   * updates its own copy of the store is a screen that can disagree with the store.
    */
   reload: () => void;
-  /** `null` inside `ready` is a real answer: nobody has ever told this app anything. */
-  readonly profile: Loaded<Profile | null>;
 };
 
 export function useSettings(hubSource = defaultHubs, profileSource = defaultProfiles): Settings {
   const [data, setData] = useState<Loaded<SettingsData>>(UNKNOWN);
-  const [profile, setProfile] = useState<Loaded<Profile | null>>(UNKNOWN);
 
   /**
-   * Which read is the current one.
-   *
-   * A write is followed by a reload, and leaving the screen has to abandon whatever is in flight.
-   * A counter answers both with one mechanism: every start claims the next number, and a read that
-   * comes back holding an old one has been superseded and says nothing. A boolean per effect could
-   * not do the second job, because `reload` is called from outside the effect.
+   * Which read is the current one. A write is followed by a reload, and leaving the screen has to
+   * abandon whatever is in flight; one counter answers both, where a boolean per effect could not,
+   * because `reload` is called from outside the effect.
    */
   const current = useRef(0);
 
@@ -69,44 +62,78 @@ export function useSettings(hubSource = defaultHubs, profileSource = defaultProf
     const latest = () => run === current.current;
 
     void (async () => {
-      const [stored, hidden] = await Promise.all([hubSource.list(), hubSource.hidden()]);
+      const [stored, hidden, profile] = await Promise.all([
+        hubSource.list(),
+        hubSource.hidden(),
+        profileSource.read(),
+      ]);
       const merged = mergeHubs(stored);
 
       const loaded = await Promise.all(
-        merged.map(async (hub) => ({ entries: await hubSource.entries(hub.id), id: hub.id })),
+        merged.map(async (hub) => ({
+          brief: await hubSource.brief(hub.id),
+          entries: await hubSource.entries(hub.id),
+          id: hub.id,
+        })),
       );
       if (!latest()) return;
 
+      const briefs: Record<string, string> = {};
       const entries: Record<string, readonly HubEntry[]> = {};
-      for (const hub of loaded) entries[hub.id] = hub.entries;
+      for (const hub of loaded) {
+        entries[hub.id] = hub.entries;
+        if (hub.brief !== null && hub.brief.length > 0) briefs[hub.id] = hub.brief;
+      }
 
-      setData(ready({ entries, hidden, hubs: merged }));
+      setData(ready({ briefs, entries, hidden, hubs: merged, profile }));
     })().catch(() => {
       // Not back to `unknown`: the lookup HAPPENED and did not work, and the screen says so rather
-      // than sitting empty. Leaving the last good read standing would show answers that may no
-      // longer be there; leaving an empty one would claim there are none.
+      // than sitting empty or claiming there is nothing there.
       if (latest()) setData(FAILED);
     });
-
-    void profileSource
-      .read()
-      .then((found) => {
-        if (latest()) setProfile(ready(found));
-      })
-      .catch(() => {
-        if (latest()) setProfile(FAILED);
-      });
   }, [hubSource, profileSource]);
 
   useFocusEffect(
     useCallback(() => {
       load();
-      // Leaving the screen abandons whatever is still in the air, by making it no longer current.
       return () => {
         current.current += 1;
       };
     }, [load]),
   );
 
-  return { data, profile, reload: load };
+  return { data, reload: load };
+}
+
+/**
+ * What the index says about itself, from one read.
+ *
+ * Pure and separate from the hook so it can be asserted in bare Node, and so the honesty rule is one
+ * function rather than eleven components remembering it: `null` in, `null` out, and every line under
+ * every row disappears until the store has actually answered.
+ */
+export function factsFrom(data: SettingsData, today: Date): IndexFacts {
+  const coached = data.hubs.filter(
+    (hub) => (coachForHub(hub.id, data.hubs) ?? coachFor(hub)) !== undefined,
+  );
+  const rows = hubRows(data.hubs, data.hidden);
+
+  return {
+    coachesTold: coached.filter((hub) => data.briefs[hub.id] !== undefined).length,
+    coachesTotal: coached.length,
+    goals: goalsHeld(data.entries).map((goal) => goal.label),
+    hubsAway: rows.filter((row) => row.away).length,
+    hubsOnRing: rows.filter((row) => !row.away).length,
+    profile:
+      data.profile === null
+        ? null
+        : {
+            age: ageFrom(data.profile.birthYear, today),
+            heightCm: data.profile.heightCm,
+            sex: data.profile.sex,
+          },
+    sports: sportsFrom(data.entries[SPORT_HUB] ?? [])
+      .filter((sport) => sport.named)
+      .map((sport) => sport.label),
+  };
 }
