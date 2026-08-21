@@ -85,12 +85,19 @@ export const GOALS: readonly Choice[] = [
  * coach, which is the same thing the `+` button does and the same code path — `newHub.ts` sets a
  * new hub's `coachId` to its own id, so a new sport arrives with a coach attached.
  */
-export const SPORTS: readonly Choice[] = [
-  { hubId: 'running', id: 'running', label: 'Running' },
-  { hubId: 'gym', id: 'gym', label: 'Gym' },
-  { hubId: 'cycling', id: 'cycling', label: 'Cycling' },
-  { hubId: 'swimming', id: 'swimming', label: 'Swimming' },
-  { hubId: 'golf', id: 'golf', label: 'Golf' },
+/**
+ * **A sport names a coach, not a hub — the owner's call, 2026-08-21.**
+ *
+ * `hubId` is gone from these on purpose. Naming a sport used to build a hub inside Exercise and put
+ * a note in it; the hub then never received a session, because every session goes to `exercise`
+ * with the sport as a field. `coachId` is what a sport actually gives you.
+ */
+export const SPORTS: readonly { coachId: string; id: string; label: string }[] = [
+  { coachId: 'running', id: 'running', label: 'Running' },
+  { coachId: 'strength', id: 'gym', label: 'Gym' },
+  { coachId: 'cycling', id: 'cycling', label: 'Cycling' },
+  { coachId: 'swimming', id: 'swimming', label: 'Swimming' },
+  { coachId: 'golf', id: 'golf', label: 'Golf' },
 ];
 
 export type RecordKind = {

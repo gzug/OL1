@@ -183,12 +183,16 @@ export function FirstRunFlow({ source = defaultProfiles }: { source?: typeof def
   }
 
   async function commitTraining() {
+    /**
+     * **A named sport is recorded on Exercise, not built as a hub inside it.**
+     *
+     * It used to create a hub per sport and drop a note in it. Those hubs never received a session
+     * — every session goes to `exercise` with the sport as a field on the payload — so they were
+     * empty rooms with coaches attached. What naming a sport actually earns you is its coach, and
+     * `sportCoachesFor` reads these entries to know which ones you have.
+     */
     for (const sport of SPORTS.filter((entry) => sports.includes(entry.id))) {
-      if (sport.hubId !== undefined) {
-        await hubs.add(sport.hubId, 'note', {
-          text: 'Named as part of your training when you set up OL1.',
-        });
-      }
+      await hubs.add('exercise', 'sport', { coachId: sport.coachId, label: sport.label });
     }
 
     const name = otherSport.trim();

@@ -194,11 +194,36 @@ export const SEED_HUBS: readonly HubDefinition[] = [
    */
   { coachId: 'longevity', id: 'labs', label: 'Labs', origin: 'builtIn', parentId: 'medical' },
 
-  { coachId: 'running', id: 'running', label: 'Running', origin: 'builtIn', parentId: 'exercise' },
-  { coachId: 'strength', id: 'gym', label: 'Gym', origin: 'builtIn', parentId: 'exercise' },
-  { coachId: 'cycling', id: 'cycling', label: 'Cycling', origin: 'builtIn', parentId: 'exercise' },
-  { coachId: 'swimming', id: 'swimming', label: 'Swimming', origin: 'builtIn', parentId: 'exercise' },
-  { coachId: 'golf', id: 'golf', label: 'Golf', origin: 'builtIn', parentId: 'exercise' },
+];
+
+/**
+ * **The sports are coaches, not hubs — the owner's call, 2026-08-21.**
+ *
+ * Running, Gym, Cycling, Swimming and Golf used to ship as hubs inside Exercise. They were empty
+ * rooms: EVERY session ever logged goes to `exercise` with the sport as a field on the payload, and
+ * a sport hub had never received one. The only thing in them was a note from the first run saying
+ * they had been named.
+ *
+ * Three reasons they stay out, strongest first:
+ *
+ * 1. **Sleep and Nutrition are domains; golf is an activity.** Putting golf on the ring beside
+ *    Sleep says golf is as fundamental to a life as sleeping. The ring is a claim about what a life
+ *    is made of, and every activity added weakens it.
+ * 2. **The ring cannot take them.** `geometry.ts` stops being readable at nineteen places and
+ *    shrinks circles to 21px. Seven is comfortable; twelve truncates the labels.
+ * 3. **Splitting destroys the only question that matters.** "Am I moving enough" is answered by the
+ *    heatmap, the body figure and the week strip, all of which read ONE hub. Across five they each
+ *    show a sparse, discouraging picture and none shows the real one.
+ *
+ * What a sport is instead: a lens on Exercise, and a voice. `SPORT_COACHES` below is the list, and
+ * which of them a person has is an entry on Exercise rather than a room of its own.
+ */
+export const SPORT_COACH_IDS: readonly string[] = [
+  'running',
+  'strength',
+  'cycling',
+  'swimming',
+  'golf',
 ];
 
 /** The hubs in the orbit: top level only. Exercise types live inside Activity, not on the ring. */
