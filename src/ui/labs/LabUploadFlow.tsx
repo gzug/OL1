@@ -58,7 +58,7 @@ import {
  * pushes people into the failure below it.
  */
 function today(): string {
-  return '2026-08-03';
+  return new Date().toISOString().slice(0, 10);
 }
 
 export function LabUploadFlow() {
@@ -178,7 +178,6 @@ export function LabUploadFlow() {
               accessibilityLabel="Date the panel was drawn"
               keyboardType="numbers-and-punctuation"
               onChangeText={setTestDate}
-              {/* The format, not an example date — the error below names the same shape. */}
               placeholder="YYYY-MM-DD"
               placeholderTextColor={colors.textSubtle}
               style={[styles.input, { borderColor: colors.hairline, color: colors.text }]}
