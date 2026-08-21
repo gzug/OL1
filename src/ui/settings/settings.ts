@@ -268,7 +268,7 @@ export function tallyLine(counts: readonly Tally[]): string {
  */
 export const COPY = {
   aboutHint:
-    'The year is what a biological age is worked out against — without it there is no number at all. Each one saves as you leave the box.',
+    'The year is what a biological age is worked out against — without it there is no number at all. Everything here saves as you change it.',
   aboutTitle: 'ABOUT YOU',
   addHub: 'Add a hub of your own',
   ageSuffix: 'years old',
@@ -279,7 +279,7 @@ export const COPY = {
   goalsTitle: 'WHAT YOU WANT',
   hubsHint: 'What is on your ring. Putting one away keeps everything in it.',
   hubsTitle: 'YOUR HUBS',
-  intro: 'The same questions the first run asks. Change any answer, any time.',
+  intro: 'The questions the first run asks, and your answers as they stand.',
   keepIt: 'Keep it',
   noBrief: 'Tell it how to work with you',
   onTheRing: 'On the ring',
