@@ -2,6 +2,11 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 
 import { isUsable, parseReport } from '../src/application/labs/parseReport';
+import { REQUIRED_MARKERS } from '../src/application/labs/phenoAge';
+import {
+  CHOLESTEROL_MMOLL_TO_MGDL,
+  TRIGLYCERIDES_MMOLL_TO_MGDL,
+} from '../src/application/labs/units';
 
 /**
  * Fixtures are INVENTED layouts in the shape a report takes, with values chosen to be ordinary.
@@ -213,4 +218,106 @@ test('nothing in an empty or unrelated document is invented', () => {
   const { findings, missing } = parseReport('This is a letter about an appointment.');
   assert.deepEqual(findings, []);
   assert.equal(missing.length, 9);
+});
+
+/**
+ * A lipid panel in the mmol/L that everywhere outside the United States prints.
+ *
+ * INVENTED values like every other fixture here, in the column layout a real report uses — the
+ * ratio row included, because it sits directly under the two values it is built from and that
+ * position is the whole trap.
+ */
+const LIPIDS = `
+LIPID STUDIES               Result   Units       Reference
+Total Cholesterol           5.2      mmol/L      < 5.5
+Triglycerides               1.7      mmol/L      < 2.0
+HDL Cholesterol             1.4      mmol/L      > 1.0
+LDL Cholesterol             3.1      mmol/L      < 3.4
+LDL/HDL Ratio               2.2
+Apolipoprotein B            0.9      g/L         < 1.0
+Lp(a)                       50       nmol/L      < 75
+
+Vitamin D                   75       nmol/L      50 - 150
+HbA1c                       5.3      %           4.0 - 6.0
+`;
+
+/**
+ * The eight markers the age calculation does not read arrived with rules and no fixture, so
+ * nothing here had ever run one of them.
+ *
+ * They convert through `extraToTargetUnit`, never `toTargetUnit` — the two tables share no keys,
+ * and a lipid sent to the wrong one asks for a unit that is not there.
+ */
+test('the markers the formula does not read are found, and converted by their own table', () => {
+  const { findings } = parseReport(LIPIDS);
+  const find = (key: string) => findings.find((item) => item.key === key);
+
+  assert.equal(findings.length, 8, 'all eight, and nothing read out of the ratio row');
+
+  assert.equal(find('total_cholesterol')?.asPrinted, 5.2);
+  assert.equal(find('hdl')?.asPrinted, 1.4);
+  assert.equal(find('hba1c')?.asPrinted, 5.3);
+  assert.equal(find('lpa')?.asPrinted, 50);
+
+  assert.equal(find('apob')?.converted, 90, '0.9 g/L is exactly 90 mg/dL');
+  assert.equal(find('vitamin_d')?.converted, 75 / 2.496);
+  assert.equal(find('ldl')?.converted, 3.1 * CHOLESTEROL_MMOLL_TO_MGDL);
+
+  // The factor that proves which table answered. Cholesterol's own would put this out by 2.3x.
+  assert.equal(
+    find('triglycerides')?.converted,
+    1.7 * TRIGLYCERIDES_MMOLL_TO_MGDL,
+    'triglycerides were converted by the wrong table, or by none',
+  );
+});
+
+/**
+ * **What `missing` means, held by a test rather than by care.**
+ *
+ * The review screen shows nine fixed rows and has to name the empty ones. A panel carrying no
+ * Lp(a) is an ordinary panel, not one with a gap to fill — so a marker the formula does not read
+ * is never missing, whether the report holds it or not. Widened, this list would turn a complete
+ * blood count into a list of things somebody failed to have.
+ */
+test('a marker the formula does not read is never missing', () => {
+  const reads = new Set<string>(REQUIRED_MARKERS);
+
+  const rich = parseReport(LIPIDS);
+  assert.equal(rich.missing.length, 9, 'a full lipid panel still has all nine markers absent');
+  for (const key of rich.missing) {
+    assert.ok(reads.has(key), `"${key}" is not a marker the formula reads`);
+  }
+
+  for (const key of parseReport('Albumin 4.5 g/dL').missing) {
+    assert.ok(reads.has(key), `an absent "${key}" was reported as a gap to fill`);
+  }
+});
+
+/**
+ * **A ratio row is not a result**, and the guard has to sit on the correct side of the name.
+ *
+ * A ratio only ever puts its slash in FRONT of the second marker, which no lookahead can see —
+ * `LDL/HDL 2.2` was read as an HDL of 2.2. And the guard on the other side was `[/:]`, which also
+ * ate the plainest separator a report prints: `HDL: 1.4` matched nothing at all.
+ */
+test('a ratio row is not read as a cholesterol, and a colon still separates', () => {
+  for (const ratio of ['LDL/HDL Ratio 2.2', 'LDL/HDL 2.2', 'Chol/HDL 3.5', 'Quotient LDL/HDL 2,2']) {
+    assert.deepEqual(parseReport(ratio).findings, [], `a value was read out of "${ratio}"`);
+  }
+
+  const colon = parseReport('HDL: 1.4 mmol/L\nLDL: 3.1 mmol/L');
+  assert.equal(colon.findings.find((item) => item.key === 'hdl')?.asPrinted, 1.4);
+  assert.equal(colon.findings.find((item) => item.key === 'ldl')?.asPrinted, 3.1);
+});
+
+/**
+ * `Lp(a)` is how a report writes it, and it matched nothing at all: a word boundary after the
+ * closing bracket can never hold, because neither side of it is a word character. The written-out
+ * `Lipoprotein (a)` matched perfectly well and hid it.
+ */
+test('Lp(a) is read in the spelling reports actually use', () => {
+  for (const spelling of ['Lp(a) 50 nmol/L', 'Lp (a) 50 nmol/L', 'Lipoprotein (a) 50 nmol/L']) {
+    const lpa = parseReport(spelling).findings.find((item) => item.key === 'lpa');
+    assert.equal(lpa?.asPrinted, 50, spelling);
+  }
 });
