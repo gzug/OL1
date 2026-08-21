@@ -97,3 +97,37 @@ test('the gap between draws is measured and said in words', () => {
   assert.equal(apartInWords(181), 'about 6 months apart');
   assert.equal(apartInWords(760), 'about 2 years apart');
 });
+
+/**
+ * **A lipid moving between panels is the change most worth seeing**, and it was absent from this
+ * comparison entirely until the panel learned to hold one. Two panels apart, cholesterol is usually
+ * the thing somebody is actually watching.
+ */
+test('a lipid is compared like anything else, in its own unit', () => {
+  const before = { ...PANEL, ldl: 130, triglycerides: 150 };
+  const after = { ...PANEL, ldl: 105, triglycerides: 148 };
+
+  const { changes } = comparePanels(
+    at(before, '2026-02-01T00:00:00.000Z'),
+    at(after, '2026-08-01T00:00:00.000Z'),
+  );
+
+  const ldl = changes.find((change) => change.key === 'ldl');
+  assert.equal(ldl?.direction, 'down');
+  assert.equal(ldl?.notable, true, 'a fifth is well past the threshold');
+  assert.equal(ldl?.unit, 'mg/dL');
+
+  const tg = changes.find((change) => change.key === 'triglycerides');
+  assert.equal(tg?.notable, false, 'two points in 150 is noise, not a direction');
+});
+
+/** And a panel with no lipids on it produces no lipid rows, rather than eight empty ones. */
+test('a panel without a lipid profile says nothing about lipids', () => {
+  const { changes } = comparePanels(
+    at(PANEL, '2026-02-01T00:00:00.000Z'),
+    at(PANEL, '2026-08-01T00:00:00.000Z'),
+  );
+
+  assert.ok(!changes.some((change) => change.key === 'ldl'));
+  assert.equal(changes.length, 9, 'exactly the nine that are there');
+});

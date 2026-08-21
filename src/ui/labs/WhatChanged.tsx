@@ -9,6 +9,7 @@ import {
   type PanelComparison,
 } from '@/application/labs/panelChange';
 import { LEVINE_MARKERS } from '@/ui/labs/levine';
+import { EXTRA_MARKERS } from '@/ui/labs/lipids';
 import { fontFamily, lineHeights, radius, spacing, tracking, typography, useTheme } from '@/ui/theme';
 
 /**
@@ -22,8 +23,14 @@ import { fontFamily, lineHeights, radius, spacing, tracking, typography, useThem
  * are different claims, and the closing line says plainly what two points can and cannot support.
  */
 
+/**
+ * Every marker's name, the nine and the rest.
+ *
+ * A lipid moving between two panels is the change most worth seeing — cholesterol is usually the
+ * thing somebody is watching — and it used to be absent from this comparison altogether.
+ */
 const LABEL: Readonly<Record<string, string>> = Object.fromEntries(
-  LEVINE_MARKERS.map((marker) => [marker.key, marker.label]),
+  [...LEVINE_MARKERS, ...EXTRA_MARKERS].map((marker) => [marker.key, marker.label]),
 );
 
 /** At most two decimals, no trailing zeroes — a converted value is rarely the decimal it looks like. */

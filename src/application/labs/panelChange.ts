@@ -15,7 +15,35 @@
  */
 
 import { REQUIRED_MARKERS } from './phenoAge';
-import { TARGET_UNIT, type LevineMarkerKey } from './units';
+import {
+  EXTRA_TARGET_UNIT,
+  TARGET_UNIT,
+  type ExtraUnitKey,
+  type LevineMarkerKey,
+} from './units';
+
+/**
+ * Every marker a panel can hold, the nine first.
+ *
+ * **Read from `EXTRA_TARGET_UNIT` rather than imported from `ui/labs/lipids`.** An application
+ * module reaching into the UI layer is backwards, and `phenoAge.ts` used to do exactly that before
+ * it was corrected — the unit table is the honest source for "which markers exist" down here.
+ *
+ * A lipid moving between panels is the change most worth seeing, and it was absent from this
+ * comparison entirely until now: two panels apart, cholesterol is the thing a person is usually
+ * watching.
+ */
+const COMPARABLE: readonly (ExtraUnitKey | LevineMarkerKey)[] = [
+  ...REQUIRED_MARKERS,
+  ...(Object.keys(EXTRA_TARGET_UNIT) as ExtraUnitKey[]),
+];
+
+/** The unit a marker is stored in, whichever table owns it. */
+function unitOf(key: ExtraUnitKey | LevineMarkerKey): string {
+  return Object.prototype.hasOwnProperty.call(TARGET_UNIT, key)
+    ? TARGET_UNIT[key as LevineMarkerKey]
+    : EXTRA_TARGET_UNIT[key as ExtraUnitKey];
+}
 
 /**
  * How much a marker has to move before the change is worth showing as a direction rather than as
@@ -36,7 +64,7 @@ export type MarkerChange = {
   /** `null` when the marker was on only one of the two panels. */
   readonly direction: 'down' | 'same' | 'up' | null;
   readonly from: number | null;
-  readonly key: LevineMarkerKey;
+  readonly key: ExtraUnitKey | LevineMarkerKey;
   /** True only when the move clears `MEANINGFUL_CHANGE`. Small moves are shown, never described. */
   readonly notable: boolean;
   readonly to: number | null;
@@ -48,7 +76,7 @@ export type PanelComparison = {
   /** Whole days between the two draws. A change over six days is a different claim to one over a year. */
   readonly daysApart: number;
   /** Markers on exactly one of the two panels, so the screen can say why a row is half empty. */
-  readonly onlyOnOne: readonly LevineMarkerKey[];
+  readonly onlyOnOne: readonly (ExtraUnitKey | LevineMarkerKey)[];
 };
 
 function daysBetween(earlier: string, later: string): number {
@@ -65,9 +93,9 @@ export function comparePanels(
   later: { markers: Readonly<Record<string, unknown>>; recordedAt: string },
 ): PanelComparison {
   const changes: MarkerChange[] = [];
-  const onlyOnOne: LevineMarkerKey[] = [];
+  const onlyOnOne: (ExtraUnitKey | LevineMarkerKey)[] = [];
 
-  for (const key of REQUIRED_MARKERS) {
+  for (const key of COMPARABLE) {
     const from = earlier.markers[key];
     const to = later.markers[key];
     const hasFrom = usable(from);
@@ -83,7 +111,7 @@ export function comparePanels(
         key,
         notable: false,
         to: hasTo ? to : null,
-        unit: TARGET_UNIT[key],
+        unit: unitOf(key),
       });
       continue;
     }
@@ -96,7 +124,7 @@ export function comparePanels(
       key,
       notable: Math.abs(move) >= MEANINGFUL_CHANGE,
       to,
-      unit: TARGET_UNIT[key],
+      unit: unitOf(key),
     });
   }
 
