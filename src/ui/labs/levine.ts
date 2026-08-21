@@ -22,7 +22,10 @@
  * cannot disagree about what `mg/dL` means.
  */
 import {
+  ALTERNATE_UNIT,
+  EXTRA_ALTERNATE_UNIT,
   TARGET_UNIT,
+  boundsIn,
   extraToTargetUnit,
   toTargetUnit,
   type ExtraUnitKey,
@@ -35,7 +38,7 @@ import {
  * Derived from `TARGET_UNIT` rather than listed again — a tenth marker added to the formula would
  * otherwise be validated against the wrong table until somebody remembered this line.
  */
-function isLevineKey(key: ExtraUnitKey | LevineMarkerKey): key is LevineMarkerKey {
+export function isLevineKey(key: PanelMarkerKey): key is LevineMarkerKey {
   return Object.prototype.hasOwnProperty.call(TARGET_UNIT, key);
 }
 
@@ -77,7 +80,7 @@ export const LEVINE_MARKERS: readonly MarkerDefinition[] = [
 export type LabSource = 'file' | 'manual' | 'photo';
 
 export type MarkerEntry = {
-  readonly key: LevineMarkerKey;
+  readonly key: PanelMarkerKey;
   /** What the user typed, kept as text so a half-typed number is not silently a different one. */
   readonly text: string;
 };
@@ -116,6 +119,32 @@ export function markerProblem(
   if (value < marker.sane.min || value > marker.sane.max) return 'outsideSane';
 
   return null;
+}
+
+/**
+ * The other unit a laboratory might have printed, whichever table owns this marker.
+ *
+ * One lookup rather than two at every call site: the split between the nine and the rest is a real
+ * boundary in the data, and a UI row asking "what else might this be written in" does not care
+ * which side of it a marker sits on.
+ */
+export function alternateUnitFor(key: PanelMarkerKey): string | undefined {
+  return isLevineKey(key) ? ALTERNATE_UNIT[key] : EXTRA_ALTERNATE_UNIT[key];
+}
+
+/** The sane range restated in whichever unit is being typed. Null where no conversion exists. */
+export function boundsFor(
+  marker: MarkerDefinition,
+  unit: string,
+): { max: number; min: number } | null {
+  if (isLevineKey(marker.key)) return boundsIn(marker.key, marker.sane, unit);
+
+  const perUnit = extraToTargetUnit(marker.key, 1, unit);
+  if (perUnit === null || perUnit === 0) return null;
+
+  const ends = [marker.sane.min / perUnit, marker.sane.max / perUnit].sort((a, b) => a - b);
+  const tidy = (value: number) => Math.round(value * 100) / 100;
+  return { max: tidy(ends[1] as number), min: tidy(ends[0] as number) };
 }
 
 export function problemMessage(marker: MarkerDefinition, problem: MarkerProblem): string {

@@ -372,8 +372,9 @@ function MarkerRow({
   unit: string;
 }) {
   const problem = markerProblem(marker, text, unit);
-  const alternate = ALTERNATE_UNIT[marker.key];
-  const shown = boundsIn(marker.key, marker.sane, unit) ?? marker.sane;
+  /* Whichever table owns this marker. A row does not care which side of the split it is on. */
+  const alternate = alternateUnitFor(marker.key);
+  const shown = boundsFor(marker, unit) ?? marker.sane;
 
   return (
     <View style={[styles.markerRow, { borderTopColor: colors.borderSubtle }]}>
