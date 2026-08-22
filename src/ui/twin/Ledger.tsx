@@ -7,7 +7,7 @@ import { ledgerFooter, ledgerLines, type LedgerLine } from '@/application/hubs/l
 import type { HubEntry } from '@/core/hubs';
 import { day, isHeld, kindWords, sourceWords } from '@/ui/hubs/entryWords';
 import { useHubs } from '@/ui/hubs/useHubs';
-import { fontFamily, lineHeights, spacing, typography, useTheme } from '@/ui/theme';
+import { fontFamily, lineHeights, radius, spacing, typography, useTheme } from '@/ui/theme';
 
 /**
  * Everything you have told this app, wherever you told it.
@@ -18,6 +18,12 @@ import { fontFamily, lineHeights, spacing, typography, useTheme } from '@/ui/the
  *
  * It replaces a four-row fixture whose footer read "Showing 4 of 148" with 148 invented. A footer
  * that names a total has to be able to stand behind it.
+ *
+ * **It carries its own heading, and that is not a layout preference.** The Twin used to wrap this in
+ * a titled section with a card behind it, so a person who had recorded nothing got the word LEDGER
+ * over an empty white box — a heading over an empty section, which this repository has a rule
+ * against and which reached the deployed screen anyway. Owning the heading is what lets the whole
+ * block disappear together.
  */
 
 /** Enough to be a record, few enough to stay a summary. `ledgerFooter` names what is beyond it. */
@@ -68,6 +74,8 @@ export function Ledger({ source = defaultHubs }: { source?: typeof defaultHubs }
 
   return (
     <View style={styles.block}>
+      <Text style={[styles.heading, { color: colors.textSubtle }]}>LEDGER</Text>
+      <View style={[styles.card, { backgroundColor: colors.surface }]}>
       {state.lines.map((line, index) => (
         <Fragment key={line.id}>
           {index > 0 && <View style={[styles.rule, { backgroundColor: colors.borderSubtle }]} />}
@@ -87,6 +95,7 @@ export function Ledger({ source = defaultHubs }: { source?: typeof defaultHubs }
       {footer !== null && (
         <Text style={[styles.footer, { color: colors.textSubtle }]}>{footer}</Text>
       )}
+      </View>
     </View>
   );
 }
@@ -96,7 +105,15 @@ function capitalise(word: string): string {
 }
 
 const styles = StyleSheet.create({
-  block: { marginTop: spacing.sm },
+  block: { marginTop: 26 },
+  card: { borderRadius: radius.md, marginBottom: spacing.sm, padding: spacing.md },
+  heading: {
+    fontFamily: fontFamily.strong,
+    fontSize: 11,
+    letterSpacing: 0.9,
+    marginBottom: spacing.sm,
+    textTransform: 'uppercase',
+  },
   date: { fontFamily: fontFamily.body, fontSize: typography.caption, minWidth: 58 },
   entry: { fontFamily: fontFamily.body, fontSize: typography.bodySmall },
   footer: {

@@ -108,6 +108,30 @@ test('the age is worked out from the year, and the year is kept for the editor',
   assert.equal(state.birthYear, 1990, 'the editor has nothing to show back without it');
 });
 
+/**
+ * A HEADING OVER AN EMPTY SECTION, found on the deployed screen. `Ledger` returns null when nothing
+ * has been recorded, but the Twin wrapped it in a titled section with a card behind it — so somebody
+ * who had logged nothing got the word LEDGER over an empty white box. It owns its heading now, so
+ * the whole block leaves together.
+ */
+test('the ledger heading belongs to the ledger, so an empty one takes it with it', () => {
+  const twin = readFileSync(TWIN, 'utf8');
+  const ledger = readFileSync(
+    new URL('../src/ui/twin/Ledger.tsx', import.meta.url).pathname,
+    'utf8',
+  );
+
+  assert.ok(
+    !/<Section title="Ledger">/.test(twin),
+    'the Twin is titling the ledger again, so an empty one keeps its heading',
+  );
+  assert.ok(/LEDGER/.test(ledger), 'the ledger no longer carries its own heading');
+  assert.ok(
+    /if \(state === null \|\| state\.lines\.length === 0\) return null;/.test(ledger),
+    'the ledger stopped disappearing when it has nothing to show',
+  );
+});
+
 /** One L1fe has no name field, so nothing on this screen may address anybody by one. */
 test('no copy on the Twin greets the user by a name', () => {
   const source = readFileSync(TWIN, 'utf8');

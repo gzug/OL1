@@ -133,11 +133,9 @@ export function TwinMockup() {
       {/* Was four invented rows under a footer reading "Showing 4 of 148", where 148 was a number
           nobody could stand behind. `Ledger` renders nothing at all until something is logged, so a
           person who has recorded nothing sees no section rather than somebody else's history. */}
-      <Section title="Ledger">
-        <View style={[styles.card, { backgroundColor: colors.surface }]}>
-          <Ledger />
-        </View>
-      </Section>
+      {/* No wrapper. `Ledger` owns its heading so that an empty one takes the heading with it —
+          the word LEDGER over an empty white box reached the deployed screen once. */}
+      <Ledger />
 
     </ScrollView>
   );
