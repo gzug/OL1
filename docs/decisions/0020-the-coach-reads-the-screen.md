@@ -60,6 +60,37 @@ can undo that, because nothing downstream formats a number.
   same things live inside `.tsx` files, which a prompt cannot import and bare Node cannot assert.
   Two copies exist and can drift.
 
+### The one score, deliberately not carried
+
+The Nutrition hub prints a weekly logging score — `100 out of 100` in a seeded preview, from three
+meals across three days. **It does not reach a coach**, and it is the one thing on a hub screen that
+is deliberately left behind.
+
+`summaries.ts` already refused it for the Twin, and the reason transfers exactly: *"a score computed
+from three of twelve meals is a number that looks like a judgement of a week it did not see. It
+belongs on the Nutrition hub, where the meals it is drawn from are visible directly underneath."* In
+a prompt it is separated from those meals by definition. `0009` allows exactly one score and says
+what it is — **how much you logged, never how you are doing** — and a coach saying *"your week
+scored 100"* is the second reading, whatever the caption underneath said.
+
+### The one thing a coach knows that no screen shows
+
+**A note on Health record reaches a coach and is displayed nowhere in the app.** The first run asks
+*"anything you live with"* and files the answer as a `note` on `medical`, verbatim. `medicalPeriods`
+reads conditions and medications and not notes; `StoredEntries` prints a date and a provenance and
+not the text. Nothing in `src/ui/` renders `payload.text` at all — checked, not assumed.
+
+It is carried anyway, because the owner was explicit on 2026-08-22: *"everything that is in the
+onboarding ALWAYS needs to be remembered by all coaches."* Everything else onboarding collects is
+visible somewhere a person can reach — goals and sports on `/settings/profile` and
+`/settings/goals`, the profile on the Twin — so this is the single crack in the rule, and it is
+named here rather than discovered later.
+
+**The fix is not in this change.** It is one block on the Health record screen showing what somebody
+wrote, which sits in files this session does not own. Until then, a coach can repeat a sentence back
+that the person cannot find anywhere in the app — which is a smaller version of exactly the failure
+this whole note is written against.
+
 ## What the coaches may read — the owner's call, 2026-08-22
 
 Asked whether a coach should see only its own hub, he answered in three parts:
