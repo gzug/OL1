@@ -1,6 +1,6 @@
 import { Link, useFocusEffect, useRouter } from 'expo-router';
 import { useCallback, useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, View, type TextStyle } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { coachChat } from '@/application/chat/coachChat';
 import { hubs } from '@/application/hubs/hubs';
@@ -10,6 +10,7 @@ import type { Attachment } from '@/core/attachments';
 import { ChatBar } from '@/ui/chat/ChatBar';
 import { RecentThreads } from '@/ui/chat/RecentThreads';
 import { Heatmap } from '@/ui/exercise/Heatmap';
+import { SessionCockpit } from '@/ui/exercise/SessionCockpit';
 import { KidneyFunction } from '@/ui/labs/KidneyFunction';
 import { PanelAge } from '@/ui/labs/PanelAge';
 import { MarkerJourney } from '@/ui/labs/MarkerJourney';
@@ -26,18 +27,34 @@ import { childHubs } from '@/ui/hubs/catalog';
 import { HubBrief } from '@/ui/hubs/HubBrief';
 import { HideHub } from '@/ui/hubs/HideHub';
 import { SAMPLE_DATA_LINE } from '@/ui/hubs/hubState';
-import type { CockpitPeriod, DayBar, FacetState, HubState } from '@/ui/hubs/hubState';
+import { Period, SectionLabel, tabularNums } from '@/ui/hubs/Period';
+import type { DayBar, FacetState, HubState } from '@/ui/hubs/hubState';
 import {
   fontFamily,
   lineHeights,
-  numerals,
   radius,
   spacing,
-  tracking,
   typography,
   useTheme,
   type ThemeColors,
 } from '@/ui/theme';
+
+
+/**
+ * `numerals.tabular` is declared `as const`, so its `fontVariant` is a readonly tuple and RN's
+ * `TextStyle` wants a mutable array. Spread once here rather than reaching into the token file.
+ */
+/**
+ * What a hub's week is counted in.
+ *
+ * Per hub rather than per screen, because "4 of 7 days" means meals in Nutrition and sessions in
+ * Exercise, and a hub with no kind listed has nothing weekly to say yet.
+ */
+const ENTRY_KIND: Readonly<Record<string, string>> = {
+  exercise: 'session',
+  labs: 'panel',
+  nutrition: 'meal',
+};
 
 /**
  * A hub's own screen.
@@ -66,24 +83,6 @@ import {
  * Serif carries the one interpretation on the screen; sans carries every fact, with tabular numerals
  * on anything counted so digits do not jitter between renders.
  */
-
-/**
- * `numerals.tabular` is declared `as const`, so its `fontVariant` is a readonly tuple and RN's
- * `TextStyle` wants a mutable array. Spread once here rather than reaching into the token file.
- */
-const tabularNums: TextStyle = { fontVariant: [...numerals.tabular.fontVariant] };
-
-/**
- * What a hub's week is counted in.
- *
- * Per hub rather than per screen, because "4 of 7 days" means meals in Nutrition and sessions in
- * Exercise, and a hub with no kind listed has nothing weekly to say yet.
- */
-const ENTRY_KIND: Readonly<Record<string, string>> = {
-  exercise: 'session',
-  labs: 'panel',
-  nutrition: 'meal',
-};
 
 export function HubScreen({
   coach,
@@ -208,6 +207,9 @@ export function HubScreen({
         {/* Exercise only. Twelve weeks of squares answers "am I being consistent", which is a
             question about training and not about meals or blood panels — a panel arrives every few
             months and would draw eleven and a half empty weeks. */}
+        {/* Exercise only, and above the line because it is real. The first cockpit built from
+            somebody's own sessions — see `src/ui/exercise/cockpit.ts` for what it refuses to say. */}
+        {hub.id === 'exercise' && <SessionCockpit hubId={hub.id} />}
         {hub.id === 'exercise' && <Heatmap hubId={hub.id} />}
 
         {/* Nutrition only, and only once meals exist. The one score in the app — see
@@ -443,35 +445,6 @@ export function HubScreen({
   );
 }
 
-function Period({ colors, period }: { colors: ThemeColors; period: CockpitPeriod }) {
-  return (
-    <>
-      <SectionLabel colors={colors} label={period.label} />
-      <View>
-        {period.rows.map((row, index) => (
-          <View
-            key={row.label}
-            style={[
-              styles.dataRow,
-              index > 0 && {
-                borderTopColor: colors.borderSubtle,
-                borderTopWidth: StyleSheet.hairlineWidth,
-              },
-            ]}>
-            <View style={styles.dataLeft}>
-              <Text style={[styles.dataLabel, { color: colors.text }]}>{row.label}</Text>
-              {/* The date is half the row. A number carrying an old date reads as today's result
-                  until the reader checks, which is the trap the drift number's caption defuses. */}
-              <Text style={[styles.dataWhen, { color: colors.textSubtle }]}>{row.when}</Text>
-            </View>
-            <Text style={[styles.dataValue, { color: colors.text }, tabularNums]}>{row.value}</Text>
-          </View>
-        ))}
-      </View>
-    </>
-  );
-}
-
 /**
  * Seven bars, no axis and no numbers. The strip is for rhythm and gaps, and a bar you could read an
  * exact value off would be making a claim the caption underneath already makes better.
@@ -513,10 +486,6 @@ function Dot({ colors, state }: { colors: ThemeColors; state: FacetState }) {
         : { borderColor: colors.hairline, borderWidth: 1 };
 
   return <View style={[styles.dot, style]} />;
-}
-
-function SectionLabel({ colors, label }: { colors: ThemeColors; label: string }) {
-  return <Text style={[styles.sectionLabel, { color: colors.textSubtle }]}>{label}</Text>;
 }
 
 const styles = StyleSheet.create({
@@ -574,29 +543,6 @@ const styles = StyleSheet.create({
   contributeText: {
     fontFamily: fontFamily.medium,
     fontSize: typography.bodySmall,
-  },
-  dataLabel: {
-    fontFamily: fontFamily.body,
-    fontSize: typography.bodySmall,
-  },
-  dataLeft: {
-    flex: 1,
-    paddingRight: spacing.md,
-  },
-  dataRow: {
-    alignItems: 'center',
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    paddingVertical: spacing.sm,
-  },
-  dataValue: {
-    fontFamily: fontFamily.semi,
-    fontSize: typography.body,
-  },
-  dataWhen: {
-    fontFamily: fontFamily.body,
-    fontSize: typography.micro,
-    marginTop: 1,
   },
   dot: {
     borderRadius: 4,
@@ -662,14 +608,6 @@ const styles = StyleSheet.create({
   secondaryText: {
     fontFamily: fontFamily.body,
     fontSize: typography.caption,
-  },
-  sectionLabel: {
-    fontFamily: fontFamily.medium,
-    fontSize: typography.micro,
-    letterSpacing: tracking.wide,
-    marginBottom: spacing.xs,
-    marginTop: spacing.lg,
-    textTransform: 'uppercase',
   },
   title: {
     fontFamily: fontFamily.semi,
