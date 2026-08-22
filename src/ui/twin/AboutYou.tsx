@@ -2,25 +2,40 @@ import { useFocusEffect } from 'expo-router';
 import { useCallback, useState } from 'react';
 import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 
-import { ageFrom, plausibleBirthYear, profiles as defaultProfiles } from '@/application/profile/profile';
+import {
+  plausibleBirthYear,
+  plausibleHeightCm,
+  profiles as defaultProfiles,
+} from '@/application/profile/profile';
 import type { Sex } from '@/core/profile';
+import {
+  NOT_READ,
+  aboutYouFrom,
+  summaryLine,
+  type AboutYouState,
+} from '@/ui/twin/aboutYou';
 import { fontFamily, lineHeights, radius, spacing, tracking, typography, useTheme } from '@/ui/theme';
 
 /**
- * The two things the Twin needs to know about you.
+ * The three things the Twin needs to know about you.
  *
  * **A birth year, because without it there is no biological age at all** — the calculation takes
- * chronological age as an input and returns null without one. And a sex, because the figure draws
- * one; the owner asked for male for now and for the female figure to follow a setting, and this is
- * that setting arriving before the second figure does.
+ * chronological age as an input and returns null without one. A sex, because the figure draws one.
+ * And a height, which arrived here on 2026-08-22 when the invented person block above it was
+ * deleted: it was the one fact on that block worth keeping and the only one not already on screen.
  *
- * **Two questions, and both may be skipped.** Legacy's profile grew a display name, a timezone,
- * four unit preferences, allergies, chronic diseases and supplements — an identity that became a
- * medical record. Anything of that kind belongs in the Health record hub as an entry somebody
- * chose to make, not as a field on a form nobody asked to fill in.
+ * **Every answer may be skipped.** Legacy's profile grew a display name, a timezone, four unit
+ * preferences, allergies, chronic diseases and supplements — an identity that became a medical
+ * record. Anything of that kind belongs in the Health record hub as an entry somebody chose to make.
  *
- * It sits on the Twin rather than behind a settings screen because this is the only place either
- * answer is used, and a setting two taps from the thing it changes is a setting nobody finds.
+ * **It says nothing at all until the store has answered.** This block held one `null` for three
+ * different things — not read yet, read failed, and no profile — and printed the same invitation for
+ * all three, so a database error asked somebody for a birth year they had already given. That
+ * judgement now lives in `aboutYou.ts` where bare Node can hold it; `docs/decisions/0013`, shape 1.
+ *
+ * It sits on the Twin rather than behind a settings screen because this is where both answers are
+ * used, and a setting two taps from the thing it changes is a setting nobody finds. Settings shows
+ * the same fields; both write through `profiles`, so there is one store and no second copy.
  */
 
 const SEXES: readonly { id: Sex; label: string }[] = [
@@ -33,9 +48,13 @@ const SEXES: readonly { id: Sex; label: string }[] = [
 export function AboutYou({ source = defaultProfiles }: { source?: typeof defaultProfiles }) {
   const { colors } = useTheme();
   const [open, setOpen] = useState(false);
-  const [year, setYear] = useState('');
-  const [sex, setSex] = useState<Sex>('male');
-  const [saved, setSaved] = useState<{ birthYear: number | null; sex: Sex } | null>(null);
+  const [state, setState] = useState<AboutYouState>(NOT_READ);
+
+  /** Null means untouched, so a reload shows through rather than being overwritten by stale text. */
+  const [year, setYear] = useState<string | null>(null);
+  const [height, setHeight] = useState<string | null>(null);
+  /** Null until somebody taps: a highlighted pill reads as a choice already made. */
+  const [sex, setSex] = useState<Sex | null>(null);
 
   useFocusEffect(
     useCallback(() => {
@@ -43,13 +62,12 @@ export function AboutYou({ source = defaultProfiles }: { source?: typeof default
       void source
         .read()
         .then((profile) => {
-          if (cancelled || profile === null) return;
-          setSaved({ birthYear: profile.birthYear, sex: profile.sex });
-          setYear(profile.birthYear === null ? '' : String(profile.birthYear));
-          setSex(profile.sex);
+          if (!cancelled) setState(aboutYouFrom(profile, new Date()));
         })
         .catch(() => {
-          // Unreadable store leaves the form empty, which is the same as never having answered.
+          /* Back to knowing nothing. It used to leave the invitation standing, so a store that would
+             not open asked somebody for a year they had already given. */
+          if (!cancelled) setState(NOT_READ);
         });
       return () => {
         cancelled = true;
@@ -57,28 +75,44 @@ export function AboutYou({ source = defaultProfiles }: { source?: typeof default
     }, [source]),
   );
 
+  const known = state.status === 'known' ? state : null;
+  const storedSex: Sex = known === null ? 'preferNotToSay' : known.sex;
+  const chosenSex = sex ?? (known === null ? null : known.sex);
+
+  const storedYear = known === null ? null : known.birthYear;
+  const storedHeight = known === null ? null : known.heightCm;
+  const yearText = year ?? (storedYear === null ? '' : String(storedYear));
+  const heightText = height ?? (storedHeight === null ? '' : String(storedHeight));
+
   const today = new Date();
-  const typed = year.trim().length === 0 ? null : plausibleBirthYear(Number(year.trim()), today);
-  const yearIsWrong = year.trim().length > 0 && typed === null;
-  const age = ageFrom(saved?.birthYear ?? null, today);
+  const typedYear = yearText.trim().length === 0 ? null : plausibleBirthYear(Number(yearText.trim()), today);
+  const yearIsWrong = yearText.trim().length > 0 && typedYear === null;
+  const typedHeight =
+    heightText.trim().length === 0 ? null : plausibleHeightCm(Number(heightText.trim()));
+  const heightIsWrong = heightText.trim().length > 0 && typedHeight === null;
 
   async function save() {
-    const profile = await source.save(typed, sex);
-    setSaved({ birthYear: profile.birthYear, sex: profile.sex });
+    await source.save(typedYear, chosenSex ?? storedSex);
+    if (typedHeight !== null) await source.saveHeight(typedHeight);
+    const written = await source.read();
+    setState(aboutYouFrom(written, new Date()));
+    setYear(null);
+    setHeight(null);
+    setSex(null);
     setOpen(false);
   }
 
   if (!open) {
+    const line = summaryLine(state);
+    /** Nothing looked up yet, or the lookup failed. Neither is something to tell somebody. */
+    if (line === null) return null;
+
     return (
       <Pressable
         accessibilityRole="button"
         onPress={() => setOpen(true)}
         style={({ pressed }) => [styles.summary, pressed && styles.pressed]}>
-        <Text style={[styles.summaryText, { color: colors.textSubtle }]}>
-          {age === null
-            ? 'Add your year of birth to get a biological age'
-            : `${age} years old · ${SEXES.find((entry) => entry.id === saved?.sex)?.label ?? ''}`}
-        </Text>
+        <Text style={[styles.summaryText, { color: colors.textSubtle }]}>{line}</Text>
       </Pressable>
     );
   }
@@ -87,22 +121,39 @@ export function AboutYou({ source = defaultProfiles }: { source?: typeof default
     <View style={styles.block}>
       <Text style={[styles.label, { color: colors.textSubtle }]}>ABOUT YOU</Text>
       <Text style={[styles.hint, { color: colors.textMuted }]}>
-        Two things, and you can skip either. The year is what the biological age is calculated
+        Three things, and you can skip any of them. The year is what the biological age is calculated
         against; without it there is no number.
       </Text>
 
       <Text style={[styles.fieldLabel, { color: colors.textSubtle }]}>YEAR OF BIRTH</Text>
       <TextInput
         inputMode="numeric"
-        onChangeText={setYear}
+        maxLength={4}
+        onChangeText={(value) => setYear(value.replace(/[^0-9]/g, ''))}
         placeholder="1982"
         placeholderTextColor={colors.textSubtle}
         style={[styles.input, { borderColor: colors.hairline, color: colors.text }]}
-        value={year}
+        value={yearText}
       />
       {yearIsWrong && (
         <Text style={[styles.problem, { color: colors.warning }]}>
           That is not a year somebody was born in.
+        </Text>
+      )}
+
+      <Text style={[styles.fieldLabel, { color: colors.textSubtle }]}>HEIGHT IN CM</Text>
+      <TextInput
+        inputMode="numeric"
+        maxLength={3}
+        onChangeText={(value) => setHeight(value.replace(/[^0-9]/g, ''))}
+        placeholder="178"
+        placeholderTextColor={colors.textSubtle}
+        style={[styles.input, { borderColor: colors.hairline, color: colors.text }]}
+        value={heightText}
+      />
+      {heightIsWrong && (
+        <Text style={[styles.problem, { color: colors.warning }]}>
+          Centimetres — somewhere between 50 and 250.
         </Text>
       )}
 
@@ -111,21 +162,21 @@ export function AboutYou({ source = defaultProfiles }: { source?: typeof default
         {SEXES.map((option) => (
           <Pressable
             accessibilityRole="button"
-            accessibilityState={{ selected: sex === option.id }}
+            accessibilityState={{ selected: chosenSex === option.id }}
             key={option.id}
             onPress={() => setSex(option.id)}
             style={({ pressed }) => [
               styles.option,
               {
-                backgroundColor: sex === option.id ? colors.accentSoft : 'transparent',
-                borderColor: sex === option.id ? colors.accentBorder : colors.hairline,
+                backgroundColor: chosenSex === option.id ? colors.accentSoft : 'transparent',
+                borderColor: chosenSex === option.id ? colors.accentBorder : colors.hairline,
               },
               pressed && styles.pressed,
             ]}>
             <Text
               style={[
                 styles.optionText,
-                { color: sex === option.id ? colors.accent : colors.textMuted },
+                { color: chosenSex === option.id ? colors.accent : colors.textMuted },
               ]}>
               {option.label}
             </Text>

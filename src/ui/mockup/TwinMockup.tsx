@@ -3,17 +3,15 @@ import { Fragment } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { hubs } from '@/application/hubs/hubs';
-import { SAMPLE_DATA_LINE } from '@/ui/hubs/hubState';
-import { fontFamily, lineHeights, radius, spacing, typography, useTheme } from '@/ui/theme';
+import { fontFamily, radius, spacing, typography, useTheme } from '@/ui/theme';
 import { AboutYou } from '@/ui/twin/AboutYou';
 import { BioAgeBlock } from '@/ui/twin/BioAgeBlock';
 import { Ledger } from '@/ui/twin/Ledger';
 import { bloodWorkSource } from '@/ui/twin/bioAgeCopy';
 import { BodyFigure } from '@/ui/twin/BodyFigure';
 import { useBioAge } from '@/ui/twin/useBioAge';
+import { twinSources } from '@/ui/twin/sources';
 import { useMuscleLoad } from '@/ui/twin/useMuscleLoad';
-
-import { centre, twin, twinSources } from './fixtures';
 
 /**
  * Digital Twin.
@@ -129,70 +127,6 @@ export function TwinMockup() {
         </View>
       </Section>
 
-      {/**
-        * The boundary. Everything above it is the person's own; everything below is invented for
-        * layout review.
-        *
-        * The hub screens draw this line and the Twin did not, which was the more dangerous half:
-        * here the real and the invented were interleaved — a real biological age, then a sample
-        * person, then a real ledger — so there was no reading of the screen that separated them.
-        */}
-      <Text style={[styles.sampleLine, { color: colors.textSubtle }]}>{SAMPLE_DATA_LINE}</Text>
-
-      <Text style={[styles.personName, { color: colors.text }]}>{twin.person.name}</Text>
-      <Text style={[styles.personFacts, { color: colors.textSubtle }]}>
-        {twin.person.facts.join(' · ')}
-      </Text>
-
-      <Section title="Running test">
-        <View style={[styles.card, { backgroundColor: colors.surface }]}>
-          <View style={styles.cardHeader}>
-            <Text style={[styles.cardTitle, { color: colors.text }]}>{twin.runningTest.title}</Text>
-            <Text style={[styles.cardMeta, { color: colors.textSubtle }]}>
-              {twin.runningTest.label}
-            </Text>
-          </View>
-          <View style={styles.ticks}>
-            {Array.from({ length: twin.runningTest.daysTotal }, (_, index) => (
-              <View
-                key={index}
-                style={[
-                  styles.tick,
-                  {
-                    backgroundColor:
-                      index < twin.runningTest.daysDone ? colors.accent : colors.border,
-                  },
-                ]}
-              />
-            ))}
-          </View>
-          <Text style={[styles.cardNote, { color: colors.textSubtle }]}>Nothing conclusive yet.</Text>
-        </View>
-
-        <View style={[styles.focusPill, { backgroundColor: colors.accentSoft }]}>
-          <Text style={[styles.focusText, { color: colors.accent }]}>{centre.focus}</Text>
-        </View>
-      </Section>
-
-      <Section title="Insights">
-        {twin.insights.map((insight) => (
-          <View key={insight} style={[styles.card, { backgroundColor: colors.surface }]}>
-            <Text style={[styles.insight, { color: colors.text }]}>{insight}</Text>
-          </View>
-        ))}
-      </Section>
-
-      <Section title="Completed tests">
-        {twin.completedTests.map((test) => (
-          <View key={test.title} style={[styles.card, { backgroundColor: colors.surface }]}>
-            <Text style={[styles.cardTitle, { color: colors.text }]}>{test.title}</Text>
-            <Text style={[styles.outcome, { color: colors.textMuted }]}>
-              Result · {test.outcome}
-            </Text>
-          </View>
-        ))}
-      </Section>
-
     </ScrollView>
   );
 }
@@ -266,39 +200,16 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     paddingVertical: spacing.xs,
   },
-  cardHeader: {
-    alignItems: 'baseline',
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-  },
-  cardMeta: {
-    fontFamily: fontFamily.body,
-    fontSize: typography.micro,
-  },
   cardNote: {
     fontFamily: fontFamily.body,
     fontSize: typography.micro,
     marginTop: spacing.sm,
-  },
-  cardTitle: {
-    fontFamily: fontFamily.semi,
-    fontSize: typography.body,
   },
   content: {
     paddingBottom: 48,
     paddingHorizontal: spacing.lg,
   },
   /** Styled exactly like Home's daily focus, so the repeat reads as the same object. */
-  focusPill: {
-    alignSelf: 'flex-start',
-    borderRadius: 13,
-    paddingHorizontal: spacing.md,
-    paddingVertical: 5,
-  },
-  focusText: {
-    fontFamily: fontFamily.medium,
-    fontSize: 11.5,
-  },
   homeLink: {
     alignSelf: 'center',
     paddingBottom: spacing.sm,
@@ -308,32 +219,6 @@ const styles = StyleSheet.create({
     fontFamily: fontFamily.body,
     fontSize: typography.caption,
     letterSpacing: 0.4,
-  },
-  insight: {
-    fontFamily: fontFamily.body,
-    fontSize: typography.bodySmall,
-    lineHeight: lineHeights.body,
-  },
-  outcome: {
-    fontFamily: fontFamily.body,
-    fontSize: typography.caption,
-    marginTop: spacing.xs,
-  },
-  sampleLine: {
-    fontFamily: fontFamily.body,
-    fontSize: typography.micro,
-    lineHeight: lineHeights.caption,
-    marginBottom: spacing.md,
-    marginTop: spacing.xl,
-  },
-  personFacts: {
-    fontFamily: fontFamily.body,
-    fontSize: typography.micro,
-    marginTop: spacing.xs,
-  },
-  personName: {
-    fontFamily: fontFamily.semi,
-    fontSize: 18,
   },
   rowRule: {
     height: 1,
@@ -347,15 +232,5 @@ const styles = StyleSheet.create({
     letterSpacing: 0.9,
     marginBottom: spacing.sm,
     textTransform: 'uppercase',
-  },
-  tick: {
-    borderRadius: 2,
-    flex: 1,
-    height: 6,
-  },
-  ticks: {
-    flexDirection: 'row',
-    gap: spacing.xs,
-    marginTop: spacing.md,
   },
 });
