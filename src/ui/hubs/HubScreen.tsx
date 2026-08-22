@@ -12,6 +12,7 @@ import { RecentThreads } from '@/ui/chat/RecentThreads';
 import { Heatmap } from '@/ui/exercise/Heatmap';
 import { KidneyFunction } from '@/ui/labs/KidneyFunction';
 import { PanelAge } from '@/ui/labs/PanelAge';
+import { MarkerJourney } from '@/ui/labs/MarkerJourney';
 import { WhatChanged } from '@/ui/labs/WhatChanged';
 import { YourMarkers } from '@/ui/labs/YourMarkers';
 import { WeekScore } from '@/ui/meals/WeekScore';
@@ -220,6 +221,7 @@ export function HubScreen({
         {hub.id === 'labs' && <KidneyFunction />}
         {hub.id === 'labs' && <YourMarkers />}
         {hub.id === 'labs' && <WhatChanged />}
+        {hub.id === 'labs' && <MarkerJourney />}
 
         {/* How this hub's coach should work with you. Above the line because it is yours. */}
         <HubBrief coach={coach} hubId={hub.id} />
