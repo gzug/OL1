@@ -7,6 +7,7 @@ import { hubs } from '@/application/hubs/hubs';
 import { toggleCoach } from '@/application/chat/threads';
 import { holdForHandoff, toRef } from '@/application/chat/attachments';
 import type { Attachment } from '@/core/attachments';
+import type { HubEntry } from '@/core/hubs';
 import { ChatBar } from '@/ui/chat/ChatBar';
 import { RecentThreads } from '@/ui/chat/RecentThreads';
 import { Heatmap } from '@/ui/exercise/Heatmap';
@@ -32,6 +33,7 @@ import { HubBrief } from '@/ui/hubs/HubBrief';
 import { HideHub } from '@/ui/hubs/HideHub';
 import { SAMPLE_DATA_LINE } from '@/ui/hubs/hubState';
 import { Period, SectionLabel, tabularNums } from '@/ui/hubs/Period';
+import { coverageFor } from '@/ui/hubs/coverage';
 import type { DayBar, FacetState, HubState } from '@/ui/hubs/hubState';
 import {
   fontFamily,
@@ -106,8 +108,16 @@ export function HubScreen({
    * go with this one — and it must name them whether or not they are on the ring right now.
    */
   const { hubs: allHubs } = useHubs();
-  const [entryCount, setEntryCount] = useState(0);
   const [contributeNoted, setContributeNoted] = useState(false);
+  /**
+   * The hub's entries, read once.
+   *
+   * This used to keep only `found.length`, for the hide warning. Coverage needs the entries
+   * themselves, and a second read of the same rows would be a second answer to "what is in this
+   * hub" — which is how three components on the Nutrition screen once printed three different
+   * numbers for the same meals.
+   */
+  const [entries, setEntries] = useState<readonly HubEntry[]>([]);
   const [selecting, setSelecting] = useState(false);
   /**
    * From the MERGED list, not the catalog.
@@ -119,6 +129,15 @@ export function HubScreen({
   const inside = childHubs(hub.id, allHubs);
 
   /**
+   * **The whole list, or the fixture's whole list — never the two merged.**
+   *
+   * Merging row by row on the label is how a renamed row silently stops being updated, and this is
+   * the block whose entire job is to say what the hub reads. Health record has nothing real yet and
+   * falls back; a hub somebody invented has no coverage to state at all.
+   */
+  const facets = coverageFor(hub.id, entries, new Date().toISOString()) ?? state.facets;
+
+  /**
    * Whether anything below the boundary is invented. A hub the app ships has an observation, a
    * basis line and a cockpit full of sample periods; a hub somebody made has none of that, and the
    * marker must not appear over an empty space.
@@ -126,7 +145,7 @@ export function HubScreen({
   const hasFixtures =
     state.observation !== undefined ||
     state.basis !== undefined ||
-    state.facets.length > 0 ||
+    facets.length > 0 ||
     state.cockpit.periods.length > 0 ||
     state.cockpit.week !== undefined ||
     state.cockpit.empty !== undefined;
@@ -168,11 +187,11 @@ export function HubScreen({
       void hubs
         .entries(hub.id)
         .then((found) => {
-          if (!cancelled) setEntryCount(found.length);
+          if (!cancelled) setEntries(found);
         })
         .catch(() => {
-          // A count that cannot be read stays 0, and the warning says "Nothing is deleted" — true
-          // either way, and never a number this could not stand behind.
+          // A read that fails leaves the list empty: the warning says "Nothing is deleted" —
+          // true either way — and coverage falls back to what the hub can never see.
         });
       return () => {
         cancelled = true;
@@ -394,11 +413,11 @@ export function HubScreen({
 
         {/* A heading over nothing is its own small false claim — it says a section exists.
             Hubs the app ships have coverage facets; a hub somebody made has none. */}
-        {state.facets.length > 0 && (
+        {facets.length > 0 && (
           <>
             <SectionLabel colors={colors} label="Coverage" />
             <View>
-            {state.facets.map((facet, index) => (
+            {facets.map((facet, index) => (
               <View
                 key={facet.label}
                 style={[
@@ -423,7 +442,7 @@ export function HubScreen({
 
         {/* Last on the screen, under the fixtures. Putting a hub away is a rare, considered act;
             putting it in the header would make it the second most prominent thing on a hub. */}
-        <HideHub entryCount={entryCount} hub={hub} hubs={allHubs} />
+        <HideHub entryCount={entries.length} hub={hub} hubs={allHubs} />
 
 
       </ScrollView>
