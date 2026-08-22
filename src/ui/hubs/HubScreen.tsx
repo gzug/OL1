@@ -1,5 +1,5 @@
 import { Link, useFocusEffect, useRouter } from 'expo-router';
-import { useCallback, useState } from 'react';
+import { useCallback, useState, type ReactNode } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { coachChat } from '@/application/chat/coachChat';
@@ -33,6 +33,7 @@ import { childHubs } from '@/ui/hubs/catalog';
 import { HubBrief } from '@/ui/hubs/HubBrief';
 import { HideHub } from '@/ui/hubs/HideHub';
 import { Period, SectionLabel, tabularNums } from '@/ui/hubs/Period';
+import { hasRealCockpit, type RealCockpitHub } from '@/ui/hubs/cockpits';
 import { coverageFor } from '@/ui/hubs/coverage';
 import { SAMPLE_DATA_LINE, hasSampleContent } from '@/ui/hubs/hubState';
 import type { DayBar, FacetState, HubFacet, HubState } from '@/ui/hubs/hubState';
@@ -224,41 +225,10 @@ export function HubScreen({
             hub nobody has used is exactly as short as it was before. */}
         <LoggedWeek hubId={hub.id} kind={ENTRY_KIND[hub.id] ?? 'note'} />
 
-        {/* Exercise only. Twelve weeks of squares answers "am I being consistent", which is a
-            question about training and not about meals or blood panels — a panel arrives every few
-            months and would draw eleven and a half empty weeks. */}
-        {/* Exercise only, and above the line because it is real. The first cockpit built from
-            somebody's own sessions — see `src/ui/exercise/cockpit.ts` for what it refuses to say. */}
-        {hub.id === 'exercise' && <SessionCockpit hubId={hub.id} />}
-        {hub.id === 'exercise' && <Heatmap hubId={hub.id} />}
-
-        {/* Nutrition only, and only once meals exist. The one score in the app — see
-            `docs/decisions/0009-a-score-for-the-week-not-the-person.md`. */}
-        {hub.id === 'nutrition' && <WeekScore />}
-        {/* Below the score, because the score is the interpretation and these are the numbers it
-            was made from — plus the three it does not read. */}
-        {hub.id === 'nutrition' && <MealCockpit />}
-
-        {/* Labs only. How old the panel is comes before anything it says, because a number from a
-            fourteen-month-old panel is not wrong — it is old, and a screen that omits the date
-            invites it to be read as current. */}
-        {hub.id === 'labs' && <PanelAge />}
-        {/* What is on the panel, and whether it carries the nine. Above `KidneyFunction`
-            because "can an age be worked out at all" comes before any one derived number. */}
-        {/* Sleep only. One number a night, typed by a person — there is no watch yet, and the
-            block says so rather than letting the reader assume one. */}
-        {/* Resilience only. Words, tallied — see `docs/decisions/0017` for what this refuses
-            to become. */}
-        {/* Health record only. It LISTS rather than summarises — three conditions is the whole
-            thing, and a count without the names is a summary of something nobody can see. */}
-        {hub.id === 'medical' && <RecordCockpit />}
-        {hub.id === 'resilience' && <DayCockpit />}
-        {hub.id === 'sleep' && <NightCockpit />}
-        {hub.id === 'labs' && <PanelCockpit />}
-        {hub.id === 'labs' && <KidneyFunction />}
-        {hub.id === 'labs' && <YourMarkers />}
-        {hub.id === 'labs' && <WhatChanged />}
-        {hub.id === 'labs' && <MarkerJourney />}
+        {/* Everything this hub shows from its own entries, in its own order. `cockpits.ts` is
+            the single record of which hubs have one — six conditions scattered through this block
+            used to be the only record, and nothing but this file could read them. */}
+        {hasRealCockpit(hub.id) && HUB_BLOCKS[hub.id]}
 
         {/* How this hub's coach should work with you. Above the line because it is yours. */}
         <HubBrief coach={coach} hubId={hub.id} />
@@ -407,16 +377,9 @@ export function HubScreen({
         )}
 
         {/* Door two, and it is the screen rather than a link to one. */}
-        {state.cockpit.empty !== undefined ? (
-          <>
-            <SectionLabel colors={colors} label="Cockpit" />
-            <Text style={[styles.empty, { color: colors.textMuted }]}>{state.cockpit.empty}</Text>
-          </>
-        ) : (
-          state.cockpit.periods.map((period) => (
-            <Period colors={colors} key={period.label} period={period} />
-          ))
-        )}
+        {state.cockpit.periods.map((period) => (
+          <Period colors={colors} key={period.label} period={period} />
+        ))}
 
         {state.cockpit.week !== undefined && (
           <>
@@ -505,6 +468,61 @@ function WeekStrip({ colors, days }: { colors: ThemeColors; days: readonly DayBa
     </View>
   );
 }
+
+/**
+ * What each hub shows from its own stored entries, in the order it shows them.
+ *
+ * **Typed against `REAL_COCKPIT_HUBS`, so a hub cannot be in one and missing from the other.** This
+ * was six `hub.id === '…' &&` conditions strewn through the scroll view, and after six changes the
+ * comments had drifted off the lines they described — four of them stacked above Health record,
+ * explaining Labs, Sleep and Resilience.
+ *
+ * Order is the point of grouping them. `PanelAge` comes before the panel's contents because how old
+ * a reading is comes before anything it says; `WeekScore` comes before the macros because the score
+ * is the interpretation and the grams are what it was made from.
+ */
+const HUB_BLOCKS: Readonly<Record<RealCockpitHub, ReactNode>> = {
+  exercise: (
+    <>
+      <SessionCockpit hubId="exercise" />
+      {/* Twelve weeks of squares answers "am I being consistent", which is a question about
+          training and not about meals or blood panels — a panel arrives every few months and
+          would draw eleven and a half empty weeks. */}
+      <Heatmap hubId="exercise" />
+    </>
+  ),
+  labs: (
+    <>
+      {/* How old the panel is comes before anything it says: a number from a fourteen-month-old
+          panel is not wrong, it is old, and a screen omitting the date invites it to be read as
+          current. */}
+      <PanelAge />
+      {/* What is on the panel, and whether it carries the nine — "can an age be worked out at
+          all" comes before any one derived number. */}
+      <PanelCockpit />
+      <KidneyFunction />
+      <YourMarkers />
+      <WhatChanged />
+      <MarkerJourney />
+    </>
+  ),
+  /* It LISTS rather than summarising — three conditions is the whole thing, and a count without
+     the names is a summary of something nobody can see. */
+  medical: <RecordCockpit />,
+  nutrition: (
+    <>
+      {/* The one score in the app — `docs/decisions/0009-a-score-for-the-week-not-the-person.md`. */}
+      <WeekScore />
+      {/* Below it, because the score is the interpretation and these are the numbers it was made
+          from, plus the three it does not read. */}
+      <MealCockpit />
+    </>
+  ),
+  /* Words, tallied. `docs/decisions/0017` is what this refuses to become. */
+  resilience: <DayCockpit />,
+  /* One number a night, typed by a person — there is no watch, and the block says so. */
+  sleep: <NightCockpit />,
+};
 
 function Coverage({
   colors,
@@ -613,11 +631,6 @@ const styles = StyleSheet.create({
     height: 8,
     marginRight: spacing.sm,
     width: 8,
-  },
-  empty: {
-    fontFamily: fontFamily.body,
-    fontSize: typography.bodySmall,
-    lineHeight: lineHeights.bodySmall,
   },
   facetDetail: {
     flexShrink: 1,

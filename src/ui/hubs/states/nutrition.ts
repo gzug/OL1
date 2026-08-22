@@ -27,10 +27,7 @@ export const nutrition: HubState = {
    * either way. The weigh-in rows ARE real and came with it — the first run stores a weight in
    * this hub, and `dailyId` makes it at most one a day.
    */
-  cockpit: {
-    empty: 'Your own meals fill the cockpit above this line. There is no invented one left here.',
-    periods: [],
-  },
+  cockpit: { periods: [] },
   contribute: {
     href: '/log-meal',
     note: 'Reading the photo is not built yet — the review step behind it is.',

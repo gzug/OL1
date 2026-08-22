@@ -23,10 +23,7 @@ export const exercise: HubState = {
    * The invented row that is NOT coming back is "Rest days". This app cannot tell a rest day from
    * an unlogged one, and says so in the caption under every strip it draws.
    */
-  cockpit: {
-    empty: 'Your own sessions fill the cockpit above this line. There is no invented one left here.',
-    periods: [],
-  },
+  cockpit: { periods: [] },
   contribute: {
     /**
      * Two real ways in. Strava is an IMPORT rather than a connection — a file you request from
