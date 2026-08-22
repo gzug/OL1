@@ -32,10 +32,10 @@ import type { Coach, HubDefinition } from '@/ui/hubs/catalog';
 import { childHubs } from '@/ui/hubs/catalog';
 import { HubBrief } from '@/ui/hubs/HubBrief';
 import { HideHub } from '@/ui/hubs/HideHub';
-import { SAMPLE_DATA_LINE } from '@/ui/hubs/hubState';
 import { Period, SectionLabel, tabularNums } from '@/ui/hubs/Period';
 import { coverageFor } from '@/ui/hubs/coverage';
-import type { DayBar, FacetState, HubState } from '@/ui/hubs/hubState';
+import { SAMPLE_DATA_LINE, hasSampleContent } from '@/ui/hubs/hubState';
+import type { DayBar, FacetState, HubFacet, HubState } from '@/ui/hubs/hubState';
 import {
   fontFamily,
   lineHeights,
@@ -136,20 +136,14 @@ export function HubScreen({
    * the block whose entire job is to say what the hub reads. Health record has nothing real yet and
    * falls back; a hub somebody invented has no coverage to state at all.
    */
-  const facets = coverageFor(hub.id, entries, new Date().toISOString()) ?? state.facets;
+  const real = coverageFor(hub.id, entries, new Date().toISOString());
 
   /**
    * Whether anything below the boundary is invented. A hub the app ships has an observation, a
    * basis line and a cockpit full of sample periods; a hub somebody made has none of that, and the
    * marker must not appear over an empty space.
    */
-  const hasFixtures =
-    state.observation !== undefined ||
-    state.basis !== undefined ||
-    facets.length > 0 ||
-    state.cockpit.periods.length > 0 ||
-    state.cockpit.week !== undefined ||
-    state.cockpit.empty !== undefined;
+  const hasFixtures = hasSampleContent(state, real !== null);
   const contributeHref = state.contribute?.href;
 
   /** This hub's coach, already at the table. A hub with no coach still gets the bar, unpointed. */
@@ -337,6 +331,28 @@ export function HubScreen({
           </>
         )}
 
+        {/**
+          * **Above the line when it is real**, which it now is for every hub the app ships.
+          *
+          * This block sat under `SAMPLE_DATA_LINE` from the day the line was drawn, and stayed
+          * there when `#123` made its rows read from actual entries — so the marker was telling
+          * somebody their own meal count was invented for layout. A marker that is wrong about one
+          * block is a marker nobody can trust about the others.
+          */}
+        {/**
+          * Where this hub's numbers come from, above the line with the numbers.
+          *
+          * It was written as "what the observation rests on" and rendered under the sample marker
+          * beside it. With every cockpit real, this sentence is the only thing on the screen saying
+          * whether a figure was typed in or measured — which is the most useful thing it could say
+          * and the last place it should be marked invented.
+          */}
+        {state.basis !== undefined && (
+          <Text style={[styles.basis, { color: colors.textMuted }, tabularNums]}>{state.basis}</Text>
+        )}
+
+        {real !== null && <Coverage colors={colors} facets={real} />}
+
         {inside.length > 0 && (
           <>
             <SectionLabel colors={colors} label="Inside this hub" />
@@ -389,9 +405,6 @@ export function HubScreen({
         {state.observation !== undefined && (
           <Text style={[styles.observation, { color: colors.text }]}>{state.observation}</Text>
         )}
-        {state.basis !== undefined && (
-          <Text style={[styles.basis, { color: colors.textMuted }, tabularNums]}>{state.basis}</Text>
-        )}
 
         {/* Door two, and it is the screen rather than a link to one. */}
         {state.cockpit.empty !== undefined ? (
@@ -415,37 +428,12 @@ export function HubScreen({
           </>
         )}
 
-        {/* A heading over nothing is its own small false claim — it says a section exists.
-            Hubs the app ships have coverage facets; a hub somebody made has none. */}
-        {facets.length > 0 && (
-          <>
-            <SectionLabel colors={colors} label="Coverage" />
-            <View>
-            {facets.map((facet, index) => (
-              <View
-                key={facet.label}
-                style={[
-                  styles.facetRow,
-                  index > 0 && {
-                    borderTopColor: colors.borderSubtle,
-                    borderTopWidth: StyleSheet.hairlineWidth,
-                  },
-                ]}>
-                <Dot colors={colors} state={facet.state} />
-                <Text style={[styles.facetLabel, { color: colors.text }]}>{facet.label}</Text>
-                <Text
-                  numberOfLines={1}
-                  style={[styles.facetDetail, { color: colors.textMuted }, tabularNums]}>
-                  {facet.detail}
-                </Text>
-              </View>
-            ))}
-            </View>
-          </>
+        {/* A heading over nothing is its own small false claim — it says a section exists. Only
+            reached by a hub whose coverage is still invented; a real one rendered above the line. */}
+        {real === null && state.facets.length > 0 && (
+          <Coverage colors={colors} facets={state.facets} />
         )}
 
-        {/* Last on the screen, under the fixtures. Putting a hub away is a rare, considered act;
-            putting it in the header would make it the second most prominent thing on a hub. */}
         <HideHub entryCount={entries.length} hub={hub} hubs={allHubs} />
 
 
@@ -515,6 +503,41 @@ function WeekStrip({ colors, days }: { colors: ThemeColors; days: readonly DayBa
         </View>
       ))}
     </View>
+  );
+}
+
+function Coverage({
+  colors,
+  facets,
+}: {
+  colors: ThemeColors;
+  facets: readonly HubFacet[];
+}) {
+  return (
+    <>
+      <SectionLabel colors={colors} label="Coverage" />
+      <View>
+        {facets.map((facet, index) => (
+          <View
+            key={facet.label}
+            style={[
+              styles.facetRow,
+              index > 0 && {
+                borderTopColor: colors.borderSubtle,
+                borderTopWidth: StyleSheet.hairlineWidth,
+              },
+            ]}>
+            <Dot colors={colors} state={facet.state} />
+            <Text style={[styles.facetLabel, { color: colors.text }]}>{facet.label}</Text>
+            <Text
+              numberOfLines={1}
+              style={[styles.facetDetail, { color: colors.textMuted }, tabularNums]}>
+              {facet.detail}
+            </Text>
+          </View>
+        ))}
+      </View>
+    </>
   );
 }
 

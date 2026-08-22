@@ -77,5 +77,4 @@ export const resilience: HubState = {
     { detail: 'Garmin only — not in Health Connect', label: 'Stress score', state: 'missing' },
     { detail: 'One word a day, typed by you', label: 'How the day felt', state: 'reading' },
   ],
-  observation: 'Your lowest variability nights land after the days you train in the evening.',
 };

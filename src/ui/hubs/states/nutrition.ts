@@ -9,7 +9,7 @@ import type { HubState } from '../hubState';
  * come with them; that is recovery, and it belongs to Resilience, which already reads it.
  */
 export const nutrition: HubState = {
-  basis: 'From 9 meals logged across 4 of the last 7 days, and 3 weigh-ins in the last 14.',
+  basis: 'From the meals and weigh-ins you have typed in. Nothing here is measured for you.',
   /**
    * **The sample cockpit is gone, because a real one exists.**
    *
@@ -45,5 +45,4 @@ export const nutrition: HubState = {
     { detail: 'Not connected yet', label: 'Hydration', state: 'missing' },
     { detail: 'Not connected yet', label: 'Body composition', state: 'missing' },
   ],
-  observation: 'Your later meals land on the days you train in the evening.',
 };

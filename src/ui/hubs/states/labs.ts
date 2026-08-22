@@ -17,7 +17,7 @@ import type { HubState } from '../hubState';
  * would read as a regression against it.
  */
 export const labs: HubState = {
-  basis: 'From 1 panel, drawn 12 Mar.',
+  basis: 'From the panels you have entered, drawn on the dates on your own reports.',
   /**
    * **The sample cockpit is gone, because a real one exists.**
    *
@@ -45,5 +45,13 @@ export const labs: HubState = {
     { detail: 'Not connected yet', label: 'Genomics', state: 'missing' },
     { detail: 'Not connected yet', label: 'Microbiome', state: 'missing' },
   ],
-  observation: 'One panel is a starting point, not a trend. A second one is what makes it a line.',
+  /**
+   * The one observation left in the app, and the only thing still marked sample on this screen.
+   *
+   * It used to read "One panel is a starting point, not a trend" — which the Coverage block now
+   * says for real, above the line, with the count behind it. An interpretation that restates a fact
+   * already on the screen is not an interpretation.
+   */
+  observation:
+    'The markers that move most between two panels are the ones that move with a week, not a year.',
 };
