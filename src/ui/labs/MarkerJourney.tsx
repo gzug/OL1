@@ -3,6 +3,7 @@ import { Fragment, useCallback, useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import Svg, { Line, Path } from 'react-native-svg';
 
+import { formatMeasured } from '@/application/format/metric';
 import { hubs as defaultHubs } from '@/application/hubs/hubs';
 import {
   PANELS_FOR_A_LINE,
@@ -132,9 +133,13 @@ export function MarkerJourney({ source = defaultHubs }: { source?: typeof defaul
                   />
                 </Svg>
 
-                <Text style={[styles.latest, { color: colors.text }]}>
-                  {last?.value} {journey.unit}
-                </Text>
+                {/* Absent rather than a stray unit on its own. `formatMeasured` returns null for
+                    a number that is not one, which is the absence law deciding this for us. */}
+                {last !== undefined && (
+                  <Text style={[styles.latest, { color: colors.text }]}>
+                    {formatMeasured(last.value, journey.unit)}
+                  </Text>
+                )}
               </View>
             </Fragment>
           );

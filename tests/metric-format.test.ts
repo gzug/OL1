@@ -6,6 +6,7 @@ import {
   formatDelta,
   formatDuration,
   formatDurationLong,
+  formatMeasured,
   formatValue,
 } from '../src/application/format/metric';
 
@@ -86,4 +87,49 @@ test('every metric this app can write down has a format', () => {
       assert.ok(format.unit.length > 0, `"${key}" has an empty unit, which prints a trailing space`);
     }
   }
+});
+
+/**
+ * **Defect four, and the reason `formatMeasured` exists.**
+ *
+ * A marker is STORED in the unit the formula reads, converted once at the edge — `levine.ts` says
+ * so and is right to. What nobody carried through was that a conversion does not land on a round
+ * figure, and four screens interpolated the stored number straight into a `<Text>`.
+ *
+ * Every input below is INVENTED — an ordinary European figure put through the conversion in
+ * `units.ts`, `71 / 88.4` and `5.2 * 38.67`. What is not invented is the OUTPUT: that is the exact
+ * float the app stores, and before this it was the exact string a person read on the screen.
+ */
+test('a converted marker is written at a precision an assay could have', () => {
+  assert.equal(formatMeasured(0.8031674208144796, 'mg/dL'), '0.8 mg/dL', 'creatinine, 71 µmol/L');
+  assert.equal(formatMeasured(90.09100000000001, 'mg/dL'), '90.1 mg/dL', 'glucose, 5.0 mmol/L');
+  assert.equal(formatMeasured(129.73104, 'mg/dL'), '130 mg/dL', 'glucose, 7.2 mmol/L');
+  assert.equal(formatMeasured(201.084, 'mg/dL'), '201 mg/dL', 'cholesterol, 5.2 mmol/L');
+  assert.equal(formatMeasured(203.71099999999996, 'mg/dL'), '204 mg/dL', 'triglycerides, 2.3 mmol/L');
+  assert.equal(formatMeasured(59.938500000000005, 'mg/dL'), '59.9 mg/dL', 'HDL, 1.55 mmol/L');
+});
+
+/** A value typed in the unit it is stored in comes back out unchanged. Nothing is invented. */
+test('a marker typed in its own unit is printed as it was typed', () => {
+  assert.equal(formatMeasured(4.4, 'g/dL'), '4.4 g/dL');
+  assert.equal(formatMeasured(95, 'mg/dL'), '95 mg/dL');
+  assert.equal(formatMeasured(6.2, '10³/µL'), '6.2 10³/µL');
+  assert.equal(formatMeasured(88, 'fL'), '88 fL');
+});
+
+/**
+ * A percentage is glued to its symbol, which this file already decided for `suffix`. Three of the
+ * seventeen markers a panel can hold are percentages — lymphocytes, red cell width, and HbA1c — and
+ * "32.5 %" is not how one is written in English.
+ */
+test('a percentage keeps its symbol, and a bare number gets nothing', () => {
+  assert.equal(formatMeasured(32.5, '%'), '32.5%');
+  assert.equal(formatMeasured(12.9, ' % '), '12.9%', 'whitespace around a unit is not a unit');
+  assert.equal(formatMeasured(3.55, ''), '3.6', 'the total-to-HDL ratio has no unit to invent');
+});
+
+/** The absence law, in the one place it is cheapest to enforce. Never "NaN", never a silent zero. */
+test('a value that is not a number is absent, not printed', () => {
+  assert.equal(formatMeasured(Number.NaN, 'mg/dL'), null);
+  assert.equal(formatMeasured(Number.POSITIVE_INFINITY, 'mg/dL'), null);
 });
