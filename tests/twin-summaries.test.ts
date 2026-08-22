@@ -151,6 +151,26 @@ test('nutrition uses the most recent weigh-in', () => {
 
 /* ── All of them together ──────────────────────────────────────────────────────────────────── */
 
+/**
+ * THE ONE THAT SHIPPED. `LabUploadFlow` writes every panel to the `labs` hub, which sits inside
+ * Health record on the ring. Reading `medical` alone told somebody "nothing logged here yet" while
+ * the biological age directly above was computed from the panel they were being told they had not
+ * added. Both halves were individually correct, which is why nothing in CI saw it.
+ */
+test('a panel in Labs reaches the Health record card', () => {
+  const withPanel = domainSummaries(
+    { labs: [entry('labs', 'panel', { markers: {} }, 30)] },
+    [],
+    NOW,
+  );
+  const health = withPanel.find((summary) => summary.hubId === 'medical');
+
+  assert.ok(health !== undefined);
+  assert.equal(health.said, 'something', 'a panel one hub down went unseen');
+  if (health.said !== 'something') return;
+  assert.match(health.headline, /^Blood drawn /);
+});
+
 test('every domain gets a card, in the order the twin reads them', () => {
   const all = domainSummaries({}, [], NOW);
   assert.deepEqual(

@@ -59,6 +59,15 @@ export const SILENCE_WORDS: Readonly<Record<Silence, string>> = {
 /**
  * How old the blood is, and nothing about the number it produced.
  *
+ * **It reads Labs as well as Health record, and that is not a convenience.** `LabUploadFlow` writes
+ * every panel to the `labs` hub, which sits INSIDE Health record on the ring — `parentId: 'medical'`
+ * in the catalog. Reading `medical` alone made this card say "nothing logged here yet" to somebody
+ * whose panel was one level down, while the biological age three centimetres above it was computed
+ * from that same panel. Two blocks on one screen, disagreeing about whether blood exists.
+ *
+ * Found by seeding a store and opening the deployed page. Nothing in CI could see it, because both
+ * halves were individually correct.
+ *
  * **The biological age deliberately does not appear here.** It leads the whole screen, directly
  * under the body, because the spec says the drift number leads the Twin. Repeating it in a card
  * three centimetres below would be the same claim twice, and the two would drift apart the first
@@ -199,7 +208,9 @@ export function domainSummaries(
   const away = new Set(hidden);
 
   return [
-    healthSummary(entries.medical ?? [], now),
+    /* Health record and everything inside it. Panels live in `labs`, which is a child hub — see the
+       note on `healthSummary`. */
+    healthSummary([...(entries.medical ?? []), ...(entries.labs ?? [])], now),
     exerciseSummary(entries.exercise ?? [], now),
     nutritionSummary(entries.nutrition ?? [], now),
     ...unbuiltSummaries(),
