@@ -28,6 +28,24 @@ import { fontFamily, lineHeights, radius, spacing, tracking, typography, useThem
  * over time, which the report cannot show.
  */
 
+/**
+ * How a direction across the whole journey reads.
+ *
+ * Written out rather than assembled from a conditional and a shared ending: "higher than the first"
+ * and "about the same as the first" do not take the same preposition, and one template producing
+ * both printed "about the same than the first" on the deployed page.
+ */
+function moveSentence(move: 'down' | 'level' | 'up'): string {
+  switch (move) {
+    case 'down':
+      return 'lower than the first';
+    case 'level':
+      return 'about the same as the first';
+    case 'up':
+      return 'higher than the first';
+  }
+}
+
 const NAME: Readonly<Record<string, string>> = Object.fromEntries(
   [...LEVINE_MARKERS, ...EXTRA_MARKERS].map((marker) => [marker.key, marker.label]),
 );
@@ -82,10 +100,11 @@ export function MarkerJourney({ source = defaultHubs }: { source?: typeof defaul
                   <Text style={[styles.name, { color: colors.text }]}>
                     {NAME[journey.key] ?? journey.key}
                   </Text>
+                  {/* "about the same THAN the first" — the comparative and the equative do not
+                      take the same preposition, and one conditional producing both was how it
+                      happened. Each phrase now carries its own ending. */}
                   <Text style={[styles.count, { color: colors.textSubtle }]}>
-                    {journey.points.length} readings ·{' '}
-                    {move === 'level' ? 'about the same' : move === 'up' ? 'higher' : 'lower'} than
-                    the first
+                    {journey.points.length} readings · {moveSentence(move)}
                   </Text>
                 </View>
 

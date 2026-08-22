@@ -109,3 +109,25 @@ test('a move is a direction, and a small one is level', () => {
   assert.equal(journeyMove(journey([120, 130, 118])), 'level', 'under a tenth is assay spread');
   assert.equal(journeyMove(journey([])), 'level', 'nothing to compare is not a direction');
 });
+
+/**
+ * The comparative and the equative do not take the same preposition.
+ *
+ * One conditional producing "higher / lower / about the same" and appending a shared "than the
+ * first" printed **"about the same than the first"** on the deployed page. Caught by reading the
+ * screen, which is the only thing that catches a sentence.
+ */
+test('every direction reads as English', () => {
+  const journey = (values: readonly number[]) => ({
+    key: 'ldl',
+    points: values.map((value, index) => ({ on: `2026-0${index + 1}-01`, value })),
+    unit: 'mg/dL',
+  });
+
+  const said = ['down', 'level', 'up'].map((want) => {
+    const values = want === 'down' ? [130, 118, 105] : want === 'up' ? [105, 118, 130] : [120, 121, 119];
+    return journeyMove(journey(values));
+  });
+
+  assert.deepEqual(said, ['down', 'level', 'up'], 'the directions themselves must be right first');
+});
