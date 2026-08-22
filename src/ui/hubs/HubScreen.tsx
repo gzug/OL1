@@ -19,6 +19,7 @@ import { WhatChanged } from '@/ui/labs/WhatChanged';
 import { YourMarkers } from '@/ui/labs/YourMarkers';
 import { MealCockpit } from '@/ui/meals/MealCockpit';
 import { WeekScore } from '@/ui/meals/WeekScore';
+import { DayCockpit } from '@/ui/resilience/DayCockpit';
 import { NightCockpit } from '@/ui/sleep/NightCockpit';
 import { LoggedWeek } from '@/ui/hubs/LoggedWeek';
 import { StoredEntries } from '@/ui/hubs/StoredEntries';
@@ -57,6 +58,7 @@ const ENTRY_KIND: Readonly<Record<string, string>> = {
   exercise: 'session',
   labs: 'panel',
   nutrition: 'meal',
+  resilience: 'day',
   sleep: 'night',
 };
 
@@ -231,6 +233,9 @@ export function HubScreen({
             because "can an age be worked out at all" comes before any one derived number. */}
         {/* Sleep only. One number a night, typed by a person — there is no watch yet, and the
             block says so rather than letting the reader assume one. */}
+        {/* Resilience only. Words, tallied — see `docs/decisions/0017` for what this refuses
+            to become. */}
+        {hub.id === 'resilience' && <DayCockpit />}
         {hub.id === 'sleep' && <NightCockpit />}
         {hub.id === 'labs' && <PanelCockpit />}
         {hub.id === 'labs' && <KidneyFunction />}

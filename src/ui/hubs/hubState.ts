@@ -85,6 +85,7 @@ export type HubCockpit = {
 export type ContributeRoute =
   | '/add-panel'
   | '/from-strava'
+  | '/log-day'
   | '/log-meal'
   | '/log-night'
   | '/log-session';

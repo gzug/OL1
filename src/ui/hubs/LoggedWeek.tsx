@@ -25,6 +25,7 @@ import { fontFamily, lineHeights, spacing, typography, useTheme } from '@/ui/the
  */
 
 const WORDS: Readonly<Record<string, { one: string; many: string; verb: string }>> = {
+  day: { many: 'days', one: 'day', verb: 'described' },
   meal: { many: 'meals', one: 'meal', verb: 'logged' },
   night: { many: 'nights', one: 'night', verb: 'logged' },
   panel: { many: 'panels', one: 'panel', verb: 'added' },

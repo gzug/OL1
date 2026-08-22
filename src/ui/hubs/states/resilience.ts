@@ -21,7 +21,18 @@ import type { HubState } from '../hubState';
  * Health Connect carries both.
  */
 export const resilience: HubState = {
-  basis: 'From heart-rate variability and resting heart rate on 6 of the last 7 nights.',
+  basis: 'The words are yours. Everything below the line waits for a watch.',
+  /**
+   * **The invented rows stay, and that is the honest answer here.**
+   *
+   * Unlike Exercise, Labs, Nutrition and Sleep, most of this hub genuinely cannot be filled yet:
+   * heart-rate variability and resting heart rate need a watch, and the phone is deferred. A
+   * cockpit that showed only "how the day felt" would imply the rest had been dropped.
+   *
+   * So the sample rows below still describe what this hub is FOR, and the real block —
+   * `src/ui/resilience/DayCockpit.tsx` — sits above the line with the half that needs no device.
+   * The `basis` line says which is which.
+   */
   cockpit: {
     periods: [
       {
@@ -54,16 +65,17 @@ export const resilience: HubState = {
     },
   },
   contribute: {
-    note: 'Neither way in is built yet.',
-    primary: 'Write a note',
-    secondary: 'Add how the day felt',
+    href: '/log-day',
+    note: 'A watch waits for the phone. Describing a day does not.',
+    primary: 'Add how the day felt',
+    secondary: 'One word, and a note if you want one',
   },
   facets: [
     { detail: '6 of the last 7 nights', label: 'Heart-rate variability', state: 'reading' },
     { detail: 'On 6 of the last 7 nights', label: 'Resting heart rate', state: 'reading' },
     { detail: 'Garmin only — not in Health Connect', label: 'Body battery', state: 'missing' },
     { detail: 'Garmin only — not in Health Connect', label: 'Stress score', state: 'missing' },
-    { detail: 'Not connected yet', label: 'How the day felt', state: 'missing' },
+    { detail: 'One word a day, typed by you', label: 'How the day felt', state: 'reading' },
   ],
   observation: 'Your lowest variability nights land after the days you train in the evening.',
 };
