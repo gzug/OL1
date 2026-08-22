@@ -1,4 +1,3 @@
-import { agoWords, panelRecency, type PanelEntry } from '@/application/labs/panelRecency';
 import type { HubEntry } from '@/core/hubs';
 import { day } from '@/ui/hubs/entryWords';
 import type { CockpitPeriod } from '@/ui/hubs/hubState';
@@ -63,9 +62,13 @@ export function labsPeriods(entries: readonly HubEntry[], now: string): readonly
         {
           label: 'Drawn',
           value: day(last.recordedAt),
-          /* The same fragment `PanelAge` builds its sentence from, not a second phrasing of it.
-             Two ways of saying how old one panel is would eventually disagree about the month. */
-          when: agoWords(panelRecency(panels as readonly PanelEntry[], now).monthsAgo),
+          /* NOT how long ago. `PanelAge` sits directly above this and its whole first line is
+             "Drawn this month." — printing it again a finger's width lower said one thing twice
+             under two headings that also said the same thing.
+             What this row can add instead is WHICH date it is. `recordedAt` is when the blood was
+             drawn, never when the panel was typed, and the fixture that used to sit here said
+             "Uploaded" — which is a different day and the wrong mental model to teach. */
+          when: 'the date on your report, not the day you typed it',
         },
         {
           label: 'Markers on it',

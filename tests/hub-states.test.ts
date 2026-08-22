@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 
+import { formatDuration } from '../src/application/format/metric';
 import { isDomainHub, orbitHubs } from '../src/ui/hubs/catalog';
 import { SAMPLE_DATA_LINE } from '../src/ui/hubs/hubState';
 import { HUB_STATES, hubStateFor } from '../src/ui/hubs/states';
@@ -175,6 +176,31 @@ test('no fixture claims more markers than a panel can hold', () => {
     assert.ok(
       Number(digits) <= ceiling,
       `a fixture claims ${digits} markers and only ${ceiling} exist`,
+    );
+  }
+});
+
+/**
+ * **A fixture is still text on a screen, and there is one way this app writes a duration.**
+ *
+ * The Sleep cockpit read `7h 05m` and `8h 04m`. `formatDuration` — the only function allowed to
+ * turn minutes into that shape, guarded by `check-duration-formatters.mjs` — writes `7h 5m`. Two of
+ * the four durations on that screen agreed with it and two did not, which is the "agreeing only by
+ * luck" that `metric.ts` was ported to end. When a real sleep block arrives it will print the
+ * unpadded form and read as a regression against the placeholder it replaced.
+ *
+ * The guard catches a hand-written string, which the script cannot: that one looks for the
+ * arithmetic, and a fixture does the arithmetic in somebody's head.
+ */
+test('a duration in a fixture is written the way this app writes durations', () => {
+  const written = [...JSON.stringify(HUB_STATES).matchAll(/(\d+)h (\d+)m/g)];
+  assert.ok(written.length > 0, 'no fixture writes a duration any more, so this guards nothing');
+
+  for (const [text, hours, minutes] of written) {
+    assert.equal(
+      text,
+      formatDuration(Number(hours) * 60 + Number(minutes)),
+      `a fixture writes "${text}", which formatDuration never produces`,
     );
   }
 });

@@ -17,7 +17,7 @@ import type { HubState } from '../hubState';
  * would read as a regression against it.
  */
 export const labs: HubState = {
-  basis: 'From 1 panel, uploaded 12 Mar.',
+  basis: 'From 1 panel, drawn 12 Mar.',
   /**
    * **The sample cockpit is gone, because a real one exists.**
    *

@@ -47,7 +47,13 @@ test('the newest panel is the one reported, whatever order they arrive in', () =
   );
 
   assert.equal(block?.label, 'Last panel');
-  assert.deepEqual(block?.rows[0], { label: 'Drawn', value: '1 Aug', when: 'this month' });
+  assert.deepEqual(block?.rows[0], {
+    label: 'Drawn',
+    value: '1 Aug',
+    /* Which date it is, not how long ago — `PanelAge` sits directly above and already says that,
+       and the fixture this replaced called it "Uploaded", which is a different day. */
+    when: 'the date on your report, not the day you typed it',
+  });
 });
 
 /**
