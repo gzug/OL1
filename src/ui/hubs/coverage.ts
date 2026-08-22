@@ -155,6 +155,33 @@ function sleep(entries: readonly HubEntry[], now: string): readonly HubFacet[] {
   ];
 }
 
+function medical(entries: readonly HubEntry[]): readonly HubFacet[] {
+  const conditions = countOf(entries, 'condition');
+  const medications = countOf(entries, 'medication');
+
+  return [
+    {
+      detail: conditions === 0 ? 'None recorded yet' : `${conditions} recorded, in your words`,
+      label: 'Conditions',
+      state: conditions === 0 ? 'missing' : 'reading',
+    },
+    {
+      detail: medications === 0 ? 'None recorded yet' : `${medications} recorded, in your words`,
+      label: 'Medications',
+      state: medications === 0 ? 'missing' : 'reading',
+    },
+    { detail: 'Inside this hub, in Labs', label: 'Blood panels', state: 'elsewhere' },
+    {
+      /* Not "not connected yet". Nothing is coming that would connect it — this would be a way to
+         record a symptom over time, and no such flow exists or is planned. */
+      detail: 'No way to record one yet',
+      label: 'Symptoms over time',
+      state: 'missing',
+    },
+    { detail: NOT_CONNECTED, label: 'Appointments and letters', state: 'missing' },
+  ];
+}
+
 function resilience(entries: readonly HubEntry[], now: string): readonly HubFacet[] {
   const week = entriesThisWeek(entries, 'day', now).filter((entry) => {
     const word = entry.payload.word;
@@ -194,6 +221,8 @@ export function coverageFor(
       return exercise(entries, now);
     case 'labs':
       return labs(entries);
+    case 'medical':
+      return medical(entries);
     case 'nutrition':
       return nutrition(entries, now);
     case 'resilience':
@@ -201,7 +230,7 @@ export function coverageFor(
     case 'sleep':
       return sleep(entries, now);
     default:
-      /* Health record holds nothing yet, and a hub somebody invented has no coverage to state. */
+      /* A hub somebody invented has no coverage to state. */
       return null;
   }
 }

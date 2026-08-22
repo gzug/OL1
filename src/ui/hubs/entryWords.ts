@@ -25,8 +25,10 @@ const KINDS: Readonly<Record<string, { one: string; many: string }>> = {
    */
   /** A day somebody described in one word. Never a score — `docs/decisions/0017`. */
   day: { many: 'days described', one: 'day described' },
+  condition: { many: 'conditions', one: 'condition' },
   goal: { many: 'goals', one: 'goal' },
   meal: { many: 'meals', one: 'meal' },
+  medication: { many: 'medications', one: 'medication' },
   night: { many: 'nights', one: 'night' },
   note: { many: 'notes', one: 'note' },
   panel: { many: 'panels', one: 'panel' },

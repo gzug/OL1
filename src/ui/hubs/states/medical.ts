@@ -16,30 +16,31 @@ import type { HubState } from '../hubState';
  * before anything has been entered.
  */
 export const medical: HubState = {
-  basis: 'From what you have entered by hand. Nothing is read from a health record.',
+  basis: 'From what you have entered by hand. Nothing is read from a medical system.',
+  /**
+   * **The sample cockpit is gone, because a real one exists.**
+   *
+   * `src/ui/medical/RecordCockpit.tsx` lists what somebody typed. Unlike every other cockpit here
+   * it LISTS rather than summarises: a week of meals is not worth reading item by item and a health
+   * record is nothing but its items, so "3 conditions recorded" without the names would summarise
+   * something nobody can see.
+   *
+   * Which also retires the reason this fixture had to be so careful. It could count and never name,
+   * because a public preview must not carry a diagnosis; the real block names them because they are
+   * the person's own words on their own device.
+   */
   cockpit: {
-    periods: [
-      {
-        label: 'Standing',
-        rows: [
-          { label: 'Conditions recorded', value: '1', when: 'entered 4 Feb' },
-          { label: 'Medications', value: '2', when: 'both marked ongoing' },
-          { label: 'Last reviewed by you', value: '4 Feb', when: 'about six months ago' },
-        ],
-      },
-      {
-        label: 'Since then',
-        rows: [
-          { label: 'Changes recorded', value: 'None', when: 'nothing since 4 Feb' },
-          { label: 'Panels inside Labs', value: '1', when: 'uploaded 12 Mar' },
-        ],
-      },
-    ],
+    empty: 'Your own record fills the cockpit above this line. There is no invented one left here.',
+    periods: [],
   },
   contribute: {
-    note: 'Neither way in is built yet.',
+    /* Two real ways in, so the second is `also` rather than `secondary` — `secondary` is a caption
+       sharing the primary's destination, which is why "Add a medication" led to the same screen. */
+    also: { href: '/log-medication', label: 'Add a medication' },
+    href: '/log-condition',
+    note: 'Your words, kept as you wrote them. Nothing here is checked against anything.',
     primary: 'Record a condition',
-    secondary: 'Add a medication',
+    secondary: 'A name, whether it is current, and since when',
   },
   facets: [
     { detail: '1 recorded, entered by hand', label: 'Conditions', state: 'reading' },
