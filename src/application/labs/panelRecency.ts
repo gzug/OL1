@@ -70,9 +70,19 @@ export function panelRecency(entries: readonly PanelEntry[], now: string): Panel
  * Every one of these is a statement about a date. None of them tells anybody to do anything — see
  * the note at the top of this file for why that line is drawn where it is.
  */
+/**
+ * How long ago, on its own: "this month", "1 month ago", "7 months ago".
+ *
+ * Exported because the Labs cockpit needs the fragment without the sentence around it, and a second
+ * copy of this phrasing is how two blocks on one screen end up disagreeing about the month.
+ */
+export function agoWords(monthsAgo: number | null): string {
+  const months = monthsAgo ?? 0;
+  return months === 0 ? 'this month' : months === 1 ? '1 month ago' : `${months} months ago`;
+}
+
 export function recencySentence(recency: PanelRecency): string {
-  const months = recency.monthsAgo ?? 0;
-  const ago = months === 0 ? 'this month' : months === 1 ? '1 month ago' : `${months} months ago`;
+  const ago = agoWords(recency.monthsAgo);
 
   switch (recency.status) {
     case 'none':
