@@ -62,7 +62,7 @@ export function RecordCockpit({ source = defaultHubs }: { source?: typeof defaul
               apart. Claiming authorship would put ours in their mouth. */}
           <SectionLabel colors={colors} label="Notes" />
           {notes.map((note) => (
-            <View key={note.text} style={styles.note}>
+            <View key={`${note.day}-${note.text}`} style={styles.note}>
               <Text style={[styles.noteText, { color: colors.text }]}>{note.text}</Text>
               <Text style={[styles.noteWhen, { color: colors.textSubtle }]}>{note.day}</Text>
             </View>
