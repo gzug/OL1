@@ -12,6 +12,7 @@
 import { execFileSync } from 'node:child_process';
 
 import {
+  duplicateDecisionNumbers,
   evaluate,
   nextDecisionNumber,
   type CommitChange,
@@ -65,6 +66,26 @@ function main(): void {
   const addedPaths = git(['diff', '--name-only', '--diff-filter=A', base, head])
     .split('\n')
     .filter(Boolean);
+
+  /**
+   * **Checked on every pull request, not only on one that removes a lot.**
+   *
+   * A duplicate number arrives with a note somebody ADDED, and adding needs no rationale — so
+   * hanging this off the deletion path would have watched the collision that prompted it go past.
+   */
+  const clash = duplicateDecisionNumbers(git(['ls-files', 'docs/decisions']).split('\n'));
+  if (clash.length > 0) {
+    console.error(`Two decision notes share a number: ${clash.join(', ')}.\n`);
+    console.error(
+      `A note is the project's memory, and "docs/decisions/${clash[0]}" stops meaning anything the
+moment it means two documents. It happens because the number is a manual counter and two sessions
+each take the next free one without seeing the other's worktree.
+
+Rename the newer file to the next free number, ${nextDecisionNumber(git(['ls-files', 'docs/decisions']).split('\n'))},
+and follow its references — a decision number is quoted in code comments, not only in the folder.`,
+    );
+    process.exit(1);
+  }
 
   const verdict = evaluate(readCommits(base, head), addedPaths);
 

@@ -84,7 +84,7 @@ export function nutritionPeriods(
  * argument the Exercise cockpit makes about the last session.
  *
  * **No direction.** The fixture had one — "Flat", "too few readings to say more" — and calling a
- * trend needs a threshold this app does not have for weight. `docs/decisions/0015` is the same
+ * trend needs a threshold this app does not have for weight. `docs/decisions/0018` is the same
  * refusal in the Labs hub: compute what is arithmetic, refuse what is a judgement.
  */
 function weightPeriod(entries: readonly HubEntry[], now: string): readonly CockpitPeriod[] {

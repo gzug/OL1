@@ -80,6 +80,35 @@ export function evaluate(commits: CommitChange[], addedPaths: string[]): Verdict
   };
 }
 
+/**
+ * Numbers used by more than one note.
+ *
+ * **Two sessions each took `0015` on consecutive days**, neither aware of the other, because the
+ * number is a manual counter and `nextDecisionNumber` only ever looks at what is already on disk —
+ * which does not include the note being written in the other worktree right now.
+ *
+ * The collision is cheap to fix and expensive to notice: a decision note is the project's memory,
+ * and `docs/decisions/0015` stops meaning anything the moment it means two documents. Code comments
+ * in three files were already pointing at an ambiguous number.
+ *
+ * A duplicate is far more likely than a gap, and a gap is harmless — so this checks for the
+ * duplicate and says nothing about gaps.
+ */
+export function duplicateDecisionNumbers(existingPaths: string[]): string[] {
+  const seen = new Map<string, number>();
+
+  for (const path of existingPaths) {
+    const number = /(\d{4})-/.exec(path)?.[1];
+    if (number === undefined) continue;
+    seen.set(number, (seen.get(number) ?? 0) + 1);
+  }
+
+  return [...seen.entries()]
+    .filter(([, count]) => count > 1)
+    .map(([number]) => number)
+    .sort();
+}
+
 /** Suggests the next free number so the failure message can hand over a real filename. */
 export function nextDecisionNumber(existingPaths: string[]): string {
   const numbers = existingPaths

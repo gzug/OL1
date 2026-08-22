@@ -1,4 +1,4 @@
-# 0015 — Arithmetic yes, a proxy no
+# 0018 — Arithmetic yes, a proxy no
 
 **Status:** accepted, 2026-08-22
 **Answers a request from the owner. Delivers one half and refuses the other.**

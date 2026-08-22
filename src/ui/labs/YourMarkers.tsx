@@ -157,7 +157,7 @@ export function YourMarkers({ source = defaultHubs }: { source?: typeof defaultH
           </Text>
 
           {/* Subtraction and division on the two rows above, and nothing more — no cohort, no
-              coefficient, no cutoff. `docs/decisions/0015` is the line and what it refuses. */}
+              coefficient, no cutoff. `docs/decisions/0018` is the line and what it refuses. */}
           {readings.length > 0 && (
             <>
               <Text style={[styles.heading, styles.extraHeading, { color: colors.textSubtle }]}>

@@ -5,7 +5,7 @@
  *
  * The owner asked for two derived metrics on 2026-08-20 — cholesterol balance and insulin
  * resistance. One of them is subtraction. The other is a population model wearing a division sign,
- * and `docs/decisions/0015` records why it is not here.
+ * and `docs/decisions/0018` records why it is not here.
  *
  * Nothing below has a fitted coefficient, a reference cohort or a threshold in it. That is what
  * separates these from PhenoAge, which is a regression and needs its whole apparatus of refusals —
@@ -65,7 +65,7 @@ export function lipidReadings(markers: Markers): readonly LipidReading[] {
    * that a person reading two numbers cannot see the relationship between them without doing it.
    *
    * Deliberately NOT the triglyceride-to-HDL ratio, which looks identical and is not — see
-   * `docs/decisions/0015`.
+   * `docs/decisions/0018`.
    */
   readings.push({
     key: 'tc_hdl_ratio',
