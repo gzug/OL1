@@ -4,6 +4,7 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { hubs as defaultHubs } from '@/application/hubs/hubs';
 import { LEVINE_MARKERS, isLevineKey } from '@/ui/labs/levine';
+import { LIPID_READING_CAVEAT, lipidReadings } from '@/application/labs/lipidReadings';
 import { EXTRA_MARKERS } from '@/ui/labs/lipids';
 import { markerContext } from '@/ui/labs/markerContext';
 import { fontFamily, lineHeights, radius, spacing, tracking, typography, useTheme } from '@/ui/theme';
@@ -65,6 +66,8 @@ export function YourMarkers({ source = defaultHubs }: { source?: typeof defaultH
    * ignores the rest. Absent entirely when a panel carries none, which is most panels.
    */
   const extras = EXTRA_MARKERS.filter((marker) => typeof markers[marker.key] === 'number');
+  /** Arithmetic on the rows above. Empty unless the panel carries both halves of it. */
+  const readings = lipidReadings(markers);
   if (present.length === 0) return null;
 
   const absent = LEVINE_MARKERS.filter((marker) => typeof markers[marker.key] !== 'number');
@@ -151,6 +154,36 @@ export function YourMarkers({ source = defaultHubs }: { source?: typeof defaultH
             These are recorded because you measure them. The biological age above reads the nine and
             nothing else, so a fuller panel does not make it more certain.
           </Text>
+
+          {/* Subtraction and division on the two rows above, and nothing more — no cohort, no
+              coefficient, no cutoff. `docs/decisions/0015` is the line and what it refuses. */}
+          {readings.length > 0 && (
+            <>
+              <Text style={[styles.heading, styles.extraHeading, { color: colors.textSubtle }]}>
+                WORKED OUT FROM THOSE
+              </Text>
+              <View style={[styles.card, { backgroundColor: colors.surface }]}>
+                {readings.map((reading, index) => (
+                  <Fragment key={reading.key}>
+                    {index > 0 && (
+                      <View style={[styles.rule, { backgroundColor: colors.borderSubtle }]} />
+                    )}
+                    <View style={styles.row}>
+                      <Text style={[styles.label, { color: colors.text }]}>{reading.label}</Text>
+                      <Text style={[styles.value, { color: colors.text }]}>
+                        {reading.value}
+                        {reading.unit.length > 0 ? ` ${reading.unit}` : ''}
+                      </Text>
+                    </View>
+                    <Text style={[styles.why, { color: colors.textSubtle }]}>{reading.what}</Text>
+                  </Fragment>
+                ))}
+              </View>
+              <Text style={[styles.absent, { color: colors.textSubtle }]}>
+                {LIPID_READING_CAVEAT}
+              </Text>
+            </>
+          )}
         </>
       )}
 
