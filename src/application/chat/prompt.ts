@@ -9,6 +9,11 @@
  * not settled, and they encode Legacy's own product decisions — canonical scores, tier-1 data,
  * recovery-warning handling — none of which exist here. What is worth keeping from them is the one
  * safety boundary, which is not a product decision but a floor under a health app.
+ *
+ * **What a coach may be told about the person is not decided here.** It arrives already written, as
+ * a `CoachContext` built in `src/ui/chat/coachContext.ts` from the same functions the hub screens
+ * render from. This file decides how it is FENCED and what may not be done with it; that file
+ * decides what it is. `context.ts` between them owns the words.
  */
 
 import type { CoachDescriptor } from '@/core/chat';
