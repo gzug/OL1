@@ -45,8 +45,16 @@ export const sleep: HubState = {
     secondary: 'How long you slept, and which night it was',
   },
   facets: [
-    { detail: '6 of the last 7 nights', label: 'Time asleep', state: 'reading' },
-    { detail: 'Bed and wake times, 6 nights', label: 'Rhythm', state: 'reading' },
+    /**
+     * **A facet is a claim about what this hub can read, and two of these were wrong.**
+     *
+     * "Time asleep" is real now — typed in, not measured — so it says which. "Rhythm" was reading
+     * bed and wake times from nothing at all: `night.ts` deliberately does not ask for them, and
+     * nothing else in the app records one. A facet claiming a capability the app does not have is
+     * the same defect as a cockpit row claiming a number it cannot produce.
+     */
+    { detail: 'The nights you have typed in', label: 'Time asleep', state: 'reading' },
+    { detail: 'Bed and wake times are not asked for yet', label: 'Rhythm', state: 'missing' },
     { detail: 'Shared with Resilience', label: 'Resting heart rate', state: 'elsewhere' },
     { detail: 'Needs a watch that names itself', label: 'Sleep stages', state: 'missing' },
   ],
