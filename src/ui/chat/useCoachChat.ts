@@ -24,12 +24,54 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 
 import type { Attachment } from '@/core/attachments';
 import type { ChatTurn, CoachDescriptor, UnavailableReason } from '@/core/chat';
+import type { CoachContext } from '@/application/chat/context';
 import { takeHeld, toRef } from '@/application/chat/attachments';
 import { coachChat } from '@/application/chat/coachChat';
 import { hubs } from '@/application/hubs/hubs';
+import { profiles } from '@/application/profile/profile';
 import { hubForCoach } from '@/ui/hubs/catalog';
+import { mergeHubs } from '@/ui/hubs/mergeHubs';
 
+import { coachContext, type EntriesByHub } from './coachContext';
 import { dropPendingTurn, resolvePendingTurn } from './chatTurns';
+
+/**
+ * What the app holds about the person, read fresh for this one answer.
+ *
+ * **Read at the moment of asking, not held from when the screen opened** — the same rule the brief
+ * already follows below, and for the same reason: somebody may have just logged a meal, and the
+ * next answer should be the one they asked for.
+ *
+ * **Every hub, for every coach.** The owner settled it on 2026-08-22: *"the data is the fundament
+ * of the advice of the coaches."* Narrowing it later is a filter on this list, nothing more.
+ *
+ * Returns null if the store cannot be read at all. A coach told nothing is told so honestly, which
+ * is far better than one silently answering as though a hub were empty — that is `0013` again.
+ */
+async function readContext(now: string): Promise<CoachContext | null> {
+  try {
+    const [profile, stored, hidden] = await Promise.all([
+      profiles.read(),
+      hubs.list(),
+      hubs.hidden(),
+    ]);
+
+    const merged = mergeHubs(stored);
+    const perHub = await Promise.all(
+      merged.map(async (hub) => [hub.id, await hubs.entries(hub.id)] as const),
+    );
+
+    return coachContext({
+      entries: Object.fromEntries(perHub) as EntriesByHub,
+      hidden,
+      hubs: merged,
+      now,
+      profile,
+    });
+  } catch {
+    return null;
+  }
+}
 
 export type ChatStatus = 'generating' | 'loading' | 'ready';
 
@@ -67,7 +109,18 @@ export function useCoachChat(threadId: string | null, coaches: readonly CoachDes
     const only = coaches.length === 1 ? hubForCoach(coaches[0]?.id ?? '') : undefined;
     const brief = only === undefined ? null : await hubs.brief(only.id);
 
-    const reply = await coachChat.answer(thread, coaches, attachment, brief);
+    /**
+     * What the app actually holds, read the same way and at the same moment.
+     *
+     * **Unlike the brief, this is not conditional on there being one coach.** A brief is a FRAME
+     * somebody wrote for one hub, and handing it to coaches it was never written for would put
+     * words in their mouths — the argument above. A fact is not a frame: last night's sleep is the
+     * same fact whoever is being asked about it, and the round table exists precisely so several
+     * coaches can answer one question together.
+     */
+    const context = await readContext(new Date().toISOString());
+
+    const reply = await coachChat.answer(thread, coaches, attachment, brief, context);
 
     if (!mounted.current) return;
     if (reply === null || reply.status === 'unavailable') {
