@@ -31,9 +31,28 @@ const entry = (
   source: 'manual',
 });
 
-test('a hub with nothing real yet falls back to its fixture', () => {
-  assert.equal(coverageFor('medical', [], NOW), null);
+test('a hub somebody invented has no coverage to state', () => {
   assert.equal(coverageFor('a-hub-somebody-made', [], NOW), null);
+});
+
+test('Health record counts what was typed and points at Labs for panels', () => {
+  const facets = coverageFor(
+    'medical',
+    [
+      entry('medical', 'condition', '2026-08-01', { name: 'Thing One', status: 'current' }),
+      entry('medical', 'medication', '2026-08-01', { name: 'Remedy One', status: 'ongoing' }),
+      entry('medical', 'medication', '2026-07-01', { name: 'Remedy Two', status: 'stopped' }),
+    ],
+    NOW,
+  );
+
+  assert.deepEqual(facets?.[0], {
+    detail: '1 recorded, in your words',
+    label: 'Conditions',
+    state: 'reading',
+  });
+  assert.equal(facets?.[1]?.detail, '2 recorded, in your words');
+  assert.equal(facets?.[2]?.state, 'elsewhere');
 });
 
 /**
@@ -69,7 +88,7 @@ test('Resilience stops claiming to read a watch it has never had', () => {
 });
 
 test('an empty hub says it is empty rather than claiming a count', () => {
-  for (const hubId of ['exercise', 'labs', 'nutrition', 'resilience', 'sleep']) {
+  for (const hubId of ['exercise', 'labs', 'medical', 'nutrition', 'resilience', 'sleep']) {
     const facets = coverageFor(hubId, [], NOW);
     assert.ok(facets !== null, hubId);
     assert.ok(

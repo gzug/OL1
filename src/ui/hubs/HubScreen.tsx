@@ -20,6 +20,7 @@ import { WhatChanged } from '@/ui/labs/WhatChanged';
 import { YourMarkers } from '@/ui/labs/YourMarkers';
 import { MealCockpit } from '@/ui/meals/MealCockpit';
 import { WeekScore } from '@/ui/meals/WeekScore';
+import { RecordCockpit } from '@/ui/medical/RecordCockpit';
 import { DayCockpit } from '@/ui/resilience/DayCockpit';
 import { NightCockpit } from '@/ui/sleep/NightCockpit';
 import { LoggedWeek } from '@/ui/hubs/LoggedWeek';
@@ -254,6 +255,9 @@ export function HubScreen({
             block says so rather than letting the reader assume one. */}
         {/* Resilience only. Words, tallied — see `docs/decisions/0017` for what this refuses
             to become. */}
+        {/* Health record only. It LISTS rather than summarises — three conditions is the whole
+            thing, and a count without the names is a summary of something nobody can see. */}
+        {hub.id === 'medical' && <RecordCockpit />}
         {hub.id === 'resilience' && <DayCockpit />}
         {hub.id === 'sleep' && <NightCockpit />}
         {hub.id === 'labs' && <PanelCockpit />}
