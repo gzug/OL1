@@ -25,9 +25,15 @@ because nothing was watching the date on it.
 
 The coach is told what the app holds. The context is assembled from **the same pure functions the
 cockpits render from** — `exercisePeriods`, `labsPeriods`, `nutritionPeriods`, `sleepPeriods`,
-`resiliencePeriods`, `medicalPeriods` and `coverageFor` — plus the four things the first run writes
-that no cockpit shows: the profile, the goals, the sports named, and what somebody wrote under
-*anything you live with*.
+`resiliencePeriods`, `medicalPeriods` and `coverageFor` — plus three things those seven do not
+reach:
+
+- **the marker values on the last panel**, through the same `formatMeasured` call `YourMarkers`
+  makes, for the reason below;
+- **the line at the top of every hub screen** — *"3 meals · 1 weigh-in"* — which is the only thing a
+  hub somebody made can say about what is in it;
+- **the four answers the first run collects that no cockpit shows**: the profile, the goals, the
+  sports named, and what somebody wrote under *anything you live with*.
 
 ### Why not a second summariser
 
@@ -54,8 +60,9 @@ can undo that, because nothing downstream formats a number.
   wrong. Fixing it means putting the note on the screen first.
 - **Seven days is the ceiling** for meals and nights, because that is the cockpit's window. *"How
   has my protein been this month"* cannot be answered.
-- **The Twin's biological age does not travel**, though it is on a screen the person can see. It
-  lives in `src/ui/twin/`, which another session owns.
+- **The Twin's biological age does not travel**, though it is on a screen the person can see. Two
+  reasons, and the second is the durable one: `src/ui/twin/` belongs to another session, and it is a
+  number whose honesty is carried by a paragraph — see the caption rule below.
 - **The refusals below are re-stated in the prompt, not imported.** The screen captions that say the
   same things live inside `.tsx` files, which a prompt cannot import and bare Node cannot assert.
   Two copies exist and can drift.
