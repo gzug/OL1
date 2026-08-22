@@ -70,11 +70,26 @@ export function RecordCockpit({ source = defaultHubs }: { source?: typeof defaul
         </>
       )}
 
-      {/* Said here as well as in the flow, because this is the screen somebody comes back to and
-          the flow is the screen they saw once. `docs/decisions/0019`. */}
+      {/**
+        * **The authorship claim is conditional and the refusal is not.**
+        *
+        * This read "Yours, as you wrote it" over everything, which was true while everything above
+        * it was a condition or a medication. The notes block broke it: the first run writes one of
+        * those lines itself, for a result it cannot read, and the caption was telling somebody they
+        * had written our sentence. Found on the deployed screen, a merge after the notes landed.
+        *
+        * So the claim now names what it is true of. The refusal below it is said unconditionally —
+        * `docs/decisions/0019` asks for it here as well as in the flow, because the flow is the
+        * screen somebody sees once and this is the one they come back to.
+        */}
+      {periods.length > 0 && (
+        <Text style={[styles.caption, { color: colors.textSubtle }]}>
+          Your conditions and medications are kept exactly as you wrote them.
+        </Text>
+      )}
       <Text style={[styles.caption, { color: colors.textSubtle }]}>
-        Yours, as you wrote it. Nothing here is checked against anything — no interaction is looked
-        for between two medications, and no dose is judged.
+        Nothing here is checked against anything — no interaction is looked for between two
+        medications, and no dose is judged.
       </Text>
     </View>
   );
