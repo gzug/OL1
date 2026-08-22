@@ -42,7 +42,7 @@ import { labsPeriods } from '@/ui/labs/cockpit';
 import { LEVINE_MARKERS } from '@/ui/labs/levine';
 import { EXTRA_MARKERS } from '@/ui/labs/lipids';
 import { nutritionPeriods } from '@/ui/meals/cockpit';
-import { medicalPeriods } from '@/ui/medical/cockpit';
+import { medicalPeriods, recordNotes } from '@/ui/medical/cockpit';
 import { resiliencePeriods } from '@/ui/resilience/cockpit';
 import { sleepPeriods } from '@/ui/sleep/cockpit';
 
@@ -253,14 +253,19 @@ export function aboutThem(
    * What somebody wrote under "anything you live with", and the two lines the flow writes beside it
    * for a microbiome or genetic result it cannot read.
    *
-   * Both are `note` entries on Health record and nothing distinguishes them, so the heading in
+   * **Through `recordNotes`, which is the Health record screen's own reader.** This filtered the
+   * entries itself until 2026-08-22, for the honest reason that no screen rendered them at all —
+   * `0020` named it as the one thing a coach knew that nobody could see. The screen shows them now,
+   * so there is one reader again and the crack is closed.
+   *
+   * Both kinds of note are `note` entries and nothing distinguishes them, so the heading in
    * `context.ts` claims only that this is free text on that hub — which is true of both. Calling
-   * all of it "their own words" would put ours in their mouth.
+   * all of it "their own words" would put ours in their mouth, which is the same call the screen's
+   * own heading makes.
    */
-  const lives = (entries.medical ?? [])
-    .filter((entry) => entry.kind === 'note')
-    .map((entry) => (typeof entry.payload.text === 'string' ? entry.payload.text.trim() : ''))
-    .filter((text) => text.length > 0);
+  const lives = recordNotes(entries.medical ?? []).map(
+    (note) => `${note.text} (written ${note.day})`,
+  );
 
   return {
     age: age === null ? null : formatMeasured(age, 'years'),

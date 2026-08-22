@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 
 import type { HubEntry } from '../src/core/hubs';
-import { medicalPeriods } from '../src/ui/medical/cockpit';
+import { medicalPeriods, recordNotes } from '../src/ui/medical/cockpit';
 import { NAME_LENGTH, nameProblem, recordEntryId, recordPayload } from '../src/ui/medical/record';
 
 /**
@@ -145,4 +145,63 @@ test('nothing in the block judges, classifies or compares two medications', () =
   for (const claim of ['interaction', 'severity', 'severe', 'mild', 'risk', 'warning', 'caution', 'avoid', 'contraindic']) {
     assert.ok(!text.includes(claim), `the record claimed "${claim}"`);
   }
+});
+
+/* ── The free text, which had no screen at all ──────────────────────────────────────────────── */
+
+const note = (text: string, recordedAt: string): HubEntry => ({
+  hubId: 'medical',
+  id: `note-${recordedAt}`,
+  kind: 'note',
+  payload: { text },
+  recordedAt,
+  source: 'manual',
+});
+
+/**
+ * **The first run asks "anything you live with" and files the answer here, verbatim** — and until
+ * 2026-08-22 nothing rendered it. `medicalPeriods` reads conditions and medications; `StoredEntries`
+ * prints a date and a provenance. Somebody who typed a sentence saw "2 notes" and two dates.
+ */
+test('what somebody wrote comes back out exactly as it went in', () => {
+  const said = 'Something invented, worse when travelling.';
+  assert.deepEqual(recordNotes([note(`  ${said}  `, '2026-08-01T00:00:00.000Z')]), [
+    { day: '1 Aug', text: said },
+  ]);
+});
+
+/** A note is something written on a day. The conditions above it are standing facts and sort differently. */
+test('notes are newest first, and the date they sort on is not the date they show', () => {
+  const notes = recordNotes([
+    note('Second', '2026-08-02T00:00:00.000Z'),
+    note('Thirteenth', '2026-07-13T00:00:00.000Z'),
+    note('Twentieth', '2026-08-20T00:00:00.000Z'),
+  ]);
+
+  assert.deepEqual(
+    notes.map((entry) => entry.text),
+    ['Twentieth', 'Second', 'Thirteenth'],
+  );
+  /* Sorting the FORMATTED day would put "13 Jul" before "2 Aug" and "20 Aug" last. */
+  assert.deepEqual(
+    notes.map((entry) => entry.day),
+    ['20 Aug', '2 Aug', '13 Jul'],
+  );
+});
+
+test('an empty note is absent rather than a blank line on the record', () => {
+  assert.deepEqual(recordNotes([note('   ', '2026-08-01T00:00:00.000Z')]), []);
+  assert.deepEqual(recordNotes([record('condition', 'Thing One', 'current')]), []);
+});
+
+/**
+ * **Notes alone are a record.** `RecordCockpit` used to return null on `medicalPeriods` being empty,
+ * so a hub holding nothing but what somebody typed in the first run drew no cockpit whatsoever.
+ * The two readers together are what the screen now decides on.
+ */
+test('a hub holding only notes still has something to show', () => {
+  const entries = [note('Something invented.', '2026-08-01T00:00:00.000Z')];
+
+  assert.deepEqual(medicalPeriods(entries), [], 'no condition and no medication');
+  assert.equal(recordNotes(entries).length, 1, 'and still something to render');
 });
