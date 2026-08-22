@@ -3,6 +3,7 @@ import test from 'node:test';
 
 import type { HubEntry } from '../src/core/hubs';
 import { coverageFor } from '../src/ui/hubs/coverage';
+import type { HubFacet } from '../src/ui/hubs/hubState';
 import { HUB_STATES } from '../src/ui/hubs/states';
 import { LEVINE_MARKERS } from '../src/ui/labs/levine';
 
@@ -45,14 +46,14 @@ test('Resilience stops claiming to read a watch it has never had', () => {
   assert.ok(facets !== null);
 
   for (const label of ['Heart-rate variability', 'Resting heart rate']) {
-    const facet = facets.find((row) => row.label === label);
+    const facet: HubFacet | undefined = facets.find((row) => row.label === label);
     assert.ok(facet !== undefined, label);
     assert.equal(facet.state, 'missing', `${label} still claims to be reading`);
     assert.match(facet.detail, /watch/i);
   }
 
   /* And the half that needs no watch says how much of it there is. */
-  const described = coverageFor(
+  const described: HubFacet | undefined = coverageFor(
     'resilience',
     [
       entry('resilience', 'day', '2026-08-22', { word: 'steady' }),
@@ -133,7 +134,7 @@ test('Labs counts the markers it holds and refuses a trend from one panel', () =
     ],
     NOW,
   );
-  const trends = two?.[1];
+  const trends: HubFacet | undefined = two?.[1];
   assert.ok(trends !== undefined);
   assert.equal(trends.state, 'reading');
   assert.match(trends.detail, /^2 panels/);
