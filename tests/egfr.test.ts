@@ -6,6 +6,7 @@ import {
   MIN_AGE,
   STAGE_MEANING,
   estimatedGfr,
+  gfrAsShown,
   gfrStage,
 } from '../src/application/labs/egfr';
 
@@ -122,5 +123,30 @@ test('every stage below the usual range points at a doctor, and none above it do
 test('the caveat names what actually moves a single creatinine', () => {
   for (const cause of ['hydration', 'protein', 'training']) {
     assert.ok(EGFR_CAVEAT.toLowerCase().includes(cause), `the caveat does not mention ${cause}`);
+  }
+});
+
+/**
+ * **The screen must not contradict itself.**
+ *
+ * `Math.round` and `gfrStage` were both correct and were given different inputs, so wherever
+ * rounding crossed a band boundary the number and the sentence under it described different
+ * people. The sharp one is the bottom of G2: 59.5 printed as `60`, which this file's own G2 wording
+ * calls ordinary, with G3a's "worth a doctor's eyes" underneath it.
+ */
+test('the band belongs to the number that is printed, at every boundary', () => {
+  for (const [value, shown, stage] of [
+    [59.5, 60, 'G2'],
+    [59.49, 59, 'G3a'],
+    [89.6, 90, 'G1'],
+    [89.4, 89, 'G2'],
+    [44.5, 45, 'G3a'],
+    [29.5, 30, 'G3b'],
+    [14.5, 15, 'G4'],
+  ] as const) {
+    const result = gfrAsShown(value);
+    assert.equal(result.shown, shown, `${value} printed as ${result.shown}`);
+    assert.equal(result.stage, stage, `${result.shown} was staged ${result.stage}`);
+    assert.equal(result.stage, gfrStage(result.shown), 'the band must follow the printed number');
   }
 });

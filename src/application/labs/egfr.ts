@@ -96,6 +96,28 @@ export function gfrStage(value: number): GfrStage {
 }
 
 /**
+ * The number a person reads, and the band that belongs to THAT number.
+ *
+ * **The screen used to round one way and stage the other**, and the two disagreed wherever rounding
+ * crossed a boundary. An eGFR of 59.5 printed as `60` — a figure this app's own G2 wording calls
+ * ordinary — underneath the G3a sentence, "worth repeating and worth a doctor's eyes". The reverse
+ * ran at the top: 89.6 printed as `90`, the exact edge of the healthiest band, with the band below
+ * it described underneath.
+ *
+ * Nothing was wrong with either half. `Math.round` was right, `gfrStage` was right, and they were
+ * given different inputs — Shape 1 of `docs/decisions/0013`, two sentences that were each true
+ * about a different number.
+ *
+ * **Rounding first is also what a laboratory does.** A report prints a whole number and stages the
+ * value it printed, so a person can check this screen against the paper in their hand and find the
+ * same two things. Staging the unrounded value would be defensible arithmetic and useless to read.
+ */
+export function gfrAsShown(value: number): { readonly shown: number; readonly stage: GfrStage } {
+  const shown = Math.round(value);
+  return { shown, stage: gfrStage(shown) };
+}
+
+/**
  * What the stage means, in words, with no instruction in any of them.
  *
  * `G2` is the one worth getting right: it covers 60–89, which is where an enormous number of

@@ -8,7 +8,7 @@ import {
   EGFR_UNIT,
   STAGE_MEANING,
   estimatedGfr,
-  gfrStage,
+  gfrAsShown,
 } from '@/application/labs/egfr';
 import { ageFrom, profiles as defaultProfiles } from '@/application/profile/profile';
 import { fontFamily, lineHeights, radius, spacing, tracking, typography, useTheme } from '@/ui/theme';
@@ -80,14 +80,14 @@ export function KidneyFunction({
    */
   if (value === null) return null;
 
-  const stage = gfrStage(value);
+  const { shown, stage } = gfrAsShown(value);
 
   return (
     <View style={styles.block}>
       <Text style={[styles.heading, { color: colors.textSubtle }]}>KIDNEY FUNCTION</Text>
       <View style={[styles.card, { backgroundColor: colors.surface }]}>
         <View style={styles.row}>
-          <Text style={[styles.value, { color: colors.text }]}>{Math.round(value)}</Text>
+          <Text style={[styles.value, { color: colors.text }]}>{shown}</Text>
           <Text style={[styles.unit, { color: colors.textMuted }]}>{EGFR_UNIT}</Text>
         </View>
         <Text style={[styles.meaning, { color: colors.textMuted }]}>{STAGE_MEANING[stage]}</Text>
