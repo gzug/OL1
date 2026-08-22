@@ -175,7 +175,18 @@ export function nutritionScore(meals: readonly ScoredMeal[]): NutritionScore {
   };
 }
 
-/** Which parts the score was actually made of, for the sentence that has to admit it. */
+/**
+ * Which parts the score was actually made of, for the sentence that has to admit it.
+ *
+ * **Ordered by weight, biggest first, and the order is READ from `WEIGHTS`.** It used to come out
+ * of `Object.keys`, which is the declaration order of a lookup table written alphabetically — so
+ * the screen named fibre before protein while protein carries the larger share of the number. A
+ * key order is not a ranking, and reading one as if it were is how `#104` put ApoB at the top of a
+ * list the panel prints last.
+ *
+ * Deriving it here means a change to a weight moves the sentence with it, rather than leaving a
+ * second copy of the ranking to be remembered.
+ */
 export function partsUsed(score: NutritionScore): readonly string[] {
   const names: Record<keyof SubScores, string> = {
     fiber: 'fibre',
@@ -184,5 +195,6 @@ export function partsUsed(score: NutritionScore): readonly string[] {
   };
   return (Object.keys(names) as (keyof SubScores)[])
     .filter((key) => score.subScores[key] !== null)
+    .sort((a, b) => WEIGHTS[b] - WEIGHTS[a])
     .map((key) => names[key]);
 }

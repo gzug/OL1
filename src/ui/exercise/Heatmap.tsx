@@ -94,8 +94,8 @@ export function Heatmap({ hubId, source = defaultHubs }: { hubId: string; source
         * that gap enormous rather than merely wrong.
         */}
       <Text style={[styles.note, { color: colors.textSubtle }]}>
-        All time: {lifetimeLine(entries)}. Darkest is your busiest day above — an empty square means
-        nothing was logged, not that nothing happened.
+        All time: {lifetimeLine(entries)}. The darkest square is your busiest day of these twelve
+        weeks — an empty square means nothing was logged, not that nothing happened.
       </Text>
     </View>
   );
