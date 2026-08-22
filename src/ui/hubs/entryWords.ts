@@ -23,6 +23,8 @@ const KINDS: Readonly<Record<string, { one: string; many: string }>> = {
    * when an unknown kind still renders, and it is also the signal that a kind has become real enough
    * to deserve a word.
    */
+  /** A day somebody described in one word. Never a score — `docs/decisions/0017`. */
+  day: { many: 'days described', one: 'day described' },
   goal: { many: 'goals', one: 'goal' },
   meal: { many: 'meals', one: 'meal' },
   night: { many: 'nights', one: 'night' },
