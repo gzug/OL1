@@ -77,7 +77,8 @@ test('whole food is honestly absent, and the score says which parts it used', ()
   const score = nutritionScore(meals);
 
   assert.equal(score.subScores.wholeFood, null);
-  assert.deepEqual(partsUsed(score), ['fibre', 'protein']);
+  /* Biggest share first — this asserted the alphabetical order it used to come out in. */
+  assert.deepEqual(partsUsed(score), ['protein', 'fibre']);
 });
 
 test('the score counts days as well as meals', () => {
