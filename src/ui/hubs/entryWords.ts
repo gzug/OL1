@@ -25,6 +25,7 @@ const KINDS: Readonly<Record<string, { one: string; many: string }>> = {
    */
   goal: { many: 'goals', one: 'goal' },
   meal: { many: 'meals', one: 'meal' },
+  night: { many: 'nights', one: 'night' },
   note: { many: 'notes', one: 'note' },
   panel: { many: 'panels', one: 'panel' },
   session: { many: 'sessions', one: 'session' },

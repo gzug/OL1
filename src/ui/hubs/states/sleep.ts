@@ -21,43 +21,28 @@ import type { HubState } from '../hubState';
  * why Friday reads as "not worn" rather than as zero.
  */
 export const sleep: HubState = {
-  basis: 'From 6 of the last 7 nights recorded by your watch.',
+  basis: 'From the nights you have typed in. No watch is connected.',
+  /**
+   * **The sample cockpit is gone, because a real one exists.**
+   *
+   * `src/ui/sleep/NightCockpit.tsx` reads the nights somebody logged. What went with the invented
+   * rows is the claim underneath them: this fixture said six of the last seven nights were
+   * "recorded by your watch", and there is no watch — the phone and everything on it are still
+   * deferred. Sleep is the domain people most expect a device to have measured for them, which is
+   * exactly why a placeholder implying one was the worst place to leave that impression.
+   *
+   * The bed and wake times went too. `night.ts` says why they are not asked for yet, and a cockpit
+   * cannot report what nobody typed.
+   */
   cockpit: {
-    periods: [
-      {
-        label: 'Last night',
-        rows: [
-          { label: 'Time asleep', value: '7h 5m', when: 'Sun → Mon' },
-          { label: 'Went to bed', value: '23:48', when: 'about your usual' },
-          { label: 'Woke', value: '06:53', when: 'earlier than usual' },
-        ],
-      },
-      {
-        label: 'This week',
-        rows: [
-          { label: 'Typical night', value: '6h 51m', when: 'across 6 nights' },
-          { label: 'Shortest', value: '5h 32m', when: 'Wednesday' },
-          { label: 'Longest', value: '8h 4m', when: 'Saturday' },
-        ],
-      },
-    ],
-    week: {
-      caption: 'One night is missing — the watch was not worn on Friday.',
-      days: [
-        { fill: 0.82, label: 'M' },
-        { fill: 0.74, label: 'T' },
-        { fill: 0.61, label: 'W' },
-        { fill: 0.79, label: 'T' },
-        { fill: 0, label: 'F' },
-        { fill: 0.94, label: 'S' },
-        { fill: 0.83, label: 'S' },
-      ],
-    },
+    empty: 'Your own nights fill the cockpit above this line. There is no invented one left here.',
+    periods: [],
   },
   contribute: {
-    note: 'Neither way in is built yet.',
+    href: '/log-night',
+    note: 'Connecting a watch waits for the phone. Typing a night in does not.',
     primary: 'Add a night by hand',
-    secondary: 'Connect a second device',
+    secondary: 'How long you slept, and which night it was',
   },
   facets: [
     { detail: '6 of the last 7 nights', label: 'Time asleep', state: 'reading' },
