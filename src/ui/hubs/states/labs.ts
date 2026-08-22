@@ -18,24 +18,20 @@ import type { HubState } from '../hubState';
  */
 export const labs: HubState = {
   basis: 'From 1 panel, uploaded 12 Mar.',
+  /**
+   * **The sample cockpit is gone, because a real one exists.**
+   *
+   * `src/ui/labs/PanelCockpit.tsx` reads the panels on file. Its rows are the date, how many
+   * markers the panel carried, and whether it carries the nine the age calculation needs — the
+   * last of which was the reason to build it: a panel that cannot produce a biological age said so
+   * nowhere a person would look while holding their report.
+   *
+   * The invented rows had claimed `34 markers read` and `34 of 34 verified` on a screen that has
+   * never accepted more than seventeen. `hub-states.test.ts` guards the ceiling on what is left.
+   */
   cockpit: {
-    periods: [
-      {
-        label: 'Last panel',
-        rows: [
-          { label: 'Uploaded', value: '12 Mar', when: 'about five months ago' },
-          { label: 'Markers read', value: '12', when: 'from that panel' },
-          { label: 'Verified by you', value: '12 of 12', when: 'at upload' },
-        ],
-      },
-      {
-        label: 'Since then',
-        rows: [
-          { label: 'New panels', value: 'None', when: 'nothing since 12 Mar' },
-          { label: 'Feeds the drift number', value: 'Yes', when: 'it is the only source' },
-        ],
-      },
-    ],
+    empty: 'Your own panels fill the cockpit above this line. There is no invented one left here.',
+    periods: [],
   },
   contribute: {
     href: '/add-panel',

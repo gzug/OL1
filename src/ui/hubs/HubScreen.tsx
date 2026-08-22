@@ -12,6 +12,7 @@ import { RecentThreads } from '@/ui/chat/RecentThreads';
 import { Heatmap } from '@/ui/exercise/Heatmap';
 import { SessionCockpit } from '@/ui/exercise/SessionCockpit';
 import { KidneyFunction } from '@/ui/labs/KidneyFunction';
+import { PanelCockpit } from '@/ui/labs/PanelCockpit';
 import { PanelAge } from '@/ui/labs/PanelAge';
 import { MarkerJourney } from '@/ui/labs/MarkerJourney';
 import { WhatChanged } from '@/ui/labs/WhatChanged';
@@ -220,6 +221,9 @@ export function HubScreen({
             fourteen-month-old panel is not wrong — it is old, and a screen that omits the date
             invites it to be read as current. */}
         {hub.id === 'labs' && <PanelAge />}
+        {/* What is on the panel, and whether it carries the nine. Above `KidneyFunction`
+            because "can an age be worked out at all" comes before any one derived number. */}
+        {hub.id === 'labs' && <PanelCockpit />}
         {hub.id === 'labs' && <KidneyFunction />}
         {hub.id === 'labs' && <YourMarkers />}
         {hub.id === 'labs' && <WhatChanged />}

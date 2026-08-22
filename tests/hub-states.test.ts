@@ -4,7 +4,6 @@ import test from 'node:test';
 import { isDomainHub, orbitHubs } from '../src/ui/hubs/catalog';
 import { SAMPLE_DATA_LINE } from '../src/ui/hubs/hubState';
 import { HUB_STATES, hubStateFor } from '../src/ui/hubs/states';
-import { labs } from '../src/ui/hubs/states/labs';
 import { LEVINE_MARKERS } from '../src/ui/labs/levine';
 import { EXTRA_MARKERS } from '../src/ui/labs/lipids';
 
@@ -157,35 +156,25 @@ test('the sample-data guard fires on a real claim and not on a comment about one
  * **A count is a claim, and being sample data does not license an impossible one.**
  *
  * The Labs fixture said `34 markers` and `34 of 34 verified`. A panel screen has never accepted
- * more than seventeen — nine the age calculation reads and eight it records — so the sample cockpit
- * described an app that cannot exist, and the real cockpit replacing it would read as a regression.
+ * more than seventeen, so the sample cockpit described an app that cannot exist.
  *
- * The ceiling is READ from the two marker lists rather than written down here, so adding an
- * eighteenth marker raises it on its own and this test never has to be remembered.
+ * Those rows have since been replaced by a real cockpit — `src/ui/labs/cockpit.ts`, guarded in
+ * `tests/labs-cockpit.test.ts`, which cannot invent a count because it reads one. What is left here
+ * is the facet copy, which is still written by hand and still able to overclaim.
+ *
+ * The ceiling is READ from the two marker lists rather than written down, so adding an eighteenth
+ * marker raises it on its own and this test never has to be remembered.
  */
-test('the Labs fixture cannot claim more markers than a panel can hold', () => {
+test('no fixture claims more markers than a panel can hold', () => {
   const ceiling = LEVINE_MARKERS.length + EXTRA_MARKERS.length;
 
-  const rows = labs.cockpit.periods.flatMap((period) => period.rows);
+  const claims = [...JSON.stringify(HUB_STATES).matchAll(/(\d+)\s+markers?\b/g)];
+  assert.ok(claims.length > 0, 'nothing counts markers any more, so this stopped guarding anything');
 
-  /* By name, and the absence of one fails: a row counting markers that gets renamed would
-     otherwise slip out of this test silently, which is how the 34 survived four months. */
-  for (const label of ['Markers read', 'Verified by you']) {
-    const row = rows.find((entry) => entry.label === label);
-    assert.ok(row !== undefined, `"${label}" was renamed, so it stopped being guarded`);
-
-    for (const [digits] of row.value.matchAll(/\d+/g)) {
-      assert.ok(
-        Number(digits) <= ceiling,
-        `"${label}" claims ${digits} markers and only ${ceiling} exist`,
-      );
-    }
-  }
-
-  for (const [, digits] of JSON.stringify(labs).matchAll(/(\d+)\s+markers\b/g)) {
+  for (const [, digits] of claims) {
     assert.ok(
       Number(digits) <= ceiling,
-      `a facet claims ${digits} markers and only ${ceiling} exist`,
+      `a fixture claims ${digits} markers and only ${ceiling} exist`,
     );
   }
 });
