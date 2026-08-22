@@ -10,36 +10,22 @@ import type { HubState } from '../hubState';
  */
 export const exercise: HubState = {
   basis: 'From 5 sessions in the last 7 days, across running and the gym.',
+  /**
+   * **The sample cockpit is gone, because a real one exists.**
+   *
+   * `src/ui/exercise/SessionCockpit.tsx` builds "Last session" and "Last seven days" out of
+   * somebody's own entries, above the sample line. Leaving the invented rows here would put two
+   * near-identical blocks on one screen carrying different numbers — the exact "screen that cannot
+   * agree with itself" that `weekly.ts` was written to end.
+   *
+   * The seven-bar strip went with them: `LoggedWeek` draws the real one, from the real window.
+   *
+   * The invented row that is NOT coming back is "Rest days". This app cannot tell a rest day from
+   * an unlogged one, and says so in the caption under every strip it draws.
+   */
   cockpit: {
-    periods: [
-      {
-        label: 'Last session',
-        rows: [
-          { label: 'Running', value: '48 min', when: 'yesterday evening' },
-          { label: 'Distance', value: '8.2 km', when: 'yesterday evening' },
-        ],
-      },
-      {
-        label: 'This week',
-        rows: [
-          { label: 'Sessions', value: '5', when: 'across 4 days' },
-          { label: 'Time moving', value: '3h 40m', when: 'this week' },
-          { label: 'Rest days', value: '3', when: 'Wed, Fri, Sun' },
-        ],
-      },
-    ],
-    week: {
-      caption: 'Two sessions landed on the same day. Wednesday and Friday were rest.',
-      days: [
-        { fill: 0.55, label: 'M' },
-        { fill: 0.88, label: 'T' },
-        { fill: 0, label: 'W' },
-        { fill: 1, label: 'T' },
-        { fill: 0, label: 'F' },
-        { fill: 0.62, label: 'S' },
-        { fill: 0, label: 'S' },
-      ],
-    },
+    empty: 'Your own sessions fill the cockpit above this line. There is no invented one left here.',
+    periods: [],
   },
   contribute: {
     /**

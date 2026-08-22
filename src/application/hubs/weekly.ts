@@ -88,6 +88,23 @@ export function weekOfEntries(
 }
 
 /**
+ * The seven day-keys the window covers, oldest first, ending on today.
+ *
+ * **One bucketing, not two.** The strip drew its own buckets and anything else counting days would
+ * have drawn its own again — and a cockpit row naming a quiet Wednesday while the bar above it
+ * shows a Wednesday with something on it is the failure this repository keeps finding. Everything
+ * that divides the window into days now divides it here.
+ *
+ * UTC days, the same `slice(0, 10)` reckoning every other date in this app uses.
+ */
+export function weekDayKeys(now: string): readonly string[] {
+  const end = new Date(now).getTime();
+  return Array.from({ length: WEEK_DAYS }, (_, index) =>
+    new Date(end - (WEEK_DAYS - 1 - index) * 86_400_000).toISOString().slice(0, 10),
+  );
+}
+
+/**
  * The seven-day strip, oldest first, as a fraction of the busiest day.
  *
  * Relative to the busiest day rather than to a target, for the same reason the body figure's scale
@@ -101,7 +118,6 @@ export function weekStrip(
   now: string,
 ): readonly { fill: number; label: string }[] {
   const letters = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
-  const end = new Date(now).getTime();
 
   /**
    * Drawn from the same entries the count is made of.
@@ -112,14 +128,10 @@ export function weekStrip(
    */
   const week = entriesThisWeek(entries, kind, now);
 
-  const counts = Array.from({ length: WEEK_DAYS }, (_, index) => {
-    const dayStart = new Date(end - (WEEK_DAYS - 1 - index) * 86_400_000);
-    const key = dayStart.toISOString().slice(0, 10);
-    return {
-      count: week.filter((entry) => localDay(entry.recordedAt) === key).length,
-      label: letters[dayStart.getUTCDay()] ?? '·',
-    };
-  });
+  const counts = weekDayKeys(now).map((key) => ({
+    count: week.filter((entry) => localDay(entry.recordedAt) === key).length,
+    label: letters[new Date(`${key}T00:00:00.000Z`).getUTCDay()] ?? '·',
+  }));
 
   const peak = Math.max(...counts.map((day) => day.count), 0);
   return counts.map((day) => ({
