@@ -9,6 +9,12 @@ import type { HubState } from '../hubState';
  *
  * No marker is named and no value is given. Naming one would put a lab result on a public preview
  * and invite it to be read as a finding, which is the one thing the fixtures rule is firmest about.
+ *
+ * **A count is still a claim.** This said `34 markers` while the panel screen has never accepted
+ * more than seventeen — nine the age calculation reads and eight it records — so the sample cockpit
+ * described an app that cannot exist. Being labelled sample data does not license a number the
+ * product can never produce: it sets an expectation, and the real cockpit that replaces this one
+ * would read as a regression against it.
  */
 export const labs: HubState = {
   basis: 'From 1 panel, uploaded 12 Mar.',
@@ -18,8 +24,8 @@ export const labs: HubState = {
         label: 'Last panel',
         rows: [
           { label: 'Uploaded', value: '12 Mar', when: 'about five months ago' },
-          { label: 'Markers read', value: '34', when: 'from that panel' },
-          { label: 'Verified by you', value: '34 of 34', when: 'at upload' },
+          { label: 'Markers read', value: '12', when: 'from that panel' },
+          { label: 'Verified by you', value: '12 of 12', when: 'at upload' },
         ],
       },
       {
@@ -38,7 +44,7 @@ export const labs: HubState = {
     secondary: 'Photo, file, or by hand',
   },
   facets: [
-    { detail: '34 markers from the 12 Mar panel', label: 'Blood panel', state: 'reading' },
+    { detail: '12 markers from the 12 Mar panel', label: 'Blood panel', state: 'reading' },
     { detail: 'One panel — no trend yet', label: 'Trends', state: 'missing' },
     { detail: 'Not connected yet', label: 'Genomics', state: 'missing' },
     { detail: 'Not connected yet', label: 'Microbiome', state: 'missing' },
