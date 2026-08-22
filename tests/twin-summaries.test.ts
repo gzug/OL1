@@ -2,12 +2,15 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 
 import {
+  SAME_WEIGHT_KG,
   SILENCE_WORDS,
   domainSummaries,
   exerciseSummary,
   healthSummary,
   nutritionSummary,
   unbuiltSummaries,
+  weightMoved,
+  whatMoved,
 } from '../src/ui/twin/summaries';
 
 const NOW = '2026-08-22T09:00:00.000Z';
@@ -198,4 +201,96 @@ test('an empty store still shows every domain, each saying what it is waiting fo
     if (summary.said !== 'nothing') return;
     assert.ok(SILENCE_WORDS[summary.why].length > 0);
   }
+});
+
+/* ── What moved since last time ────────────────────────────────────────────────────────────── */
+
+/**
+ * A DIRECTION NEEDS TWO POINTS. One panel is a reading; calling it a movement invents a direction
+ * from a single measurement, which is the shape of error this repository keeps finding.
+ */
+test('one panel has moved nowhere, because there is nothing to have moved from', () => {
+  assert.equal(whatMoved([]), null);
+  assert.equal(whatMoved([entry('labs', 'panel', { markers: { crp: 1 } }, 30)]), null);
+});
+
+test('a marker that moved is named, with its direction and no verdict', () => {
+  const line = whatMoved([
+    entry('labs', 'panel', { markers: { crp: 1.0 } }, 200),
+    entry('labs', 'panel', { markers: { crp: 2.0 } }, 10),
+  ]);
+
+  assert.ok(line !== null);
+  assert.match(line, /up/i, 'the direction went missing');
+  assert.doesNotMatch(
+    line,
+    /\b(better|worse|improved|worsened|good|bad|healthy|risk)\b/i,
+    'a summary card started making a clinical judgement',
+  );
+});
+
+/**
+ * A move too small to call is shown as a pair of numbers on the Labs hub and described nowhere. A
+ * one-line card has no room for that nuance, so it says nothing rather than something it cannot
+ * qualify.
+ */
+test('a move too small to call is not described as a move', () => {
+  const line = whatMoved([
+    entry('labs', 'panel', { markers: { crp: 1.0 } }, 200),
+    entry('labs', 'panel', { markers: { crp: 1.02 } }, 10),
+  ]);
+
+  assert.equal(line, 'Nothing moved much since the one before');
+});
+
+/* ── Weight ────────────────────────────────────────────────────────────────────────────────── */
+
+test('one weigh-in has no direction', () => {
+  assert.equal(weightMoved([entry('nutrition', 'weight', { kg: 76.4 }, 1)]), null);
+});
+
+test('a real change names its direction and size', () => {
+  const down = weightMoved([
+    entry('nutrition', 'weight', { kg: 76.4 }, 1),
+    entry('nutrition', 'weight', { kg: 77.1 }, 30),
+  ]);
+  assert.equal(down, 'Down 0.7 kg since the one before');
+
+  const up = weightMoved([
+    entry('nutrition', 'weight', { kg: 78 }, 1),
+    entry('nutrition', 'weight', { kg: 77.1 }, 30),
+  ]);
+  assert.match(up ?? '', /^Up 0\.9 kg/);
+});
+
+/**
+ * A bathroom scale does not agree with itself across a day. Reporting a hundred grams as a direction
+ * turns noise into a trend — the same refusal `MEANINGFUL_CHANGE` makes about blood, applied to a
+ * different instrument.
+ */
+test('a move smaller than the scale is level, not a trend', () => {
+  const line = weightMoved([
+    entry('nutrition', 'weight', { kg: 76.4 }, 1),
+    entry('nutrition', 'weight', { kg: 76.5 }, 30),
+  ]);
+
+  assert.equal(line, 'Level since the one before');
+  assert.ok(SAME_WEIGHT_KG > 0.1, 'the floor is below what a scale can disagree with itself by');
+});
+
+/** The card leads with the weight and the change is what sits under it, not the other way round. */
+test('the nutrition card keeps the weight as its headline and the direction underneath', () => {
+  const summary = nutritionSummary(
+    [
+      entry('nutrition', 'weight', { kg: 76.4 }, 1),
+      entry('nutrition', 'weight', { kg: 77.1 }, 30),
+      entry('nutrition', 'meal', {}, 1),
+    ],
+    NOW,
+  );
+
+  assert.equal(summary.said, 'something');
+  if (summary.said !== 'something') return;
+  assert.equal(summary.headline, '76.4 kg');
+  assert.equal(summary.detail, 'Down 0.7 kg since the one before');
 });

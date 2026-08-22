@@ -21,8 +21,10 @@
 
 import { buildHeatmap, minutesByDate, type Heatmap } from '@/application/exercise/heatmap';
 import { weekOfEntries } from '@/application/hubs/weekly';
+import { comparePanels, tooSmallToCall, type MarkerChange } from '@/application/labs/panelChange';
 import { agoWords, panelRecency } from '@/application/labs/panelRecency';
 import type { HubEntry } from '@/core/hubs';
+import { markerName } from '@/ui/twin/bioAgeCopy';
 
 /**
  * Why a domain has nothing to say. Never merely "no data" — the reason is the useful half.
@@ -82,15 +84,69 @@ export function healthSummary(entries: readonly HubEntry[], now: string): Domain
   }
 
   const others = entries.filter((entry) => entry.kind !== 'panel').length;
+  const moved = whatMoved(panels);
 
   return {
-    detail: others === 0 ? null : `${others} ${others === 1 ? 'other note' : 'other notes'}`,
+    detail:
+      moved ??
+      (others === 0 ? null : `${others} ${others === 1 ? 'other note' : 'other notes'}`),
     headline: `Blood drawn ${agoWords(recency.monthsAgo)}`,
     hubId: 'medical',
     label: 'Health record',
     said: 'something',
     strip: null,
   };
+}
+
+/** A panel's markers, defensively — a stored payload is a claim about shape, not a guarantee. */
+function markersOf(entry: HubEntry): Readonly<Record<string, unknown>> {
+  const markers = entry.payload.markers;
+  return typeof markers === 'object' && markers !== null
+    ? (markers as Readonly<Record<string, unknown>>)
+    : {};
+}
+
+/**
+ * What moved between the last two panels, in the fewest words that are true.
+ *
+ * **`null` with fewer than two panels, and that is the whole rule.** A change needs something to
+ * change from. One panel is a reading; calling it a movement would be inventing a direction from a
+ * single point, which is the shape of error this repository keeps finding.
+ *
+ * **Only notable moves are named.** `tooSmallToCall` marks a real move that does not clear the
+ * threshold, and those are deliberately not described — the Labs hub shows the pair of numbers and
+ * lets a person see it, which is the honest treatment for a difference too small to call. A card
+ * with one line has no room for that nuance, so it says nothing rather than something it cannot
+ * qualify.
+ *
+ * **Direction only, never a verdict.** "ApoB down" is a fact. "ApoB improved" is a clinical judgement
+ * this app refuses to make anywhere — `egfr.ts` and `markerContext.ts` both fail the build on copy
+ * that diagnoses, and a summary card is not the place to start.
+ */
+export function whatMoved(panels: readonly HubEntry[]): string | null {
+  if (panels.length < 2) return null;
+
+  const byTime = [...panels].sort((a, b) => a.recordedAt.localeCompare(b.recordedAt));
+  const later = byTime[byTime.length - 1];
+  const earlier = byTime[byTime.length - 2];
+  if (later === undefined || earlier === undefined) return null;
+
+  const { changes } = comparePanels(
+    { markers: markersOf(earlier), recordedAt: earlier.recordedAt },
+    { markers: markersOf(later), recordedAt: later.recordedAt },
+  );
+
+  const notable = changes.filter(
+    (change: MarkerChange) => change.notable && !tooSmallToCall(change),
+  );
+  if (notable.length === 0) return 'Nothing moved much since the one before';
+
+  const named = notable
+    .slice(0, 2)
+    .map((change) => `${markerName(change.key)} ${change.direction}`)
+    .join(', ');
+
+  return notable.length > 2 ? `${named}, and ${notable.length - 2} more` : named;
 }
 
 /* ── Exercise ──────────────────────────────────────────────────────────────────────────────── */
@@ -153,12 +209,12 @@ export function nutritionSummary(entries: readonly HubEntry[], now: string): Dom
 
   const week = weekOfEntries(meals, 'meal', now);
   const latest = weights[0];
+  const moved = weightMoved(weights);
+  const mealLine =
+    meals.length === 0 ? null : `${week.total} ${week.total === 1 ? 'meal' : 'meals'} this week`;
 
   return {
-    detail:
-      meals.length === 0
-        ? null
-        : `${week.total} ${week.total === 1 ? 'meal' : 'meals'} this week`,
+    detail: moved ?? mealLine,
     headline:
       latest === undefined
         ? `${meals.length} ${meals.length === 1 ? 'meal' : 'meals'} logged`
@@ -168,6 +224,37 @@ export function nutritionSummary(entries: readonly HubEntry[], now: string): Dom
     said: 'something',
     strip: null,
   };
+}
+
+/** Under this, two weigh-ins are the same weight measured twice. Scales do not agree with themselves. */
+export const SAME_WEIGHT_KG = 0.2;
+
+/**
+ * Which way the weight went, against the weigh-in before it.
+ *
+ * **`null` on a single weigh-in**, for the same reason a single panel has nothing to compare: a
+ * direction drawn from one point is invented.
+ *
+ * **And `null` on a move under two hundred grams.** A bathroom scale does not agree with itself
+ * across a day, and reporting 0.1 kg as a direction turns noise into a trend — which is precisely
+ * what the panel comparison refuses to do with `MEANINGFUL_CHANGE`, applied to a different
+ * instrument.
+ *
+ * Newest first, because `nutritionSummary` sorts them that way and re-sorting here would be a second
+ * opinion about which weigh-in is current.
+ */
+export function weightMoved(newestFirst: readonly HubEntry[]): string | null {
+  if (newestFirst.length < 2) return null;
+
+  const now = newestFirst[0]?.payload.kg;
+  const before = newestFirst[1]?.payload.kg;
+  if (typeof now !== 'number' || typeof before !== 'number') return null;
+
+  const delta = now - before;
+  if (Math.abs(delta) < SAME_WEIGHT_KG) return 'Level since the one before';
+
+  const size = (Math.round(Math.abs(delta) * 10) / 10).toFixed(1);
+  return `${delta < 0 ? 'Down' : 'Up'} ${size} kg since the one before`;
 }
 
 /* ── The two that cannot speak yet ─────────────────────────────────────────────────────────── */
