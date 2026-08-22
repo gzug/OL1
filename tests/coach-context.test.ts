@@ -8,6 +8,7 @@ import type { Profile } from '../src/core/profile';
 import { coachContext, loggedLine, type EntriesByHub } from '../src/ui/chat/coachContext';
 import { coachesAtTable } from '../src/ui/chat/coachList';
 import { SEED_HUBS } from '../src/ui/hubs/catalog';
+import { hubStateFor } from '../src/ui/hubs/states';
 import { exercisePeriods } from '../src/ui/exercise/cockpit';
 import { nutritionPeriods } from '../src/ui/meals/cockpit';
 import { resiliencePeriods } from '../src/ui/resilience/cockpit';
@@ -345,6 +346,35 @@ test('a hub put away is not read to a coach', () => {
 /** It is a place on the ring, not a hub: no coach, no cockpit, and it can never hold anything. */
 test('the Open Table is not reported as a hub with nothing in it', () => {
   assert.equal(promptFor({}).includes('Open Table'), false);
+});
+
+/**
+ * **The worst thing this feature could do, and it cannot.**
+ *
+ * Every hub screen still carries an invented cockpit under `SAMPLE_DATA_LINE`, and Resilience's is
+ * the sharpest case: it prints a heart-rate variability of `48 ms` for a hub that reads no watch and
+ * says so in its own coverage. On a screen it sits under a line saying it is invented. In a prompt
+ * there is no line, and a coach quoting it would be inventing a measurement about somebody's body.
+ *
+ * It cannot happen, because nothing here reads `HUB_STATES` — the context is built from `cockpit.ts`
+ * and `coverage.ts` and from nothing else. This is that guarantee, asserted rather than assumed.
+ */
+test('the invented cockpit under the sample line never reaches a coach', () => {
+  const invented = hubStateFor('resilience')?.cockpit.periods ?? [];
+  const millisecond = invented.flatMap((period) => period.rows).filter((row) => row.value.endsWith(' ms'));
+  assert.ok(millisecond.length > 0, 'the fixture this guards has gone — retire this test with it');
+
+  const prompt = promptFor({
+    resilience: [entry('resilience', 'day', { word: 'steady' })],
+    sleep: [entry('sleep', 'night', { minutes: 428 })],
+  });
+
+  /* Nothing this app measures is written in milliseconds. Heart-rate variability is the only thing
+     that would be, and it waits for a watch. */
+  assert.equal(prompt.includes(' ms'), false, 'an invented measurement reached a coach');
+  for (const row of millisecond) {
+    assert.equal(prompt.includes(row.value), false, `the fixture value ${row.value} reached a coach`);
+  }
 });
 
 /** Every hub, for every coach — the owner's call. The blood panel is not the Longevity Guide's alone. */
