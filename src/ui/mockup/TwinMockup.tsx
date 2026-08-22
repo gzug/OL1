@@ -9,6 +9,7 @@ import { BioAgeBlock } from '@/ui/twin/BioAgeBlock';
 import { Ledger } from '@/ui/twin/Ledger';
 import { bloodWorkSource } from '@/ui/twin/bioAgeCopy';
 import { BodyFigure } from '@/ui/twin/BodyFigure';
+import { DomainCards } from '@/ui/twin/DomainCards';
 import { useBioAge } from '@/ui/twin/useBioAge';
 import { twinSources } from '@/ui/twin/sources';
 import { useMuscleLoad } from '@/ui/twin/useMuscleLoad';
@@ -117,6 +118,17 @@ export function TwinMockup() {
           ))}
         </View>
       </Section>
+
+      {/**
+        * Every domain, saying what it currently knows — the spec's own claim, on screen at last:
+        * *One twin, fed by every domain, is the claim the orbit exists to make.* Home draws each hub
+        * connected to the centre, and until this landed, opening the centre proved nothing.
+        *
+        * It sits under the number and its sources rather than above them because the drift number
+        * leads the Twin by the same spec line, and because these cards are what the number sits in
+        * the middle of rather than a competitor to it.
+        */}
+      <DomainCards />
 
       {/* Was four invented rows under a footer reading "Showing 4 of 148", where 148 was a number
           nobody could stand behind. `Ledger` renders nothing at all until something is logged, so a
