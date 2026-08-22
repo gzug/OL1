@@ -74,7 +74,9 @@ export function medicalPeriods(entries: readonly HubEntry[]): readonly CockpitPe
   const records = entries.map(recordOf).filter((record): record is Record_ => record !== null);
 
   return (['condition', 'medication'] as const)
-    .map((kind) => {
+    /* Annotated, because the inferred literal has a MUTABLE `rows` and `CockpitPeriod` wants a
+       readonly one — so the narrowing predicate below has nothing valid to narrow to. */
+    .map((kind): CockpitPeriod | null => {
       const mine = ordered(records.filter((record) => record.kind === kind));
       if (mine.length === 0) return null;
 
