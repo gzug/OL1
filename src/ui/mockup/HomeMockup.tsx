@@ -8,7 +8,6 @@ import { toggleCoach } from '@/application/chat/threads';
 import { ChatBar } from '@/ui/chat/ChatBar';
 import { ChatsDrawer } from '@/ui/chat/ChatsDrawer';
 import { CoachSelector } from '@/ui/chat/CoachSelector';
-import { ThreadList } from '@/ui/chat/ThreadList';
 import { coachesAtTable } from '@/ui/chat/coachList';
 import type { Attachment } from '@/core/attachments';
 import { coachForHub, orbitHubs, ringPlaceCount, type HubId } from '@/ui/hubs/catalog';
@@ -74,7 +73,7 @@ function figureScale(boxHeight: number): number {
  * `chats` is the full-screen drawer; the other two are sheets that sit above the bar. They share
  * one piece of state because only one of them may ever be open.
  */
-type Sheet = 'chats' | 'coaches' | 'history' | null;
+type Sheet = 'chats' | 'coaches' | null;
 
 export function HomeMockup() {
   const { colors } = useTheme();
@@ -120,7 +119,7 @@ export function HomeMockup() {
     /**
      * A send from Home starts a NEW conversation, every time — the same as typing into the box on
      * Claude's home screen. The owner asked for exactly that comparison. Earlier conversations are
-     * not lost by it: they are one tap away under "Earlier", and on their hub.
+     * not lost by it: they are under "Chats", top left, and on their hub.
      */
     const thread = await coachChat.start(selected);
     await coachChat.persist(
@@ -135,17 +134,11 @@ export function HomeMockup() {
 
   return (
     <View style={styles.screen}>
-      {/* The top row is navigation. Earlier conversations belong here rather than only inside a
-          chat: reaching yesterday's thread should not require starting a new one first. */}
+      {/* The top row is navigation. Reaching yesterday's thread should not require starting a new
+          one first, which is why "Chats" is here and not only inside a conversation. */}
       <View style={styles.topRow}>
-        {/**
-          * Replays the first run. **It is here for demonstrating the app**, which the owner asked
-          * for on 2026-08-21 — the flow is otherwise reachable exactly once per browser, and the
-          * best-written screens in OL1 were the ones nobody could see twice.
-          *
-          * It replays rather than resets: nothing is cleared, no hub is removed, and the profile is
-          * only overwritten if somebody answers again. Walking through and leaving costs nothing.
-          */}
+        {/* Showing the first run again is NOT here any more: it lives in the drawer this button
+            opens, and in Settings. Two places, both of them somewhere a person would look. */}
         <View style={styles.topSideLeft}>
           {/**
             * **A word, not three lines.** A hamburger says "app with a menu"; this says what is
@@ -160,8 +153,8 @@ export function HomeMockup() {
             accessibilityLabel="Your conversations"
             accessibilityRole="button"
             onPress={() => setSheet('chats')}
-            style={({ pressed }) => [styles.onboarding, pressed && styles.pressed]}>
-            <Text style={[styles.earlierText, { color: colors.textMuted }]}>Chats</Text>
+            style={({ pressed }) => [styles.chats, pressed && styles.pressed]}>
+            <Text style={[styles.chatsText, { color: colors.textMuted }]}>Chats</Text>
           </Pressable>
         </View>
         <Link asChild href="/twin">
@@ -169,15 +162,10 @@ export function HomeMockup() {
             <Text style={[styles.twinLinkText, { color: colors.textMuted }]}>⌃  Digital Twin</Text>
           </Pressable>
         </Link>
-        <View style={styles.topSide}>
-          <Pressable
-            accessibilityLabel="Earlier conversations"
-            accessibilityRole="button"
-            onPress={() => setSheet((open) => (open === 'history' ? null : 'history'))}
-            style={({ pressed }) => [styles.earlier, pressed && styles.pressed]}>
-            <Text style={[styles.earlierText, { color: colors.textMuted }]}>Earlier</Text>
-          </Pressable>
-        </View>
+        {/* Empty, and load-bearing: it balances "Chats" so the Twin link stays centred in the
+            row. Something will earn this corner eventually; until then it holds the space rather
+            than letting the middle drift left. */}
+        <View style={styles.topSide} />
       </View>
 
       {sheet !== null && sheet !== 'chats' && (
@@ -269,12 +257,6 @@ export function HomeMockup() {
             selected={selected}
           />
         )}
-        {sheet === 'history' && (
-          <ThreadList
-            onClose={() => setSheet(null)}
-            onOpen={(thread, ids) => router.push(`/table?coaches=${ids.join(',')}&thread=${thread}`)}
-          />
-        )}
         <View style={styles.barSlot}>
           <ChatBar
             coachNames={coaches.map((coach) => coach.name)}
@@ -319,17 +301,12 @@ const styles = StyleSheet.create({
     marginTop: TWIN_NAME_GAP,
     textAlign: 'center',
   },
-  /** The loudest thing on the screen, by contrast rather than by size. */
-  earlier: {
+  /** The one way into your conversations, and the only thing in the top row that opens something. */
+  chats: {
     paddingHorizontal: spacing.lg,
     paddingVertical: spacing.xs,
   },
-  /** Mirrors `earlier` on the other side of the row, left-aligned rather than right. */
-  onboarding: {
-    paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.xs,
-  },
-  earlierText: {
+  chatsText: {
     fontFamily: fontFamily.body,
     fontSize: typography.caption,
   },
