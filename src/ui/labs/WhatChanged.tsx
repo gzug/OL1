@@ -2,11 +2,13 @@ import { useFocusEffect } from 'expo-router';
 import { Fragment, useCallback, useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 
+import { formatMeasured } from '@/application/format/metric';
 import { hubs as defaultHubs } from '@/application/hubs/hubs';
 import {
   apartInWords,
   comparePanels,
   type PanelComparison,
+  tooSmallToCall,
 } from '@/application/labs/panelChange';
 import { LEVINE_MARKERS } from '@/ui/labs/levine';
 import { EXTRA_MARKERS } from '@/ui/labs/lipids';
@@ -32,11 +34,6 @@ import { fontFamily, lineHeights, radius, spacing, tracking, typography, useThem
 const LABEL: Readonly<Record<string, string>> = Object.fromEntries(
   [...LEVINE_MARKERS, ...EXTRA_MARKERS].map((marker) => [marker.key, marker.label]),
 );
-
-/** At most two decimals, no trailing zeroes — a converted value is rarely the decimal it looks like. */
-function tidy(value: number): number {
-  return Math.round(value * 100) / 100;
-}
 
 export function WhatChanged({ source = defaultHubs }: { source?: typeof defaultHubs }) {
   const { colors } = useTheme();
@@ -105,9 +102,12 @@ export function WhatChanged({ source = defaultHubs }: { source?: typeof defaultH
                 {LABEL[change.key] ?? change.key}
               </Text>
               <Text style={[styles.values, { color: colors.text }]}>
-                {change.from === null ? '—' : tidy(change.from)}
+                {change.from === null ? '—' : formatMeasured(change.from, '')}
                 {'  →  '}
-                {change.to === null ? '—' : tidy(change.to)}{' '}
+                {change.to === null ? '—' : formatMeasured(change.to, '')}
+                {/* Glued for a percentage, spaced for everything else — the same call
+                    `formatMeasured` makes, kept here so the unit can stay its own colour. */}
+                {change.unit === '%' ? '' : ' '}
                 <Text style={[styles.unit, { color: colors.textSubtle }]}>{change.unit}</Text>
               </Text>
             </View>
@@ -116,6 +116,17 @@ export function WhatChanged({ source = defaultHubs }: { source?: typeof defaultH
             {change.notable && change.direction !== null && (
               <Text style={[styles.note, { color: colors.textMuted }]}>
                 {change.direction === 'up' ? 'Higher' : 'Lower'} than last time.
+              </Text>
+            )}
+            {/**
+              * **Silence was being read as a change.** A row with two visibly different numbers and
+              * nothing under it looks like a move the app simply declined to name; the rule was
+              * stated once at the foot of the screen, three rows away from the pair it governs.
+              * `same` is excluded — two identical numbers need no explaining.
+              */}
+            {tooSmallToCall(change) && (
+              <Text style={[styles.note, { color: colors.textSubtle }]}>
+                Too small a move to call, on a test with this much spread.
               </Text>
             )}
             {change.direction === null && (
@@ -133,8 +144,8 @@ export function WhatChanged({ source = defaultHubs }: { source?: typeof defaultH
        */}
       <Text style={[styles.closing, { color: colors.textSubtle }]}>
         Two panels are a line, not a trend. Blood moves with the time of day, hydration, a hard
-        session, and an illness weeks earlier — and every test has some spread of its own. Only
-        moves of more than a tenth are called higher or lower here.
+        session, and an illness weeks earlier — and every test has some spread of its own. Only a
+        move of more than a tenth of the earlier value is called higher or lower here.
       </Text>
     </View>
   );

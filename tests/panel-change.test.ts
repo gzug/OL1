@@ -1,7 +1,13 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 
-import { MEANINGFUL_CHANGE, apartInWords, comparePanels } from '../src/application/labs/panelChange';
+import {
+  MEANINGFUL_CHANGE,
+  type MarkerChange,
+  apartInWords,
+  comparePanels,
+  tooSmallToCall,
+} from '../src/application/labs/panelChange';
 
 /**
  * The app says in three places that a second panel turns a reading into a direction. This is the
@@ -130,4 +136,34 @@ test('a panel without a lipid profile says nothing about lipids', () => {
 
   assert.ok(!changes.some((change) => change.key === 'ldl'));
   assert.equal(changes.length, 9, 'exactly the nine that are there');
+});
+
+/**
+ * **The row that said nothing was being read as a change.**
+ *
+ * Two visibly different numbers with no sentence under them looks like a move the app declined to
+ * name. Three ways to get this wrong, so all three are here: an identical pair needs no explaining,
+ * a marker on only one panel already has its own line, and a move that clears the threshold has an
+ * arrow of its own.
+ */
+test('a move too small to call is named, and nothing else is', () => {
+  const change = (over: Partial<MarkerChange>): MarkerChange => ({
+    direction: 'up',
+    from: 4.4,
+    key: 'albumin',
+    notable: false,
+    to: 4.5,
+    unit: 'g/dL',
+    ...over,
+  });
+
+  assert.equal(tooSmallToCall(change({})), true, 'a real move below the threshold');
+  assert.equal(tooSmallToCall(change({ direction: 'down' })), true, 'in either direction');
+  assert.equal(tooSmallToCall(change({ notable: true })), false, 'this one gets an arrow instead');
+  assert.equal(tooSmallToCall(change({ direction: 'same' })), false, 'nothing to explain');
+  assert.equal(
+    tooSmallToCall(change({ direction: null, to: null })),
+    false,
+    'a marker on only one panel already has its own line',
+  );
 });

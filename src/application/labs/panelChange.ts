@@ -72,6 +72,21 @@ export type MarkerChange = {
   readonly unit: string;
 };
 
+/**
+ * A move that is real, is not zero, and does not clear the threshold — the case the screen was
+ * silent about.
+ *
+ * A row showing two visibly different numbers with nothing under it reads as a change the app
+ * declined to name. The rule governing it was stated once, at the foot of the screen, three rows
+ * away from the pair it applies to.
+ *
+ * Here rather than in the `.tsx` for the reason `bioAgeCopy.ts` gives — a condition written into
+ * JSX cannot be asserted in bare Node, and this one has three ways to be wrong.
+ */
+export function tooSmallToCall(change: MarkerChange): boolean {
+  return change.direction !== null && change.direction !== 'same' && !change.notable;
+}
+
 export type PanelComparison = {
   readonly changes: readonly MarkerChange[];
   /** Whole days between the two draws. A change over six days is a different claim to one over a year. */
