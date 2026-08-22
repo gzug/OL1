@@ -3,6 +3,7 @@ import test from 'node:test';
 
 import {
   MIN_MEALS,
+  WEIGHTS,
   confidenceFor,
   nutritionScore,
   partsUsed,
@@ -136,4 +137,36 @@ test('the pairing has to be inside one meal, not across the week', () => {
   ]);
 
   assert.equal(split.withheld, 'noPairedMacros');
+});
+
+/**
+ * **A key order is not a ranking.**
+ *
+ * `partsUsed` read its order off `Object.keys` of a lookup table written alphabetically, so the
+ * screen named fibre before protein while protein carries the larger share of the number. Same
+ * mistake as `#104`, which put ApoB at the top of a list the panel prints last.
+ *
+ * The expected order is derived from `WEIGHTS` here too, so a change to a weight fails this test
+ * rather than quietly leaving the sentence behind.
+ */
+test('the parts of a score are named biggest share first', () => {
+  const meals = [
+    meal('01', { calories: 600, fiberGrams: 9, proteinGrams: 40 }),
+    meal('02', { calories: 700, fiberGrams: 11, proteinGrams: 45 }),
+    meal('03', { calories: 550, fiberGrams: 8, proteinGrams: 36 }),
+  ];
+
+  assert.ok(WEIGHTS.protein > WEIGHTS.fiber, 'protein is the larger share, which is the whole point');
+  assert.deepEqual(partsUsed(nutritionScore(meals)), ['protein', 'fibre']);
+});
+
+/** One part is still named on its own, and whole food is never among them — there are no items. */
+test('a score made of one part names that part alone', () => {
+  const meals = [
+    meal('01', { calories: 600, proteinGrams: 40 }),
+    meal('02', { calories: 700, proteinGrams: 45 }),
+    meal('03', { calories: 550, proteinGrams: 36 }),
+  ];
+
+  assert.deepEqual(partsUsed(nutritionScore(meals)), ['protein']);
 });

@@ -99,9 +99,11 @@ export function WeekScore({ source = defaultHubs }: { source?: typeof defaultHub
             {confidenceSentence(score)}
           </Text>
           <Text style={[styles.basis, { color: colors.textSubtle }]}>
+            {/* "Made of fibre and protein", directly under a number the size of this one, reads
+                as a description of the MEALS. It is a description of the score. */}
             {parts.length === 1
-              ? `Made of ${parts[0]} alone — nothing else was recorded.`
-              : `Made of ${parts.slice(0, -1).join(', ')} and ${parts[parts.length - 1]}.`}
+              ? `Scored on ${parts[0]} alone — nothing else was recorded.`
+              : `Scored on ${parts.slice(0, -1).join(', ')} and ${parts[parts.length - 1]}, in that order of weight.`}
             {score.subScores.wholeFood === null &&
               ' Whole food is not counted: meals record macros, not a list of ingredients.'}
           </Text>
