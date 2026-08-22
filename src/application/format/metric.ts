@@ -144,6 +144,32 @@ export function formatValue(key: MetricKey, value: number): string | null {
   return apply(VALUE_FORMATS[key], value);
 }
 
+/**
+ * A measured value whose unit is DATA rather than a table entry — every marker on a blood panel.
+ *
+ * `VALUE_FORMATS` cannot hold these and should not. A marker's unit belongs to the marker
+ * (`levine.ts`, `lipids.ts`) and a panel can carry seventeen of them; a second key-to-unit table
+ * here would be a copy of something that already exists and can already drift from it.
+ *
+ * **What these share with everything else is the half that was actually broken: `round`.** A stored
+ * marker is the CONVERTED number, and conversion does not land on a round figure — creatinine typed
+ * as a European panel prints it, 71 µmol/L, and stores 0.8031674208144796 mg/dL. Four screens
+ * interpolated that straight into a `<Text>`. Sixteen significant figures claim a precision no
+ * assay has and no laboratory printed.
+ *
+ * A percentage is glued to its symbol, which is how one is written in English and what this file
+ * already decided for `suffix`. Everything else takes a space.
+ */
+export function formatMeasured(value: number, unit: string): string | null {
+  if (!Number.isFinite(value)) return null;
+
+  const trimmed = unit.trim();
+  if (trimmed.length === 0) return apply({ kind: 'bare' }, value);
+  return trimmed === '%'
+    ? apply({ kind: 'suffix', suffix: '%' }, value)
+    : apply({ kind: 'unit', unit: trimmed }, value);
+}
+
 /** A difference, signed. Null when there is no number. */
 export function formatDelta(key: MetricKey, value: number): string | null {
   if (!Number.isFinite(value)) return null;

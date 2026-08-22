@@ -4,6 +4,7 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { hubs as defaultHubs } from '@/application/hubs/hubs';
 import { LEVINE_MARKERS, isLevineKey } from '@/ui/labs/levine';
+import { formatMeasured } from '@/application/format/metric';
 import { LIPID_READING_CAVEAT, lipidReadings } from '@/application/labs/lipidReadings';
 import { EXTRA_MARKERS } from '@/ui/labs/lipids';
 import { markerContext } from '@/ui/labs/markerContext';
@@ -91,7 +92,7 @@ export function YourMarkers({ source = defaultHubs }: { source?: typeof defaultH
                 style={({ pressed }) => [styles.row, pressed && styles.pressed]}>
                 <Text style={[styles.label, { color: colors.text }]}>{marker.label}</Text>
                 <Text style={[styles.value, { color: colors.text }]}>
-                  {markers[marker.key]} {marker.unit}
+                  {formatMeasured(markers[marker.key] as number, marker.unit)}
                 </Text>
               </Pressable>
               {isOpen && context !== undefined && (
@@ -131,7 +132,7 @@ export function YourMarkers({ source = defaultHubs }: { source?: typeof defaultH
                     style={({ pressed }) => [styles.row, pressed && styles.pressed]}>
                     <Text style={[styles.label, { color: colors.text }]}>{marker.label}</Text>
                     <Text style={[styles.value, { color: colors.text }]}>
-                      {markers[marker.key]} {marker.unit}
+                      {formatMeasured(markers[marker.key] as number, marker.unit)}
                     </Text>
                   </Pressable>
                   {isOpen && (
@@ -171,8 +172,7 @@ export function YourMarkers({ source = defaultHubs }: { source?: typeof defaultH
                     <View style={styles.row}>
                       <Text style={[styles.label, { color: colors.text }]}>{reading.label}</Text>
                       <Text style={[styles.value, { color: colors.text }]}>
-                        {reading.value}
-                        {reading.unit.length > 0 ? ` ${reading.unit}` : ''}
+                        {formatMeasured(reading.value, reading.unit)}
                       </Text>
                     </View>
                     <Text style={[styles.why, { color: colors.textSubtle }]}>{reading.what}</Text>
