@@ -19,6 +19,7 @@ import { WhatChanged } from '@/ui/labs/WhatChanged';
 import { YourMarkers } from '@/ui/labs/YourMarkers';
 import { MealCockpit } from '@/ui/meals/MealCockpit';
 import { WeekScore } from '@/ui/meals/WeekScore';
+import { NightCockpit } from '@/ui/sleep/NightCockpit';
 import { LoggedWeek } from '@/ui/hubs/LoggedWeek';
 import { StoredEntries } from '@/ui/hubs/StoredEntries';
 import { useHubs } from '@/ui/hubs/useHubs';
@@ -56,6 +57,7 @@ const ENTRY_KIND: Readonly<Record<string, string>> = {
   exercise: 'session',
   labs: 'panel',
   nutrition: 'meal',
+  sleep: 'night',
 };
 
 /**
@@ -227,6 +229,9 @@ export function HubScreen({
         {hub.id === 'labs' && <PanelAge />}
         {/* What is on the panel, and whether it carries the nine. Above `KidneyFunction`
             because "can an age be worked out at all" comes before any one derived number. */}
+        {/* Sleep only. One number a night, typed by a person — there is no watch yet, and the
+            block says so rather than letting the reader assume one. */}
+        {hub.id === 'sleep' && <NightCockpit />}
         {hub.id === 'labs' && <PanelCockpit />}
         {hub.id === 'labs' && <KidneyFunction />}
         {hub.id === 'labs' && <YourMarkers />}

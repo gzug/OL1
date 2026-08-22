@@ -186,21 +186,29 @@ test('no fixture claims more markers than a panel can hold', () => {
  * The Sleep cockpit read `7h 05m` and `8h 04m`. `formatDuration` — the only function allowed to
  * turn minutes into that shape, guarded by `check-duration-formatters.mjs` — writes `7h 5m`. Two of
  * the four durations on that screen agreed with it and two did not, which is the "agreeing only by
- * luck" that `metric.ts` was ported to end. When a real sleep block arrives it will print the
- * unpadded form and read as a regression against the placeholder it replaced.
+ * luck" that `metric.ts` was ported to end.
  *
- * The guard catches a hand-written string, which the script cannot: that one looks for the
- * arithmetic, and a fixture does the arithmetic in somebody's head.
+ * The script cannot catch this: it looks for the ARITHMETIC, and a fixture does the arithmetic in
+ * somebody's head.
+ *
+ * **Proven on a known violation before it is believed.** No fixture writes a duration today — the
+ * Sleep cockpit is real now and formats through the function — and a check with nothing to check
+ * looks exactly like a check that passes. So it is shown going red first.
  */
 test('a duration in a fixture is written the way this app writes durations', () => {
-  const written = [...JSON.stringify(HUB_STATES).matchAll(/(\d+)h (\d+)m/g)];
-  assert.ok(written.length > 0, 'no fixture writes a duration any more, so this guards nothing');
-
-  for (const [text, hours, minutes] of written) {
-    assert.equal(
-      text,
-      formatDuration(Number(hours) * 60 + Number(minutes)),
-      `a fixture writes "${text}", which formatDuration never produces`,
+  const wrong = (text: string) =>
+    [...text.matchAll(/(\d+)h (\d+)m/g)].filter(
+      ([written, hours, minutes]) =>
+        written !== formatDuration(Number(hours) * 60 + Number(minutes)),
     );
-  }
+
+  assert.equal(wrong('7h 05m').length, 1, 'the guard does not see a padded minute');
+  assert.equal(wrong('slept 8h 04m, woke 6h 51m').length, 1, 'nor one of two in a sentence');
+  assert.equal(wrong('7h 5m and 6h 51m').length, 0, 'and it does not fire on correct ones');
+
+  assert.deepEqual(
+    wrong(JSON.stringify(HUB_STATES)).map(([written]) => written),
+    [],
+    'a fixture writes a duration this app would never print',
+  );
 });

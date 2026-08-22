@@ -75,6 +75,20 @@ export type HubCockpit = {
   };
 };
 
+/**
+ * Every route a hub can offer as a way in.
+ *
+ * A union rather than a plain string, so a fixture cannot point at a screen that does not exist —
+ * and named once rather than written out twice, because it WAS written out twice and the second
+ * copy is the one somebody forgets when a fifth way in arrives. It just did.
+ */
+export type ContributeRoute =
+  | '/add-panel'
+  | '/from-strava'
+  | '/log-meal'
+  | '/log-night'
+  | '/log-session';
+
 export type HubState = {
   /** What the observation rests on. The sentence that keeps the one above it honest. */
   readonly basis?: string;
@@ -84,7 +98,7 @@ export type HubState = {
      * Where the primary way in leads, when it leads anywhere yet. Absent means the button is still
      * a placeholder and says so on press — which is most of them, and saying so beats a dead tap.
      */
-    readonly href?: '/add-panel' | '/from-strava' | '/log-meal' | '/log-session';
+    readonly href?: ContributeRoute;
     /**
      * A second way in, quieter than the first.
      *
@@ -92,7 +106,7 @@ export type HubState = {
      * history in from a Strava export — and one button cannot be both. Optional, because most hubs
      * have exactly one honest way to put something in and a second slot would invite filling.
      */
-    readonly also?: { readonly href: '/add-panel' | '/from-strava' | '/log-meal' | '/log-session'; readonly label: string };
+    readonly also?: { readonly href: ContributeRoute; readonly label: string };
     readonly note: string;
     readonly primary: string;
     readonly secondary?: string;
