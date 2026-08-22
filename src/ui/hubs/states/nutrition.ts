@@ -10,47 +10,26 @@ import type { HubState } from '../hubState';
  */
 export const nutrition: HubState = {
   basis: 'From 9 meals logged across 4 of the last 7 days, and 3 weigh-ins in the last 14.',
+  /**
+   * **The sample cockpit is gone, because a real one exists.**
+   *
+   * `WeekScore` gives the score and `src/ui/meals/MealCockpit.tsx` gives the grams behind it, both
+   * above the sample line. Two cockpits on one screen carrying different numbers for the same week
+   * is the "screen that cannot agree with itself" `weekly.ts` was written to end, and this one was
+   * already doing it — the invented block said nine meals across four days while the real strip
+   * above it counted eight across six.
+   *
+   * The seven-bar strip went with it: `LoggedWeek` draws the real one.
+   *
+   * The rows that are NOT coming back are the clock times — "First meal 09:40", "Typical first meal
+   * 08:15". `recordedAt` is stored and rendered in UTC, which `entryWords.day` explains and refuses
+   * to print an hour for: a time here would be wrong by the traveller's offset and look right
+   * either way. The weigh-in rows ARE real and came with it — the first run stores a weight in
+   * this hub, and `dailyId` makes it at most one a day.
+   */
   cockpit: {
-    periods: [
-      {
-        label: 'Today',
-        rows: [
-          { label: 'Meals logged', value: '2', when: 'last at 13:20' },
-          { label: 'First meal', value: '09:40', when: 'later than usual' },
-        ],
-      },
-      {
-        label: 'This week',
-        rows: [
-          { label: 'Days logged', value: '4 of 7', when: 'Mon, Tue, Thu, Sun' },
-          { label: 'Meals logged', value: '9', when: 'across those 4 days' },
-          { label: 'Typical first meal', value: '08:15', when: 'across 4 days' },
-        ],
-      },
-      {
-        /* Body moved in here. Its own cadence came with it: weight is a slow signal and four days
-           without a reading is normal for it, which is why it keeps a period of its own rather than
-           being mixed into a week built out of meals. */
-        label: 'Weight, last 14 days',
-        rows: [
-          { label: 'Last weigh-in', value: '2 days ago', when: 'entered by hand' },
-          { label: 'Weigh-ins', value: '3', when: 'roughly one a week' },
-          { label: 'Direction', value: 'Flat', when: 'too few readings to say more' },
-        ],
-      },
-    ],
-    week: {
-      caption: 'Three days have nothing logged. The gaps are the reading, not a failure.',
-      days: [
-        { fill: 1, label: 'M' },
-        { fill: 0.67, label: 'T' },
-        { fill: 0, label: 'W' },
-        { fill: 1, label: 'T' },
-        { fill: 0, label: 'F' },
-        { fill: 0, label: 'S' },
-        { fill: 0.67, label: 'S' },
-      ],
-    },
+    empty: 'Your own meals fill the cockpit above this line. There is no invented one left here.',
+    periods: [],
   },
   contribute: {
     href: '/log-meal',

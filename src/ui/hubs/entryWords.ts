@@ -10,6 +10,8 @@
  * what somebody logged.
  */
 
+import { weekDayKeys } from '@/application/hubs/weekly';
+
 const KINDS: Readonly<Record<string, { one: string; many: string }>> = {
   /**
    * `goal` and `note` arrive from the first-run flow, which was built in a parallel session while
@@ -109,4 +111,27 @@ export function day(iso: string): string {
   const date = new Date(iso);
   if (Number.isNaN(date.getTime())) return 'undated';
   return `${date.getUTCDate()} ${MONTHS[date.getUTCMonth()]}`;
+}
+
+/**
+ * "today", "yesterday", or the plain count. Never "3d" — this is a sentence, not a chart axis.
+ *
+ * Here rather than in one hub's cockpit because two of them needed it, and the second copy would
+ * have been the one that said "1 days ago" eventually. Same UTC reckoning as `day` above, from the
+ * same buckets `weekStrip` draws.
+ */
+export function dayWords(dayKey: string, now: string): string {
+  const keys = weekDayKeys(now);
+  const today = keys[keys.length - 1];
+  if (dayKey === today) return 'today';
+
+  /* `dayKey`, not `day` — the parameter would otherwise shadow this file's own exported `day`. */
+  const apart = Math.round(
+    (Date.parse(`${today}T00:00:00.000Z`) - Date.parse(`${dayKey}T00:00:00.000Z`)) / 86_400_000,
+  );
+  if (!Number.isFinite(apart) || apart < 0) return 'recorded ahead of today';
+  if (apart === 1) return 'yesterday';
+  if (apart < 7) return `${apart} days ago`;
+  if (apart < 14) return 'last week';
+  return `${Math.round(apart / 7)} weeks ago`;
 }

@@ -1,6 +1,7 @@
 import { entriesThisWeek, weekDayKeys } from '@/application/hubs/weekly';
 import { formatDuration, formatMeasured } from '@/application/format/metric';
 import type { HubEntry } from '@/core/hubs';
+import { dayWords } from '@/ui/hubs/entryWords';
 import { SESSION_TYPES } from '@/ui/exercise/session';
 import type { CockpitPeriod } from '@/ui/hubs/hubState';
 
@@ -57,22 +58,6 @@ function sessionOf(entry: HubEntry): Session | null {
     distanceKm: number(entry.payload.distanceKm),
     minutes,
   };
-}
-
-/** "today", "yesterday", or the plain count. Never "3d" — this is a sentence, not a chart axis. */
-export function dayWords(day: string, now: string): string {
-  const keys = weekDayKeys(now);
-  const today = keys[keys.length - 1];
-  if (day === today) return 'today';
-
-  const apart = Math.round(
-    (Date.parse(`${today}T00:00:00.000Z`) - Date.parse(`${day}T00:00:00.000Z`)) / 86_400_000,
-  );
-  if (!Number.isFinite(apart) || apart < 0) return 'recorded ahead of today';
-  if (apart === 1) return 'yesterday';
-  if (apart < 7) return `${apart} days ago`;
-  if (apart < 14) return 'last week';
-  return `${Math.round(apart / 7)} weeks ago`;
 }
 
 /** The days in the window with no session on them, named. Empty when every day has one. */

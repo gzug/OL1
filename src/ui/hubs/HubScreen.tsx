@@ -17,6 +17,7 @@ import { PanelAge } from '@/ui/labs/PanelAge';
 import { MarkerJourney } from '@/ui/labs/MarkerJourney';
 import { WhatChanged } from '@/ui/labs/WhatChanged';
 import { YourMarkers } from '@/ui/labs/YourMarkers';
+import { MealCockpit } from '@/ui/meals/MealCockpit';
 import { WeekScore } from '@/ui/meals/WeekScore';
 import { LoggedWeek } from '@/ui/hubs/LoggedWeek';
 import { StoredEntries } from '@/ui/hubs/StoredEntries';
@@ -216,6 +217,9 @@ export function HubScreen({
         {/* Nutrition only, and only once meals exist. The one score in the app — see
             `docs/decisions/0009-a-score-for-the-week-not-the-person.md`. */}
         {hub.id === 'nutrition' && <WeekScore />}
+        {/* Below the score, because the score is the interpretation and these are the numbers it
+            was made from — plus the three it does not read. */}
+        {hub.id === 'nutrition' && <MealCockpit />}
 
         {/* Labs only. How old the panel is comes before anything it says, because a number from a
             fourteen-month-old panel is not wrong — it is old, and a screen that omits the date

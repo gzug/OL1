@@ -3,7 +3,8 @@ import test from 'node:test';
 
 import { weekDayKeys, weekStrip } from '../src/application/hubs/weekly';
 import type { HubEntry } from '../src/core/hubs';
-import { dayWords, exercisePeriods, quietDays } from '../src/ui/exercise/cockpit';
+import { exercisePeriods, quietDays } from '../src/ui/exercise/cockpit';
+import { dayWords } from '../src/ui/hubs/entryWords';
 
 /**
  * The first cockpit built from real entries. Every session below is invented.
