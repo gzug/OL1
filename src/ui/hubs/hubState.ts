@@ -66,8 +66,6 @@ export type DayBar = {
 };
 
 export type HubCockpit = {
-  /** Shown instead of the periods when the hub reads nothing. An empty hub is a short screen. */
-  readonly empty?: string;
   readonly periods: readonly CockpitPeriod[];
   readonly week?: {
     readonly caption: string;
@@ -154,7 +152,6 @@ export function hasSampleContent(state: HubState, coverageIsReal: boolean): bool
     state.observation !== undefined ||
     (!coverageIsReal && state.facets.length > 0) ||
     state.cockpit.periods.length > 0 ||
-    state.cockpit.week !== undefined ||
-    state.cockpit.empty !== undefined
+    state.cockpit.week !== undefined
   );
 }

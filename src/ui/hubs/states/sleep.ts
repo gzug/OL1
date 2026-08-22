@@ -34,10 +34,7 @@ export const sleep: HubState = {
    * The bed and wake times went too. `night.ts` says why they are not asked for yet, and a cockpit
    * cannot report what nobody typed.
    */
-  cockpit: {
-    empty: 'Your own nights fill the cockpit above this line. There is no invented one left here.',
-    periods: [],
-  },
+  cockpit: { periods: [] },
   contribute: {
     href: '/log-night',
     note: 'Connecting a watch waits for the phone. Typing a night in does not.',

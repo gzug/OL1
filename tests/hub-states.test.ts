@@ -3,6 +3,7 @@ import test from 'node:test';
 
 import { formatDuration } from '../src/application/format/metric';
 import { isDomainHub, orbitHubs } from '../src/ui/hubs/catalog';
+import { REAL_COCKPIT_HUBS, hasRealCockpit } from '../src/ui/hubs/cockpits';
 import { SAMPLE_DATA_LINE, hasSampleContent } from '../src/ui/hubs/hubState';
 import { HUB_STATES, hubStateFor } from '../src/ui/hubs/states';
 import { LEVINE_MARKERS } from '../src/ui/labs/levine';
@@ -26,14 +27,34 @@ test('every domain hub in the orbit has a cockpit written for it', () => {
   }
 });
 
-test('a cockpit either reports periods or says why it is empty, never neither', () => {
-  for (const [id, state] of Object.entries(HUB_STATES)) {
-    const hasPeriods = state.cockpit.periods.length > 0;
-    const explains = state.cockpit.empty !== undefined;
+/**
+ * **A hub renders a cockpit from somewhere.**
+ *
+ * This used to read "either reports periods or says why it is empty, never neither", and the second
+ * half was the problem: every fixture whose cockpit had been replaced by a real one carried a
+ * sentence saying so — "Your own meals fill the cockpit above this line" — a note about a fixture,
+ * shown to a person, whose only job was to satisfy this test. It also held the sample-data marker
+ * up over four screens with nothing invented left on them.
+ *
+ * `cockpits.ts` is now the single record of which hubs build one from stored entries, and
+ * `HUB_BLOCKS` in `HubScreen` is typed against it — so a hub cannot be in one and missing from the
+ * other, and this test can ask the honest question instead.
+ */
+test('every domain hub renders a cockpit from somewhere', () => {
+  for (const hub of orbitHubs().filter(isDomainHub)) {
+    const state = hubStateFor(hub.id);
+    assert.ok(state !== undefined, hub.id);
     assert.ok(
-      hasPeriods || explains,
-      `"${id}" has no cockpit periods and no sentence explaining the absence — it renders blank`,
+      hasRealCockpit(hub.id) || state.cockpit.periods.length > 0,
+      `"${hub.id}" has no cockpit of its own and no fixture standing in for one`,
     );
+  }
+});
+
+/** And nothing claims a real cockpit it does not have. Labs sits inside Health record, not on the ring. */
+test('every hub named as having a real cockpit is a hub', () => {
+  for (const hubId of REAL_COCKPIT_HUBS) {
+    assert.ok(hubStateFor(hubId) !== undefined, `"${hubId}" is not a hub the app ships`);
   }
 });
 
@@ -83,7 +104,6 @@ test('no fixture names a clinical marker or a diagnosis', () => {
     const text = [
       state.observation ?? '',
       state.basis ?? '',
-      state.cockpit.empty ?? '',
       ...state.cockpit.periods.flatMap((p) => p.rows.flatMap((r) => [r.label, r.value, r.when])),
       ...state.facets.flatMap((f) => [f.label, f.detail]),
     ].join(' ');
@@ -237,7 +257,6 @@ test('anything genuinely invented does raise it', () => {
 
   assert.equal(hasSampleContent(bare, true), false, 'a hub with nothing invented shows no marker');
   assert.equal(hasSampleContent({ ...bare, observation: 'A thing somebody read into it' }, true), true);
-  assert.equal(hasSampleContent({ ...bare, cockpit: { empty: 'gone', periods: [] } }, true), true);
   assert.equal(
     hasSampleContent(
       { ...bare, cockpit: { periods: [{ label: 'A', rows: [{ label: 'b', value: 'c', when: 'd' }] }] } },

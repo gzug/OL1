@@ -29,10 +29,7 @@ export const labs: HubState = {
    * The invented rows had claimed `34 markers read` and `34 of 34 verified` on a screen that has
    * never accepted more than seventeen. `hub-states.test.ts` guards the ceiling on what is left.
    */
-  cockpit: {
-    empty: 'Your own panels fill the cockpit above this line. There is no invented one left here.',
-    periods: [],
-  },
+  cockpit: { periods: [] },
   contribute: {
     href: '/add-panel',
     note: 'Reading a report is not built yet — the review gate behind this is.',

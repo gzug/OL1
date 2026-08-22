@@ -29,10 +29,7 @@ export const medical: HubState = {
    * because a public preview must not carry a diagnosis; the real block names them because they are
    * the person's own words on their own device.
    */
-  cockpit: {
-    empty: 'Your own record fills the cockpit above this line. There is no invented one left here.',
-    periods: [],
-  },
+  cockpit: { periods: [] },
   contribute: {
     /* Two real ways in, so the second is `also` rather than `secondary` — `secondary` is a caption
        sharing the primary's destination, which is why "Add a medication" led to the same screen. */
