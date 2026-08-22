@@ -59,6 +59,9 @@ export function TwinMockup() {
   /** Tapping a muscle records that you worked it. You were there; nothing here knows better. */
   async function markWorked(slug: string) {
     await hubs.add('exercise', 'worked', { muscles: [slug] }, { source: 'manual' });
+    /* And look again. The write was always correct; without this the figure did not move until the
+       Twin was reopened, which reads as a control that does nothing. */
+    load.reread();
   }
 
   return (

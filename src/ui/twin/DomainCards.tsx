@@ -28,6 +28,11 @@ import {
  * value — a weight, a count, a date the blood was drawn — and the hub is where tapping it goes,
  * never what it says.
  *
+ * **Two across, on the owner's instruction of 2026-08-22.** As a single column they were five wide
+ * bands with a short line in each and a great deal of paper between them; he read that as not
+ * looking good and he was right. Paired, the whole set is visible without scrolling, which is what
+ * makes it a summary rather than a list — you can see everything the twin knows in one look.
+ *
  * **A domain with nothing to say still gets a card**, and says why. Two of the five cannot compute
  * anything at all, and hiding them would make the twin look complete. Naming them is the only thing
  * on this screen that shows a person what it is still missing.
@@ -75,9 +80,11 @@ export function DomainCards({ source = defaultHubs }: { source?: typeof defaultH
   return (
     <View style={styles.block}>
       <Text style={[styles.label, { color: colors.textSubtle }]}>WHAT EVERY PART OF YOU SAYS</Text>
-      {summaries.map((summary) => (
-        <Card key={summary.hubId} summary={summary} />
-      ))}
+      <View style={styles.grid}>
+        {summaries.map((summary) => (
+          <Card key={summary.hubId} summary={summary} />
+        ))}
+      </View>
     </View>
   );
 }
@@ -152,7 +159,19 @@ function Strip({ summary }: { summary: Extract<DomainSummary, { said: 'something
 
 const styles = StyleSheet.create({
   block: { marginTop: spacing.lg },
-  card: { borderRadius: radius.md, marginBottom: spacing.sm, padding: spacing.md },
+  /**
+   * Half the row, less the gap. `flexBasis` rather than `width: '50%'` so the gap comes out of the
+   * tile rather than pushing the second one onto its own line — which is what a percentage width
+   * plus a gap does, and it looked like a bug rather than a layout.
+   */
+  card: {
+    borderRadius: radius.md,
+    flexBasis: '48%',
+    flexGrow: 1,
+    minHeight: 92,
+    padding: spacing.md,
+  },
+  grid: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
   detail: {
     fontFamily: fontFamily.body,
     fontSize: typography.micro,
@@ -160,7 +179,7 @@ const styles = StyleSheet.create({
     marginTop: spacing.xs,
   },
   domain: { fontFamily: fontFamily.medium, fontSize: typography.caption },
-  headline: { fontFamily: fontFamily.serif, fontSize: typography.subtitle, marginTop: 3 },
+  headline: { fontFamily: fontFamily.serif, fontSize: typography.body, marginTop: 3 },
   label: {
     fontFamily: fontFamily.medium,
     fontSize: typography.micro,
@@ -174,6 +193,6 @@ const styles = StyleSheet.create({
     lineHeight: lineHeights.bodySmall,
     marginTop: 3,
   },
-  strip: { flexDirection: 'row', gap: 2, marginTop: spacing.sm },
-  week: { borderRadius: 1, flex: 1, height: 18 },
+  strip: { flexDirection: 'row', gap: 1, marginTop: spacing.sm },
+  week: { borderRadius: 1, flex: 1, height: 14 },
 });

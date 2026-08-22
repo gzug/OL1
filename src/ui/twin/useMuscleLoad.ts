@@ -11,7 +11,7 @@
  */
 
 import { useFocusEffect } from 'expo-router';
-import { useCallback, useState } from 'react';
+import { useCallback, useRef, useState } from 'react';
 
 import { hubs as defaultHubs } from '@/application/hubs/hubs';
 import {
@@ -33,7 +33,21 @@ const EMPTY: MuscleLoad = { counted: 0, loads: {}, unplaced: 0 };
  *
  * The whole class is `docs/decisions/0013-a-sentence-that-outlived-its-truth.md`, shape 1.
  */
-export type LoadedMuscles = MuscleLoad & { readonly read: boolean };
+export type LoadedMuscles = MuscleLoad & {
+  readonly read: boolean;
+  /**
+   * Read it again, now.
+   *
+   * **Without this the figure was a dead control.** Tapping a muscle wrote the entry correctly and
+   * the colour it produced was correct — but `useFocusEffect` only fires when a screen gains focus,
+   * and tapping something on a screen you are already looking at does not do that. So the write
+   * landed, the figure did not move, and the muscle appeared the next time the Twin was opened.
+   *
+   * The owner reported it as "clicking on a muscle group to change the colour still doesn't work",
+   * and he was right about the symptom: everything worked except looking again.
+   */
+  readonly reread: () => void;
+};
 
 /** The hub a session belongs to. Exercise holds everything that moves, per the ring the owner drew. */
 export const SESSION_HUB = 'exercise';
@@ -62,31 +76,43 @@ function toSession(entry: {
 }
 
 export function useMuscleLoad(source = defaultHubs): LoadedMuscles {
-  const [load, setLoad] = useState<LoadedMuscles>({ ...EMPTY, read: false });
+  const [load, setLoad] = useState<MuscleLoad & { read: boolean }>({ ...EMPTY, read: false });
+
+  /**
+   * Which read is current.
+   *
+   * A tap is followed by a re-read while the screen still has focus, so the effect's own cancel flag
+   * cannot cover it — that flag belongs to one run of the effect, and `reread` is called from
+   * outside any of them.
+   */
+  const current = useRef(0);
+
+  const reread = useCallback(() => {
+    const run = (current.current += 1);
+
+    void source
+      .entries(SESSION_HUB)
+      .then((entries) => {
+        if (run !== current.current) return;
+        const sessions = entries
+          .map(toSession)
+          .filter((session): session is LoggedSession => session !== null);
+        setLoad({ ...muscleLoad(sessions, new Date().toISOString()), read: true });
+      })
+      .catch(() => {
+        // A store that cannot be read leaves the figure unmarked, which is what "we do not know"
+        // looks like. Marking it from nothing would be the one thing this must never do.
+      });
+  }, [source]);
 
   useFocusEffect(
     useCallback(() => {
-      let cancelled = false;
-
-      void source
-        .entries(SESSION_HUB)
-        .then((entries) => {
-          if (cancelled) return;
-          const sessions = entries
-            .map(toSession)
-            .filter((session): session is LoggedSession => session !== null);
-          setLoad({ ...muscleLoad(sessions, new Date().toISOString()), read: true });
-        })
-        .catch(() => {
-          // A store that cannot be read leaves the figure unmarked, which is what "we do not know"
-          // looks like. Marking it from nothing would be the one thing this must never do.
-        });
-
+      reread();
       return () => {
-        cancelled = true;
+        current.current += 1;
       };
-    }, [source]),
+    }, [reread]),
   );
 
-  return load;
+  return { ...load, reread };
 }
