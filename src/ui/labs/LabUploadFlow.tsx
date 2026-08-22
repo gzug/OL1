@@ -191,7 +191,7 @@ export function LabUploadFlow() {
             />
             <Way
               colors={colors}
-              detail="Type the nine values yourself."
+              detail="Type the values yourself. Nine are read by the age calculation; the rest are recorded."
               label="Enter by hand"
               onPress={() => setSource('manual')}
             />

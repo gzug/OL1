@@ -152,8 +152,8 @@ export function YourMarkers({ source = defaultHubs }: { source?: typeof defaultH
             })}
           </View>
           <Text style={[styles.absent, { color: colors.textSubtle }]}>
-            These are recorded because you measure them. The biological age above reads the nine and
-            nothing else, so a fuller panel does not make it more certain.
+            These are recorded because you measure them. The biological age on your Twin reads the
+            nine and nothing else, so a fuller panel does not make it more certain.
           </Text>
 
           {/* Subtraction and division on the two rows above, and nothing more — no cohort, no

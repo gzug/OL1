@@ -126,7 +126,7 @@ export function WhatChanged({ source = defaultHubs }: { source?: typeof defaultH
               */}
             {tooSmallToCall(change) && (
               <Text style={[styles.note, { color: colors.textSubtle }]}>
-                Too small a move to call, on a test with this much spread.
+                Under a tenth of the earlier value — not called either way.
               </Text>
             )}
             {change.direction === null && (
