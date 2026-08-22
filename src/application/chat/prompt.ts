@@ -9,9 +9,16 @@
  * not settled, and they encode Legacy's own product decisions — canonical scores, tier-1 data,
  * recovery-warning handling — none of which exist here. What is worth keeping from them is the one
  * safety boundary, which is not a product decision but a floor under a health app.
+ *
+ * **What a coach may be told about the person is not decided here.** It arrives already written, as
+ * a `CoachContext` built in `src/ui/chat/coachContext.ts` from the same functions the hub screens
+ * render from. This file decides how it is FENCED and what may not be done with it; that file
+ * decides what it is. `context.ts` between them owns the words.
  */
 
 import type { CoachDescriptor } from '@/core/chat';
+
+import { contextSection, fenced, type CoachContext } from './context';
 
 const SAFETY = [
   'Never diagnose, never prescribe, and never recommend supplements or doses.',
@@ -19,9 +26,18 @@ const SAFETY = [
 ].join(' ');
 
 /**
- * The app knows nothing about the person yet — the hubs are fixtures and nothing is connected. A
- * model that is not told this invents a plausible history and states it as fact, which in a health
- * app is the single most expensive thing it can do.
+ * What a coach is told when the app really does hold nothing.
+ *
+ * **This used to be what EVERY coach was told, and by 2026-08-22 it was false.** The comment here
+ * said "the hubs are fixtures and nothing is connected", which was true the day it was written.
+ * Six hubs now hold typed data — a session, a panel, a meal, a night, how a day felt, a condition,
+ * a medication — and a person who typed their blood panel in could open the Longevity Guide and be
+ * asked what their markers were.
+ *
+ * It survives because the sentence is still exactly right in the case it now covers: nothing in the
+ * store, nothing in the profile, nothing from the first run. A model that is not told this invents
+ * a plausible history and states it as fact, which in a health app is the single most expensive
+ * thing it can do.
  */
 const NO_DATA =
   'You have no access to this person’s health data. Do not invent numbers, history, or ' +
@@ -44,27 +60,64 @@ const STYLE =
  *    way out.
  * 2. **It replaces `NO_DATA` rather than joining it.** Telling a model both "you know nothing about
  *    this person" and "here is what they told you" is a contradiction, and the resolution a model
- *    picks is not one anybody chose. Where a brief exists it is stated as the only thing known.
+ *    picks is not one anybody chose.
  * 3. **It says do not extend it.** "Coach me based on Outlive" must not become an assumed age, an
  *    assumed training history or an assumed diagnosis. A frame is not a file.
+ *
+ * **The third of those moved out of this function on 2026-08-22.** It used to end here with "That
+ * is the ONLY thing you know about them", which stopped being true the moment the hubs could also
+ * be read: the prompt would have claimed exclusivity for the brief while a whole block of hub facts
+ * sat beside it, and the resolution a model picks for that contradiction is again not one anybody
+ * chose. It is now `DO_NOT_EXTEND`, issued once, after every block that carries something known.
  */
 function briefSection(brief: string): string {
   return [
     'This person wrote the following about how they want to be coached in this area. Treat it as ' +
       'their own words and let it shape your answers.',
-    '<their-words>\n' + brief.trim() + '\n</their-words>',
-    'That is the ONLY thing you know about them. Do not extend it into ages, history, ' +
-      'measurements or conditions they did not write, and do not imply you can see any.',
+    '<their-words>\n' + fenced(brief.trim()) + '\n</their-words>',
   ].join('\n\n');
+}
+
+/**
+ * The one sentence that closes whatever was known, however many blocks that took.
+ *
+ * Issued once rather than per block, because said three times it reads as three separate rules and
+ * a model obeys the nearest. Said last, it is about all of them.
+ */
+const DO_NOT_EXTEND =
+  'That is everything you know about them. Do not extend it into ages, history, measurements or ' +
+  'conditions they did not give, and do not imply you can see anything that is not there.';
+
+/**
+ * Everything the app can honestly say it knows, or the admission that it knows nothing.
+ *
+ * **Order matters and is deliberate.** The brief is a frame and is read first, because a frame is
+ * read before the thing it frames. The facts follow, carrying their own refusals. Then the one
+ * closing sentence, and then — in the caller — `SAFETY`, last. The person's own free text therefore
+ * sits earliest, with every guard in the prompt after it rather than before.
+ */
+function whatIsKnown(brief: string | null, context: CoachContext | null): string {
+  const sections = [
+    ...(brief === null ? [] : [briefSection(brief)]),
+    ...(context === null ? [] : [contextSection(context)]),
+  ].filter((section): section is string => section !== null);
+
+  return sections.length === 0 ? NO_DATA : [...sections, DO_NOT_EXTEND].join('\n\n');
 }
 
 export function systemPromptFor(
   coaches: readonly CoachDescriptor[],
   /** What the person wrote about how they want to be coached in this hub. */
   brief?: string | null,
+  /**
+   * What the app holds about them: the hub cockpits, what each hub can and cannot see, and the
+   * answers the first run collected. Absent where a caller has not read the store — a bare call
+   * still produces the prompt that says it knows nothing, which is then true of that prompt.
+   */
+  context?: CoachContext | null,
 ): string {
   const written = brief === undefined || brief === null || brief.trim().length === 0 ? null : brief;
-  const known = written === null ? NO_DATA : briefSection(written);
+  const known = whatIsKnown(written, context ?? null);
 
   if (coaches.length === 0) {
     return [

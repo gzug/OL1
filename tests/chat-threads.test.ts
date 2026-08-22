@@ -246,6 +246,12 @@ test('the safety floor is the last thing after a brief, not before it', () => {
 /**
  * Telling a model both "you know nothing about this person" and "here is what they told you" is a
  * contradiction, and the resolution a model picks is not one anybody chose.
+ *
+ * **This used to assert "the ONLY thing you know about them", and that wording had to go on
+ * 2026-08-22.** It was true while a brief was the only thing a coach could be told; the hubs can now
+ * be read too, and a prompt claiming exclusivity for the brief beside a block of hub facts is the
+ * same contradiction in the other direction. The rule did not change — one sentence, after
+ * everything known, saying do not extend it — only its scope. `docs/decisions/0020`.
  */
 test('a brief replaces the knows-nothing line rather than sitting beside it', () => {
   const without = systemPromptFor(coachesAtTable(['sleep']));
@@ -253,7 +259,7 @@ test('a brief replaces the knows-nothing line rather than sitting beside it', ()
 
   assert.match(without, /no access to this person/i);
   assert.doesNotMatch(with_, /no access to this person/i);
-  assert.match(with_, /ONLY thing you know/i);
+  assert.match(with_, /That is everything you know about them/i);
   assert.match(with_, /Do not extend it/i, 'a frame must not become an assumed history');
 });
 

@@ -33,6 +33,7 @@ import type {
 import { chatStore as defaultStore } from '@/infrastructure/chat/chatStore';
 import { createChatModel } from '@/infrastructure/llm/llmRouter';
 
+import type { CoachContext } from './context';
 import { systemPromptFor } from './prompt';
 import { latestFor, newThreadId } from './threads';
 
@@ -51,6 +52,11 @@ export type CoachChat = {
     attachment?: Attachment,
     /** The hub's brief, when this conversation is inside one. Absent at the Open Table. */
     brief?: string | null,
+    /**
+     * What the app holds about the person, read at the moment of asking. Absent means a caller that
+     * has not read the store, and the prompt then says it knows nothing — see `prompt.ts`.
+     */
+    context?: CoachContext | null,
   ): Promise<CoachReply | null>;
   isConfigured(): boolean;
   listThreads(): Promise<readonly ChatThreadSummary[]>;
@@ -92,7 +98,7 @@ export function createCoachChat(
   }
 
   return {
-    async answer(threadId, coaches, attachment, brief) {
+    async answer(threadId, coaches, attachment, brief, context) {
       const turns = await store.readTurns(threadId);
       const last = turns[turns.length - 1];
 
@@ -104,11 +110,11 @@ export function createCoachChat(
         history: turns.slice(0, -1),
         message: last.text,
         /**
-         * The hub's brief, when the conversation is inside one. It is what the person wrote about
-         * how they want to be coached there, and it reaches the model as their words — see
-         * `briefSection` in `prompt.ts` for why it is fenced and why `SAFETY` follows it.
+         * The hub's brief, when the conversation is inside one, and what the app holds about the
+         * person. Both reach the model fenced, as data rather than as instructions — see
+         * `briefSection` and `contextSection` for why, and why `SAFETY` follows both.
          */
-        systemPrompt: systemPromptFor(coaches, brief),
+        systemPrompt: systemPromptFor(coaches, brief, context),
       });
 
       // Only a real answer is persisted. Writing the failure copy as an assistant turn would put
