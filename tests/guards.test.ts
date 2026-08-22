@@ -1,9 +1,10 @@
 import assert from 'node:assert/strict';
-import { readFileSync } from 'node:fs';
+import { readFileSync, readdirSync } from 'node:fs';
 import test from 'node:test';
 
 import {
   LARGE_DELETION_LINES,
+  duplicateDecisionNumbers,
   evaluate,
   nextDecisionNumber,
 } from '../scripts/change-rationale';
@@ -116,4 +117,45 @@ test('the agent instruction files stay short enough to be read', () => {
   // both are contract, not bloat, and published guidance puts the real risk nearer 200. Raising
   // this to make room for a rule is fine; raising it to make room for prose is the failure.
   assert.ok(lines <= 90, `AGENTS.md + CLAUDE.md are ${lines} lines; the cap is 90`);
+});
+
+/**
+ * **The real incident: two sessions each took `0015`.**
+ *
+ * On 2026-08-21 one wrote "Settings is an index, not a page" and on 2026-08-22 another wrote
+ * "Arithmetic yes, a proxy no". Neither could see the other's worktree, and `nextDecisionNumber`
+ * only looks at what is already on disk.
+ *
+ * The collision is cheap to fix and expensive to notice. A decision note is this project's memory,
+ * and `docs/decisions/0015` stopped meaning anything the moment it meant two documents — by which
+ * point code comments in four files were pointing at an ambiguous number.
+ */
+test('two notes sharing a number are caught', () => {
+  const clashed = [
+    'docs/decisions/0015-settings-is-an-index-not-a-page.md',
+    'docs/decisions/0015-arithmetic-yes-a-proxy-no.md',
+    'docs/decisions/0016-a-test-nobody-can-run.md',
+  ];
+
+  assert.deepEqual(duplicateDecisionNumbers(clashed), ['0015']);
+  assert.equal(nextDecisionNumber(clashed), '0017', 'and the number it hands over skips both');
+});
+
+/** A gap is harmless and common — a note can be deleted. Only the duplicate is reported. */
+test('a gap in the numbering is not a problem', () => {
+  const gapped = [
+    'docs/decisions/0001-a.md',
+    'docs/decisions/0004-b.md',
+    'docs/decisions/README.md',
+    'docs/decisions/TEMPLATE.md',
+  ];
+
+  assert.deepEqual(duplicateDecisionNumbers(gapped), []);
+});
+
+/** The folder as it actually stands. This is the assertion that keeps it fixed. */
+test('no two notes in this repository share a number', () => {
+  const notes = readdirSync('docs/decisions').map((name) => `docs/decisions/${name}`);
+
+  assert.deepEqual(duplicateDecisionNumbers(notes), []);
 });

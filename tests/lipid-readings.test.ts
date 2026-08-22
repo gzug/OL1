@@ -4,7 +4,7 @@ import test from 'node:test';
 import { LIPID_READING_CAVEAT, lipidReadings } from '../src/application/labs/lipidReadings';
 
 /**
- * Arithmetic yes, a proxy no — `docs/decisions/0015`.
+ * Arithmetic yes, a proxy no — `docs/decisions/0018`.
  *
  * Every value here is INVENTED. What is under test is the line: these are subtraction and division
  * on numbers a person already has, with no cohort, coefficient or cutoff behind them.
@@ -32,7 +32,7 @@ test('a panel without both halves produces nothing at all', () => {
 });
 
 /**
- * **The refusal `0015` exists for.**
+ * **The refusal `0018` exists for.**
  *
  * The triglyceride-to-HDL ratio is one division away from the data here and must not be computed:
  * it fails outright in African-American women, has no accepted cutoffs, and is ethnicity- and

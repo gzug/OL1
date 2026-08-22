@@ -61,4 +61,4 @@ words came up and how often.** It may not:
 If a future feature needs a number about recovery, it needs a **measurement** — heart-rate
 variability from a watch, which this hub is already waiting for. Not a rating dressed as one.
 
-Same shape as `0015`: compute what is arithmetic, refuse what is a proxy.
+Same shape as `0018`: compute what is arithmetic, refuse what is a proxy.

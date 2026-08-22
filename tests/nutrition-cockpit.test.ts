@@ -164,7 +164,7 @@ test('weigh-ins do not need meals beside them', () => {
 
 /**
  * **No direction.** The fixture had one — "Flat", "too few readings to say more" — and calling a
- * trend on weight needs a threshold this app does not have. `docs/decisions/0015` is the same
+ * trend on weight needs a threshold this app does not have. `docs/decisions/0018` is the same
  * refusal in Labs: compute what is arithmetic, refuse what is a judgement.
  */
 test('nothing here calls a direction on a weight', () => {
