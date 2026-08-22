@@ -3,7 +3,7 @@ import test from 'node:test';
 
 import { formatDuration } from '../src/application/format/metric';
 import { isDomainHub, orbitHubs } from '../src/ui/hubs/catalog';
-import { SAMPLE_DATA_LINE } from '../src/ui/hubs/hubState';
+import { SAMPLE_DATA_LINE, hasSampleContent } from '../src/ui/hubs/hubState';
 import { HUB_STATES, hubStateFor } from '../src/ui/hubs/states';
 import { LEVINE_MARKERS } from '../src/ui/labs/levine';
 import { EXTRA_MARKERS } from '../src/ui/labs/lipids';
@@ -211,4 +211,60 @@ test('a duration in a fixture is written the way this app writes durations', () 
     [],
     'a fixture writes a duration this app would never print',
   );
+});
+
+/**
+ * **The sample marker has to be right about every block under it, or it is worth nothing under any
+ * of them.**
+ *
+ * It sat over the Coverage list from the day the line was drawn, and stayed there when `#123` made
+ * those rows read from real entries — so the app was telling somebody their own meal count was
+ * invented for layout. `basis` had drifted the same way. Both moved above the line; neither counts
+ * towards the marker any more.
+ */
+test('real coverage does not raise the sample marker', () => {
+  const nothingInvented = {
+    cockpit: { periods: [] },
+    facets: [{ detail: '8 logged this week', label: 'Meals', state: 'reading' }],
+  } as const;
+
+  assert.equal(hasSampleContent(nothingInvented, true), false, 'coverage is real and above the line');
+  assert.equal(hasSampleContent(nothingInvented, false), true, 'and the fixture list still counts');
+});
+
+test('anything genuinely invented does raise it', () => {
+  const bare = { cockpit: { periods: [] }, facets: [] } as const;
+
+  assert.equal(hasSampleContent(bare, true), false, 'a hub with nothing invented shows no marker');
+  assert.equal(hasSampleContent({ ...bare, observation: 'A thing somebody read into it' }, true), true);
+  assert.equal(hasSampleContent({ ...bare, cockpit: { empty: 'gone', periods: [] } }, true), true);
+  assert.equal(
+    hasSampleContent(
+      { ...bare, cockpit: { periods: [{ label: 'A', rows: [{ label: 'b', value: 'c', when: 'd' }] }] } },
+      true,
+    ),
+    true,
+  );
+  assert.equal(
+    hasSampleContent(
+      { ...bare, cockpit: { periods: [], week: { caption: 'x', days: [] } } },
+      true,
+    ),
+    true,
+  );
+});
+
+/**
+ * **`basis` is no longer marked invented, so every one of them has to be true.** Three were
+ * counts — "From 5 sessions in the last 7 days" — that contradicted the real block above them the
+ * moment a cockpit started reading entries.
+ */
+test('no basis line states a count it cannot know', () => {
+  for (const [id, state] of Object.entries(HUB_STATES)) {
+    if (state.basis === undefined) continue;
+    assert.ok(
+      !/\b\d+\b/.test(state.basis),
+      `"${id}" states a number in its basis line, which sits above the sample marker now: "${state.basis}"`,
+    );
+  }
 });

@@ -9,7 +9,7 @@ import type { HubState } from '../hubState';
  * a leftover holding whatever the named sports do not cover.
  */
 export const exercise: HubState = {
-  basis: 'From 5 sessions in the last 7 days, across running and the gym.',
+  basis: 'From the sessions you have logged. No watch or phone is connected yet.',
   /**
    * **The sample cockpit is gone, because a real one exists.**
    *
@@ -45,5 +45,4 @@ export const exercise: HubState = {
     { detail: 'Shared with Sleep', label: 'Recovery', state: 'elsewhere' },
     { detail: 'Not connected yet', label: 'Routes', state: 'missing' },
   ],
-  observation: 'Your evening sessions cluster in the second half of the week.',
 };

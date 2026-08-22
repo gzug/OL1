@@ -134,3 +134,27 @@ export type HubState = {
 export function emptyHubState(): HubState {
   return { cockpit: { periods: [] }, facets: [] };
 }
+
+/**
+ * Whether anything below `SAMPLE_DATA_LINE` is actually invented.
+ *
+ * **The marker has to be right about every block under it or it is worth nothing under any of
+ * them.** It sat over the Coverage list from the day the line was drawn and stayed there when
+ * coverage started reading real entries — so the app was telling somebody their own meal count was
+ * invented for layout. `basis` had drifted the same way: it is now the only sentence on the screen
+ * saying whether a figure was typed in or measured, which is the last thing to mark invented.
+ *
+ * Both moved above the line, and neither counts here any more.
+ *
+ * Here rather than in the `.tsx` for the reason `bioAgeCopy.ts` gives — a condition written into
+ * JSX cannot be asserted in bare Node, and this one has five ways to be wrong.
+ */
+export function hasSampleContent(state: HubState, coverageIsReal: boolean): boolean {
+  return (
+    state.observation !== undefined ||
+    (!coverageIsReal && state.facets.length > 0) ||
+    state.cockpit.periods.length > 0 ||
+    state.cockpit.week !== undefined ||
+    state.cockpit.empty !== undefined
+  );
+}

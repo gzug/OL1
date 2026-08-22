@@ -49,5 +49,4 @@ export const medical: HubState = {
     { detail: 'Not connected yet', label: 'Symptoms over time', state: 'missing' },
     { detail: 'Not connected yet', label: 'Appointments and letters', state: 'missing' },
   ],
-  observation: 'Everything in this hub was entered in one sitting in February.',
 };

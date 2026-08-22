@@ -58,5 +58,4 @@ export const sleep: HubState = {
     { detail: 'Shared with Resilience', label: 'Resting heart rate', state: 'elsewhere' },
     { detail: 'Needs a watch that names itself', label: 'Sleep stages', state: 'missing' },
   ],
-  observation: 'Your shortest nights land on the days you train in the evening.',
 };
