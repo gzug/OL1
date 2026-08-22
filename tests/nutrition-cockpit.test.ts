@@ -18,7 +18,9 @@ const meal = (day: string, macros: Record<string, unknown>, id = day): HubEntry 
   id: `meal-${id}`,
   kind: 'meal',
   payload: { macros },
-  recordedAt: `${day}T12:00:00.000Z`,
+  /* Morning, so a meal dated "today" is behind `NOW` rather than three hours ahead of it — the
+     window refuses anything in the future, and refusing it is the point. */
+  recordedAt: `${day}T08:00:00.000Z`,
   source: 'manual',
 });
 
