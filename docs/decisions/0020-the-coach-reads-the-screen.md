@@ -80,7 +80,25 @@ been wrong about something visible in ten seconds on a rendered page.
 
 ### On a screen, and deliberately not carried
 
-Two blocks a person can see do not travel, for two different reasons.
+Adding the markers raised the obvious next question — the Labs screen also shows a kidney function
+of `109 mL/min/1.73m²`, and Nutrition shows a score — so the line is drawn here rather than one
+block at a time.
+
+**A number that needs its caption to be honest does not travel as a row.**
+
+A cockpit row is a label, a value and a `when`. Sums and averages of what somebody typed carry their
+own qualification inside that shape: *average of 3 meals*, *across 4 nights*, *drawn 2 Aug*. The
+app's interpreted numbers do not. eGFR's caption is a paragraph about hydration, a big protein meal
+and hard training in the days before a draw. PhenoAge needs a range instead of a point, a floor
+under CRP, and a driver list `0018` calls *structurally incapable of carrying a number*. The
+nutrition score needs the sentence saying it scores your logging and not you.
+
+**A row cannot hold a paragraph.** Stripped of it, each of those becomes exactly the thing this
+repository keeps refusing: a number that reads as a verdict. So they stay on the screens that carry
+their caveats, and a coach gets the creatinine the laboratory printed instead — which is what eGFR
+was estimated from, and which needs no caveat to be true.
+
+The two worth naming individually:
 
 **The weekly logging score — refused.** Nutrition prints `100 out of 100` from three meals across
 three days. `summaries.ts` already refused it for the Twin and the reason transfers exactly: *"a
