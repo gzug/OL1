@@ -27,7 +27,7 @@ export const sleep: HubState = {
       {
         label: 'Last night',
         rows: [
-          { label: 'Time asleep', value: '7h 05m', when: 'Sun → Mon' },
+          { label: 'Time asleep', value: '7h 5m', when: 'Sun → Mon' },
           { label: 'Went to bed', value: '23:48', when: 'about your usual' },
           { label: 'Woke', value: '06:53', when: 'earlier than usual' },
         ],
@@ -37,7 +37,7 @@ export const sleep: HubState = {
         rows: [
           { label: 'Typical night', value: '6h 51m', when: 'across 6 nights' },
           { label: 'Shortest', value: '5h 32m', when: 'Wednesday' },
-          { label: 'Longest', value: '8h 04m', when: 'Saturday' },
+          { label: 'Longest', value: '8h 4m', when: 'Saturday' },
         ],
       },
     ],
