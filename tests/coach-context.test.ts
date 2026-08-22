@@ -254,6 +254,35 @@ test('a marker gets no reference range and is never called good or bad', () => {
   assert.ok(prompt.includes('do not call a value good, bad, high or low'));
 });
 
+/**
+ * **The thing the owner asked for by name**: *"the data is the fundament of the advice of the
+ * coaches."* A coach told a panel holds nine markers, without being told what any of them are, has
+ * been given a fact about a file rather than about a person.
+ *
+ * The creatinine here is the number `formatMeasured` was written for — a European panel typed in
+ * millimoles is stored converted, and four screens once interpolated all sixteen digits of it
+ * straight into a `<Text>`. Sixteen significant figures claim a precision no assay has.
+ */
+test('a coach is told what is on the panel, not only how many things are on it', () => {
+  const prompt = promptFor({
+    labs: [
+      entry(
+        'labs',
+        'panel',
+        { markers: { albumin: 4.4, creatinine: 0.8031674208144796, crp: 0.8 } },
+        '2026-08-02',
+      ),
+    ],
+  });
+
+  assert.ok(prompt.includes('Albumin: 4.4 g/dL (drawn 2 Aug)'));
+  assert.ok(prompt.includes('Creatinine: 0.8 mg/dL'), 'the value the screen prints');
+  assert.equal(prompt.includes('0.8031'), false, 'a stored conversion reached the model raw');
+  assert.ok(prompt.includes('Markers on it: 3'), 'the count is still there, above the values');
+  assert.ok(prompt.includes('Not on this panel'));
+  assert.ok(prompt.includes('Glucose'), 'what is absent is what a coach should ask for');
+});
+
 /** The caption under the Exercise cockpit, which has to survive the trip into a prompt. */
 test('a quiet day is never called a rest day', () => {
   const prompt = promptFor({

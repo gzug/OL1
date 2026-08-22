@@ -36,9 +36,11 @@ import type { Profile, Sex } from '@/core/profile';
 import { exercisePeriods } from '@/ui/exercise/cockpit';
 import { isDomainHub, type HubDefinition } from '@/ui/hubs/catalog';
 import { coverageFor } from '@/ui/hubs/coverage';
-import { isHeld, kindWords } from '@/ui/hubs/entryWords';
+import { day, isHeld, kindWords } from '@/ui/hubs/entryWords';
 import type { CockpitPeriod } from '@/ui/hubs/hubState';
 import { labsPeriods } from '@/ui/labs/cockpit';
+import { LEVINE_MARKERS } from '@/ui/labs/levine';
+import { EXTRA_MARKERS } from '@/ui/labs/lipids';
 import { nutritionPeriods } from '@/ui/meals/cockpit';
 import { medicalPeriods } from '@/ui/medical/cockpit';
 import { resiliencePeriods } from '@/ui/resilience/cockpit';
@@ -46,6 +48,70 @@ import { sleepPeriods } from '@/ui/sleep/cockpit';
 
 /** Every hub's entries, keyed by hub id. The shape a caller reads out of the store. */
 export type EntriesByHub = Readonly<Record<string, readonly HubEntry[]>>;
+
+/**
+ * The markers on the last panel, exactly as `YourMarkers` prints them.
+ *
+ * **`labsPeriods` does not carry these and should not** — it says how many markers are on the panel
+ * and whether the nine the age calculation reads are among them, because that is the one thing a
+ * person cannot work out while holding their own report. The VALUES are the block underneath it,
+ * and on a screen the two sit a finger's width apart.
+ *
+ * In a prompt they do not, and the gap was worth catching: the owner asked for the blood panel
+ * specifically — *"the data is the fundament of the advice of the coaches"* — and a coach told a
+ * panel holds nine markers without being told what any of them are cannot do anything with it.
+ * Found by opening the seeded Labs screen, not by a test.
+ *
+ * **The same `formatMeasured(value, marker.unit)` call the screen makes**, over the same two marker
+ * lists in the same order, so a converted creatinine reads `0.9 mg/dL` here exactly as it does
+ * there. `docs/decisions/0018` is what stops it becoming anything more: no range is applied and no
+ * value is called good or bad, on the screen or in the prompt.
+ *
+ * **What is absent is named too.** `YourMarkers` lists the missing ones, and for a coach it is the
+ * more actionable half — it is what to ask for rather than what to guess at.
+ */
+function markerPeriods(entries: readonly HubEntry[]): readonly CockpitPeriod[] {
+  const last = entries
+    .filter((entry) => entry.kind === 'panel')
+    .sort((a, b) => b.recordedAt.localeCompare(a.recordedAt))[0];
+  if (last === undefined) return [];
+
+  const held = last.payload.markers;
+  if (typeof held !== 'object' || held === null) return [];
+  const markers = held as Readonly<Record<string, unknown>>;
+
+  const drawn = `drawn ${day(last.recordedAt)}`;
+  const rows = [...LEVINE_MARKERS, ...EXTRA_MARKERS]
+    .map((marker) => {
+      const value = markers[marker.key];
+      if (typeof value !== 'number' || !Number.isFinite(value)) return null;
+      const written = formatMeasured(value, marker.unit);
+      return written === null ? null : { label: marker.label, value: written, when: drawn };
+    })
+    .filter((row): row is { label: string; value: string; when: string } => row !== null);
+
+  if (rows.length === 0) return [];
+
+  const absent = LEVINE_MARKERS.filter((marker) => typeof markers[marker.key] !== 'number');
+
+  return [
+    {
+      label: 'Every marker on their last panel, as their report printed it',
+      rows: [
+        ...rows,
+        ...(absent.length === 0
+          ? []
+          : [
+              {
+                label: 'Not on this panel',
+                value: absent.map((marker) => marker.label).join(', '),
+                when: 'there is no reading for these, so ask rather than assume',
+              },
+            ]),
+      ],
+    },
+  ];
+}
 
 /**
  * The cockpit a hub draws, or none.
@@ -63,7 +129,8 @@ function periodsFor(
     case 'exercise':
       return exercisePeriods(entries, now);
     case 'labs':
-      return labsPeriods(entries, now);
+      /* The count first, then the values — the order they sit in on the screen. */
+      return [...labsPeriods(entries, now), ...markerPeriods(entries)];
     case 'medical':
       return medicalPeriods(entries);
     case 'nutrition':

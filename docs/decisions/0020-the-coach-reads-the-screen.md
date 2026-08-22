@@ -60,18 +60,44 @@ can undo that, because nothing downstream formats a number.
   same things live inside `.tsx` files, which a prompt cannot import and bare Node cannot assert.
   Two copies exist and can drift.
 
-### The one score, deliberately not carried
+### What the marker values nearly cost
 
-The Nutrition hub prints a weekly logging score — `100 out of 100` in a seeded preview, from three
-meals across three days. **It does not reach a coach**, and it is the one thing on a hub screen that
-is deliberately left behind.
+`labsPeriods` says how many markers are on the last panel and whether the nine the age calculation
+reads are among them. It does not carry the values — those are `YourMarkers`, the block directly
+underneath, which prints each one through `formatMeasured(value, marker.unit)`.
 
-`summaries.ts` already refused it for the Twin, and the reason transfers exactly: *"a score computed
-from three of twelve meals is a number that looks like a judgement of a week it did not see. It
-belongs on the Nutrition hub, where the meals it is drawn from are visible directly underneath."* In
-a prompt it is separated from those meals by definition. `0009` allows exactly one score and says
-what it is — **how much you logged, never how you are doing** — and a coach saying *"your week
-scored 100"* is the second reading, whatever the caption underneath said.
+On a screen the two sit a finger's width apart. In a prompt they do not, and building only from the
+named cockpit functions would have given the Longevity Guide *"9 markers on this panel"* and not one
+of them — **a fact about a file rather than about a person**, in the hub the owner named by name.
+
+So `coachContext` adds them, through the same call the screen makes, over the same two lists in the
+same order. What is **absent** is named too, because for a coach that is the more useful half: it is
+what to ask for rather than what to guess at.
+
+Found by opening the seeded Labs screen. Nothing in CI could have seen it — every test was passing,
+and each half was individually correct. That is the third time in this repository a green check has
+been wrong about something visible in ten seconds on a rendered page.
+
+### On a screen, and deliberately not carried
+
+Two blocks a person can see do not travel, for two different reasons.
+
+**The weekly logging score — refused.** Nutrition prints `100 out of 100` from three meals across
+three days. `summaries.ts` already refused it for the Twin and the reason transfers exactly: *"a
+score computed from three of twelve meals is a number that looks like a judgement of a week it did
+not see. It belongs on the Nutrition hub, where the meals it is drawn from are visible directly
+underneath."* In a prompt it is separated from those meals by definition. `0009` allows exactly one
+score and says what it is — **how much you logged, never how you are doing** — and a coach saying
+*"your week scored 100"* is the second reading, whatever the caption underneath said.
+
+**The twelve-week heatmap — not built, and named as a gap.** It prints a grid and a lifetime line
+(*"All time: 3 sessions, 44 km"*), and *"have I been consistent over three months"* is the Exercise
+question that nothing else on that screen answers. It is not carried because turning a grid into
+text is a design decision rather than a call to an existing function, and it was outside what was
+agreed. **The Exercise Coach can therefore speak about the last seven days and not about the last
+twelve weeks.** That is the most likely next thing to want.
+
+The Twin's biological age is a third, already named above.
 
 ### The one thing a coach knows that no screen shows
 
