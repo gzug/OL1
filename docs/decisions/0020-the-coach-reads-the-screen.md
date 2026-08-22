@@ -124,9 +124,9 @@ twelve weeks.** That is the most likely next thing to want.
 
 The Twin's biological age is a third, already named above.
 
-### The one thing a coach knows that no screen shows
+### The one thing a coach knew that no screen showed — found, then closed
 
-**A note on Health record reaches a coach and is displayed nowhere in the app.** The first run asks
+**A note on Health record reached a coach and was displayed nowhere in the app.** The first run asks
 *"anything you live with"* and files the answer as a `note` on `medical`, verbatim. `medicalPeriods`
 reads conditions and medications and not notes; `StoredEntries` prints a date and a provenance and
 not the text. Nothing in `src/ui/` renders `payload.text` at all — checked, not assumed.
@@ -137,10 +137,13 @@ visible somewhere a person can reach — goals and sports on `/settings/profile`
 `/settings/goals`, the profile on the Twin — so this is the single crack in the rule, and it is
 named here rather than discovered later.
 
-**The fix is not in this change.** It is one block on the Health record screen showing what somebody
-wrote, which sits in files this session does not own. Until then, a coach can repeat a sentence back
-that the person cannot find anywhere in the app — which is a smaller version of exactly the failure
-this whole note is written against.
+**Closed the same day.** The Health record screen now shows the notes, under a heading
+that claims no authorship — the flow writes two kinds here and nothing tells them apart.
+`RecordCockpit` also stopped returning nothing when there is no condition and no medication: a hub holding only what
+somebody typed in the first run drew no cockpit at all.
+
+`coachContext` reads them through `recordNotes` now, which is the screen's own reader, so there is
+one reader again rather than two. **The rule holds without an exception.**
 
 ## What the coaches may read — the owner's call, 2026-08-22
 
